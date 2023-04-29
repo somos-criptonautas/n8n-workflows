@@ -1,0 +1,445 @@
+{
+  "active": false,
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OpenAI-DALLE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTML Extract": {
+      "main": [
+        [
+          {
+            "node": "Clean Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI-CHATGPT": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI-DALLE": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sheets": {
+      "main": [
+        [
+          {
+            "node": "split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content": {
+      "main": [
+        [
+          {
+            "node": "OpenAI-CHATGPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-04-27T17:05:41.072Z",
+  "id": "1",
+  "name": "[AI] News to Discourse",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "04750e9b-6ce3-401b-89e7-f1f17f3a4a28",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        320,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"split\"].json[\"url\"] }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "id": "7a8bb997-5a2d-4ee0-a1ca-bebe9fe32bc2",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        900,
+        240
+      ],
+      "typeVersion": 3,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "body",
+              "cssSelector": "html"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": false
+        }
+      },
+      "id": "6409f0c4-bf93-4a1d-a74c-e294fb39895f",
+      "name": "HTML Extract",
+      "type": "n8n-nodes-base.htmlExtract",
+      "position": [
+        1060,
+        240
+      ],
+      "typeVersion": 1,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/18iZ59I0q2AeElqcEpyJECNlSv4M6iJll9PQzXQkqEUk/edit#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13h8HPWKha5kZHDeKxAPQvQqAOonof5cgpxzh79tIQfY/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columnToMatchOn": "url",
+        "valueToMatchOn": "={{ $node.sheets.json.url }}",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "canal",
+              "fieldValue": "{{ $input.item.json.canal}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "dbd5f866-2f5e-4adf-b1b5-a27b08c0425a",
+      "name": "Update Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1980,
+        180
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "$input.item.json.titulo=JSON.stringify($input.item.json.text).titulo\n\n$input.item.json.contenido=JSON.stringify($input.item.json.text).contenido\n\nreturn $input.item;"
+      },
+      "id": "f8bf8b70-6070-447b-af22-4d4e1ffe3539",
+      "name": "Parse JSON",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1540,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "eccf1dc8-a0bb-40f6-9471-95eac8020b02",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2200,
+        240
+      ],
+      "webhookId": "d44bc024-1c21-44e0-b2b4-5cff6fb9f402",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "title": "={{ $input.item.json.text.titulo }}",
+        "content": "{{ $input.item.json.text.imagen }}|{{ $input.item.json.text.contenido }}",
+        "additionalFields": {
+          "category": "={{ $input.item.json.text.canal}}"
+        }
+      },
+      "id": "2a7f6913-3d66-44a4-9eb5-3136106c9bed",
+      "name": "Discourse",
+      "type": "n8n-nodes-base.discourse",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -40
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "=Imagen de portada artística con calidad profesional: {{ $input.item.json.text.titulo }}",
+        "responseFormat": "imageUrl",
+        "options": {}
+      },
+      "id": "51508ff4-fab1-42b6-9f7d-be4701a639b3",
+      "name": "OpenAI-DALLE",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        -40
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "prompt": "Este es el contenido del sitio {{$node[\"split\"].json[\"url\"]}}: {{ $json[\"contentShort\"] }}\n\nEn formato JSON:\n\n- Resume el contenido, introduciendo de manera divertida y disruptiva la información, usando [terrícola/humano/humanoide] al saludar a la audiencia. Danos el contenido más relevante de la noticia en no más de cinco párrafos, en español casual y con modismos latinos.\n\n- Clasifica ese contenido eligiendo una opción entre [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar] sin cambiar las palabras ni agregar letras, en minúsculas y eligiendo la opción textual.\n\n- Sugiere un título con impacto SEO relacionado.\n\nEl formato tiene que ser:\n{\"titulo\": titulo,\n\"contenido\": contenido,\n\"canal\": canal}\n\nJSON:",
+        "simplifyOutput": false,
+        "options": {
+          "maxTokens": 750,
+          "topP": 0.8
+        }
+      },
+      "id": "f45fcc6a-9ccd-43c9-9eaf-1797768e1e62",
+      "name": "OpenAI-CHATGPT",
+      "type": "n8n-nodes-base.openAi",
+      "position": [
+        1380,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "id": "2754c6e1-9cf6-47d4-ad97-0797ec9155df",
+      "name": "sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        540,
+        180
+      ],
+      "typeVersion": 3,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.body){\n\n\n\n$input.item.json.content = $input.item.json.body.replace(/^\\s+|\\s+$/g, '').replace(/\\s+/g, ' ');\n\n  $input.item.json.contentShort = $input.item.json.content.slice(0, 10000)\n}\n\n\n\n\nreturn $input.item"
+      },
+      "id": "8196fc6c-51c3-4051-b600-6601bc1f1928",
+      "name": "Clean Content",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1220,
+        240
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "af3f3bdd-c32d-436f-a7f1-55f702de2315",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1780,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b7972111-345f-46f3-90a2-8cd440c3d710",
+      "name": "split",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        740,
+        180
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-04-28T17:51:27.168Z",
+  "versionId": "704181b8-ad01-4a86-a006-47d107618d03"
+}
