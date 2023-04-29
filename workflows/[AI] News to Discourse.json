@@ -327,11 +327,11 @@
     },
     {
       "parameters": {
-        "prompt": "Este es el contenido del sitio {{$node[\"split\"].json[\"url\"]}}: {{ $json[\"contentShort\"] }}\n\nEn formato JSON:\n\n- Resume el contenido, introduciendo de manera divertida y disruptiva la información, usando [terrícola/humano/humanoide] al saludar a la audiencia. Danos el contenido más relevante de la noticia en no más de cinco párrafos, en español casual y con modismos latinos.\n\n- Clasifica ese contenido eligiendo una opción entre [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar] sin cambiar las palabras ni agregar letras, en minúsculas y eligiendo la opción textual.\n\n- Sugiere un título con impacto SEO relacionado.\n\nEl formato tiene que ser:\n{\"titulo\": titulo,\n\"contenido\": contenido,\n\"canal\": canal}\n\nJSON:",
+        "prompt": "Resume lo más relevante en tres párrafos: {{ $json[\"contentShort\"] }}\n\nIntroduce de manera divertida y disruptiva la información, usando [terrícola/humano/humanoide] al saludar a la audiencia y con modismos latinos.\n\n- Sugiere un título con impacto SEO relacionado.\n\n- Clasifica ese contenido eligiendo una opción entre [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar] sin cambiar las palabras ni agregar letras, en minúsculas y eligiendo la opción textual.\n\nEl formato tiene que ser:\n{\"contenido\": contenido,\n\"titulo\": titulo,\n\"canal\": canal}\n\nJSON:",
         "simplifyOutput": false,
         "options": {
           "maxTokens": 750,
-          "topP": 0.8
+          "topP": 0.9
         }
       },
       "id": "f45fcc6a-9ccd-43c9-9eaf-1797768e1e62",
@@ -440,6 +440,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-04-28T17:51:27.168Z",
-  "versionId": "704181b8-ad01-4a86-a006-47d107618d03"
+  "updatedAt": "2023-04-29T12:14:34.677Z",
+  "versionId": "de719ecc-9521-470b-8b89-6da1f9230379"
 }
