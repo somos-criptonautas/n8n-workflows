@@ -16,16 +16,6 @@
       "main": [
         [
           {
-            "node": "Discourse",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "OpenAI-DALLE",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "Merge",
             "type": "main",
             "index": 1
@@ -81,7 +71,12 @@
       "main": [
         [
           {
-            "node": "Parse JSON",
+            "node": "OpenAI-DALLE",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "OpenAI",
             "type": "main",
             "index": 0
           }
@@ -92,7 +87,7 @@
       "main": [
         [
           {
-            "node": "Discourse",
+            "node": "HTTP Request1",
             "type": "main",
             "index": 0
           }
@@ -142,6 +137,33 @@
           },
           {
             "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
             "type": "main",
             "index": 0
           }
@@ -241,7 +263,7 @@
       "name": "Update Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        1980,
+        2060,
         180
       ],
       "typeVersion": 3,
@@ -255,13 +277,13 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "$input.item.json.titulo=JSON.stringify($input.item.json.text).titulo\n\n$input.item.json.contenido=JSON.stringify($input.item.json.text).contenido\n\nreturn $input.item;"
+        "jsCode": "$input.item.json.titulo=JSON.stringify($input.item.json.text).titulo\n\n$input.item.json.contenido=JSON.stringify($input.item.json.text).contenido\n\n$input.item.json.canal=JSON.stringify($input.item.json.text).canal\n\nreturn $input.item;"
       },
       "id": "f8bf8b70-6070-447b-af22-4d4e1ffe3539",
       "name": "Parse JSON",
       "type": "n8n-nodes-base.code",
       "position": [
-        1540,
+        1700,
         240
       ],
       "typeVersion": 1
@@ -274,7 +296,7 @@
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "position": [
-        2200,
+        2240,
         240
       ],
       "webhookId": "d44bc024-1c21-44e0-b2b4-5cff6fb9f402",
@@ -283,7 +305,7 @@
     {
       "parameters": {
         "title": "={{ $input.item.json.text.titulo }}",
-        "content": "{{ $input.item.json.text.imagen }}|{{ $input.item.json.text.contenido }}",
+        "content": "![image|({{ binary }})|{{ $input.item.json.text.contenido }}",
         "additionalFields": {
           "category": "={{ $input.item.json.text.canal}}"
         }
@@ -293,8 +315,8 @@
       "type": "n8n-nodes-base.discourse",
       "typeVersion": 1,
       "position": [
-        2000,
-        -40
+        1900,
+        0
       ],
       "credentials": {
         "discourseApi": {
@@ -306,17 +328,20 @@
     {
       "parameters": {
         "resource": "image",
-        "prompt": "=Imagen de portada artística con calidad profesional: {{ $input.item.json.text.titulo }}",
+        "prompt": "=Imagen de portada artística con calidad profesional que represente {{ $input.item.json.text.titulo }}",
         "responseFormat": "imageUrl",
-        "options": {}
+        "options": {
+          "n": 1,
+          "size": "1024x1024"
+        }
       },
       "id": "51508ff4-fab1-42b6-9f7d-be4701a639b3",
       "name": "OpenAI-DALLE",
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        1820,
-        -40
+        1540,
+        -20
       ],
       "credentials": {
         "openAiApi": {
@@ -327,7 +352,8 @@
     },
     {
       "parameters": {
-        "prompt": "Resume lo más relevante en tres párrafos: {{ $json[\"contentShort\"] }}\n\nIntroduce de manera divertida y disruptiva la información, usando [terrícola/humano/humanoide] al saludar a la audiencia y con modismos latinos.\n\n- Sugiere un título con impacto SEO relacionado.\n\n- Clasifica ese contenido eligiendo una opción entre [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar] sin cambiar las palabras ni agregar letras, en minúsculas y eligiendo la opción textual.\n\nEl formato tiene que ser:\n{\"contenido\": contenido,\n\"titulo\": titulo,\n\"canal\": canal}\n\nJSON:",
+        "model": "gpt-3.5-turbo",
+        "prompt": "Responderás en formato JSON con el formato {'contenido': contenido, 'titulo': titulo}\n\nSaludarás y desearás [buen día, buenas tardes, buenas noches] de manera divertida usando [terrícola/humano/humanoide] y usarás un resumen de 3 párrafos como 'contenido', en español y con modismos latinos del siguiente texto:\n\n{{ $json[\"contentShort\"] }}\n\n- Generarás un título con impacto SEO no mayor a 13 palabras.",
         "simplifyOutput": false,
         "options": {
           "maxTokens": 750,
@@ -417,7 +443,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        1780,
+        1900,
         180
       ]
     },
@@ -433,6 +459,64 @@
         740,
         180
       ]
+    },
+    {
+      "parameters": {
+        "operation": "edit",
+        "input": "($input.item.json)",
+        "instruction": "Agrega 'canal' al archivo JSON clasificando en [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar]",
+        "options": {}
+      },
+      "id": "b955ea24-49dc-42ef-9de7-1b5180f42695",
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        240
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.com/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "user_id",
+              "value": "1"
+            },
+            {
+              "name": "files[]",
+              "value": "={{ $binary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c68fd547-444f-4425-87cb-060df125acaa",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1720,
+        -20
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -440,6 +524,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-04-29T12:14:34.677Z",
-  "versionId": "de719ecc-9521-470b-8b89-6da1f9230379"
+  "updatedAt": "2023-04-30T16:47:02.562Z",
+  "versionId": "18bb4faf-052b-401f-b9ec-081b4ecd61ac"
 }
