@@ -19,6 +19,11 @@
             "node": "Merge",
             "type": "main",
             "index": 1
+          },
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -71,12 +76,7 @@
       "main": [
         [
           {
-            "node": "OpenAI-DALLE",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "OpenAI",
+            "node": "Clean Content2",
             "type": "main",
             "index": 0
           }
@@ -147,12 +147,7 @@
       "main": [
         [
           {
-            "node": "Parse JSON",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Discourse",
+            "node": "Clean Content1",
             "type": "main",
             "index": 0
           }
@@ -164,6 +159,50 @@
         [
           {
             "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI-DALLE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content1": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discourse": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheets1",
             "type": "main",
             "index": 0
           }
@@ -212,7 +251,7 @@
         "extractionValues": {
           "values": [
             {
-              "key": "body",
+              "key": "content",
               "cssSelector": "html"
             }
           ]
@@ -236,16 +275,16 @@
         "operation": "update",
         "documentId": {
           "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
           "mode": "url",
-          "value": "https://docs.google.com/spreadsheets/d/18iZ59I0q2AeElqcEpyJECNlSv4M6iJll9PQzXQkqEUk/edit#gid=0",
           "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
         },
         "sheetName": {
           "__rl": true,
-          "mode": "list",
           "value": "gid=0",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/13h8HPWKha5kZHDeKxAPQvQqAOonof5cgpxzh79tIQfY/edit#gid=0",
-          "cachedResultName": "Sheet1"
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
         },
         "columnToMatchOn": "url",
         "valueToMatchOn": "={{ $node.sheets.json.url }}",
@@ -253,7 +292,7 @@
           "values": [
             {
               "column": "canal",
-              "fieldValue": "{{ $input.item.json.canal}}"
+              "fieldValue": "={{ $input.item.json.canal}}"
             }
           ]
         },
@@ -263,7 +302,7 @@
       "name": "Update Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        2060,
+        2320,
         180
       ],
       "typeVersion": 3,
@@ -277,13 +316,13 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "$input.item.json.titulo=JSON.stringify($input.item.json.text).titulo\n\n$input.item.json.contenido=JSON.stringify($input.item.json.text).contenido\n\n$input.item.json.canal=JSON.stringify($input.item.json.text).canal\n\nreturn $input.item;"
+        "jsCode": "$input.item.json.contenido=JSON.stringify($input.item.json.text).contenido\n\n$input.item.json.canal=JSON.stringify($input.item.json.text).canal\n\n$input.item.json.titulo=JSON.stringify($input.item.json.text).titulo\n\nreturn $input.item;"
       },
       "id": "f8bf8b70-6070-447b-af22-4d4e1ffe3539",
       "name": "Parse JSON",
       "type": "n8n-nodes-base.code",
       "position": [
-        1700,
+        1980,
         240
       ],
       "typeVersion": 1
@@ -296,7 +335,7 @@
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "position": [
-        2240,
+        2480,
         240
       ],
       "webhookId": "d44bc024-1c21-44e0-b2b4-5cff6fb9f402",
@@ -304,10 +343,10 @@
     },
     {
       "parameters": {
-        "title": "={{ $input.item.json.text.titulo }}",
-        "content": "![image|({{ binary }})|{{ $input.item.json.text.contenido }}",
+        "title": "={{ $node[\"Parse JSON\"].json[\"titulo\"] }}",
+        "content": "=![image|({{ url }})|{{ $node[\"Parse JSON\"].json[\"contenido\"] }}",
         "additionalFields": {
-          "category": "={{ $input.item.json.text.canal}}"
+          "category": "={{ $node[\"Parse JSON\"].json[\"canal\"] }}"
         }
       },
       "id": "2a7f6913-3d66-44a4-9eb5-3136106c9bed",
@@ -315,8 +354,8 @@
       "type": "n8n-nodes-base.discourse",
       "typeVersion": 1,
       "position": [
-        1900,
-        0
+        2640,
+        -40
       ],
       "credentials": {
         "discourseApi": {
@@ -328,8 +367,7 @@
     {
       "parameters": {
         "resource": "image",
-        "prompt": "= {{ $input.item.json.text.titulo }}",
-        "responseFormat": "imageUrl",
+        "prompt": "={{ $json.message.content }}",
         "options": {
           "n": 1,
           "size": "1024x1024"
@@ -340,8 +378,8 @@
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        1540,
-        -20
+        2200,
+        -40
       ],
       "credentials": {
         "openAiApi": {
@@ -352,9 +390,12 @@
     },
     {
       "parameters": {
-        "prompt": "Usarás formato JSON incluyendo dos órdenes:\n\n1) Resume en tres párrafos como 'contenido' el siguiente texto: {{ $json.contentShort }}\n\n2) Genera un título con impacto SEO no mayor a 11 palabras como 'titulo'.\n\nUsa este formato JSON: {'contenido': contenido, 'titulo': título}",
-        "simplifyOutput": false,
-        "options": {}
+        "prompt": "=1) Traduce {{ $json.content }}.\n\n2) Sintetiza en tres párrafos y no más de 250 palabras el siguiente texto: \n\n2) Genera un título con impacto SEO no mayor a 11 palabras.\n\nEl formato debe ser: { \"contenido\": contenido, \"titulo\": titulo }",
+        "options": {
+          "maxTokens": 750,
+          "temperature": 0.8,
+          "topP": 1
+        }
       },
       "id": "f45fcc6a-9ccd-43c9-9eaf-1797768e1e62",
       "name": "OpenAI-CHATGPT",
@@ -369,8 +410,7 @@
           "id": "4",
           "name": "OpenAi account"
         }
-      },
-      "continueOnFail": true
+      }
     },
     {
       "parameters": {
@@ -414,7 +454,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "if ($input.item.json.body){\n\n\n\n$input.item.json.content = $input.item.json.body.replace(/^\\s+|\\s+$/g, '').replace(/\\s+/g, ' ');\n\n  $input.item.json.contentShort = $input.item.json.content.slice(0, 10000)\n}\n\n\n\n\nreturn $input.item"
+        "jsCode": "if ($input.item.json.content){\n\n  $input.item.json.content =\n$input.item.json.content.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n\n\n\nreturn $input.item"
       },
       "id": "8196fc6c-51c3-4051-b600-6601bc1f1928",
       "name": "Clean Content",
@@ -439,7 +479,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        1900,
+        2160,
         180
       ]
     },
@@ -459,16 +499,18 @@
     {
       "parameters": {
         "operation": "edit",
-        "input": "={{ $json.choices[0].text }}",
-        "instruction": "Clasifica entre: [bitcoin, monero, privacidad, tech-apps] y agrega la palabra en minúsculas en la entrada JSON 'canal'.",
-        "options": {}
+        "input": "={{ $json.text }}",
+        "instruction": "Clasifica {{ $json.text }} entre: [bitcoin, monero, privacidad, tech-apps] y agrega esa palabra en la entrada JSON 'canal'.",
+        "options": {
+          "temperature": 0.5
+        }
       },
       "id": "b955ea24-49dc-42ef-9de7-1b5180f42695",
       "name": "OpenAI",
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        1540,
+        1680,
         240
       ],
       "credentials": {
@@ -488,12 +530,16 @@
         "bodyParameters": {
           "parameters": [
             {
-              "name": "user_id",
-              "value": "1"
-            },
-            {
               "name": "files[]",
               "value": "={{ $binary }}"
+            },
+            {
+              "name": "type",
+              "value": "composer"
+            },
+            {
+              "name": "user_id",
+              "value": "1"
             }
           ]
         },
@@ -504,13 +550,123 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        1720,
-        -20
+        2480,
+        -40
       ],
       "credentials": {
         "discourseApi": {
           "id": "1",
           "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "you are a DALLE-2 prompt generator. Generate a [cypherpunk, modern, symbolic] image that represents {{ $json.titulo }} in no more than 23 words."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 150,
+          "n": 1,
+          "topP": 0.8
+        }
+      },
+      "id": "b1107416-a7bd-464d-a3c2-6bac9810d400",
+      "name": "OpenAI1",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        2040,
+        -40
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.text){\n\n  $input.item.json.text =\n$input.item.json.text.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n\n\n\nreturn $input.item"
+      },
+      "id": "8d7a430e-a656-4fb3-a412-358613cbda4a",
+      "name": "Clean Content1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1820,
+        240
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.text){\n\n  $input.item.json.text =\n$input.item.json.text.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n\n\n\nreturn $input.item"
+      },
+      "id": "f5d62da4-ebae-4cc0-99f8-50012505b0e9",
+      "name": "Clean Content2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1540,
+        240
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "columnToMatchOn": "published",
+        "valueToMatchOn": "={{ $node.sheets.json.url }}",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "newColumn",
+              "columnName": "published",
+              "fieldValue": "=true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "562769f8-52e1-4dc8-abfa-9e28b14e00c7",
+      "name": "Update Google Sheets1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2780,
+        -40
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets account"
         }
       }
     }
@@ -520,6 +676,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-10T02:59:38.965Z",
-  "versionId": "88160989-113c-432d-8402-d504018eae11"
+  "updatedAt": "2023-05-10T08:01:59.262Z",
+  "versionId": "8522e14c-31bb-4e3c-bbb4-dcb5746c3091"
 }
