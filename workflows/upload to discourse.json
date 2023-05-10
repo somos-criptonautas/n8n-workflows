@@ -1,0 +1,111 @@
+{
+  "active": false,
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-05-10T08:09:56.958Z",
+  "id": "5",
+  "name": "upload to discourse",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8840dd1f-a9d1-4afd-b068-acd424f3d107",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        720,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "files[]",
+              "value": "="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e824e0de-2f2d-4898-8731-f7015339c340",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1100,
+        320
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "a beautiful landscape",
+        "options": {
+          "n": 1,
+          "size": "256x256"
+        }
+      },
+      "id": "6b7113fb-9546-45de-a912-8e9cebff7d74",
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        900,
+        320
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-05-10T08:11:41.332Z",
+  "versionId": "557e9015-e10e-4e23-8aaf-94c5c59e7940"
+}
