@@ -328,7 +328,7 @@
     {
       "parameters": {
         "resource": "image",
-        "prompt": "=Imagen de portada artística con calidad profesional que represente {{ $input.item.json.text.titulo }}",
+        "prompt": "= {{ $input.item.json.text.titulo }}",
         "responseFormat": "imageUrl",
         "options": {
           "n": 1,
@@ -352,13 +352,9 @@
     },
     {
       "parameters": {
-        "model": "gpt-3.5-turbo",
-        "prompt": "Responderás en formato JSON con el formato {'contenido': contenido, 'titulo': titulo}\n\nSaludarás y desearás [buen día, buenas tardes, buenas noches] de manera divertida usando [terrícola/humano/humanoide] y usarás un resumen de 3 párrafos como 'contenido', en español y con modismos latinos del siguiente texto:\n\n{{ $json[\"contentShort\"] }}\n\n- Generarás un título con impacto SEO no mayor a 13 palabras.",
+        "prompt": "Usarás formato JSON incluyendo dos órdenes:\n\n1) Resume en tres párrafos como 'contenido' el siguiente texto: {{ $json.contentShort }}\n\n2) Genera un título con impacto SEO no mayor a 11 palabras como 'titulo'.\n\nUsa este formato JSON: {'contenido': contenido, 'titulo': título}",
         "simplifyOutput": false,
-        "options": {
-          "maxTokens": 750,
-          "topP": 0.9
-        }
+        "options": {}
       },
       "id": "f45fcc6a-9ccd-43c9-9eaf-1797768e1e62",
       "name": "OpenAI-CHATGPT",
@@ -463,8 +459,8 @@
     {
       "parameters": {
         "operation": "edit",
-        "input": "($input.item.json)",
-        "instruction": "Agrega 'canal' al archivo JSON clasificando en [bitcoin/monero/privacidad-seguridad/tech-apps/comunidad/salud-bienestar]",
+        "input": "={{ $json.choices[0].text }}",
+        "instruction": "Clasifica entre: [bitcoin, monero, privacidad, tech-apps] y agrega la palabra en minúsculas en la entrada JSON 'canal'.",
         "options": {}
       },
       "id": "b955ea24-49dc-42ef-9de7-1b5180f42695",
@@ -524,6 +520,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-04-30T16:47:02.562Z",
-  "versionId": "18bb4faf-052b-401f-b9ec-081b4ecd61ac"
+  "updatedAt": "2023-05-10T02:59:38.965Z",
+  "versionId": "88160989-113c-432d-8402-d504018eae11"
 }
