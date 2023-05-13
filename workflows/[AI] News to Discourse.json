@@ -54,7 +54,7 @@
       "main": [
         [
           {
-            "node": "Wait",
+            "node": "Update Google Sheets1",
             "type": "main",
             "index": 0
           }
@@ -197,6 +197,28 @@
           }
         ]
       ]
+    },
+    "Update Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2023-04-27T17:05:41.072Z",
@@ -209,8 +231,8 @@
       "name": "When clicking \"Execute Workflow\"",
       "type": "n8n-nodes-base.manualTrigger",
       "position": [
-        320,
-        240
+        260,
+        340
       ],
       "typeVersion": 1
     },
@@ -334,9 +356,7 @@
       "parameters": {
         "title": "={{ $node[\"Parse JSON\"].json[\"titulo\"] }}",
         "content": "={{ url }}\n\n{{ $node[\"Parse JSON\"].json[\"contenido\"] }}",
-        "additionalFields": {
-          "category": "={{ $node[\"Parse JSON\"].json[\"canal\"] }}"
-        }
+        "additionalFields": {}
       },
       "id": "2a7f6913-3d66-44a4-9eb5-3136106c9bed",
       "name": "Discourse",
@@ -380,7 +400,7 @@
     },
     {
       "parameters": {
-        "prompt": "=1) Traduce {{ $json.content }}, sintetiza en tres párrafos y no más de 250 palabras el contenido (sin agregar comillas)\n\n2) Genera un título con impacto SEO no mayor a 11 palabras.\n\nEl formato debe ser: { \"contenido\": contenido, \"titulo\": titulo }",
+        "prompt": "=1) Traduce y sintetiza en tres párrafos (no más de 250 palabras y sin agregar comillas): {{ $json.content }}\n\n2) Genera un título con impacto SEO no mayor a 11 palabras.\n\nEl formato debe ser: { \"contenido\": contenido, \"titulo\": titulo }",
         "options": {
           "maxTokens": 750,
           "temperature": 0.8,
@@ -417,6 +437,14 @@
           "cachedResultName": "links",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
         },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "published",
+              "lookupValue": "\"\""
+            }
+          ]
+        },
         "options": {
           "dataLocationOnSheet": {
             "values": {
@@ -429,7 +457,7 @@
       "name": "sheets",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        540,
+        480,
         180
       ],
       "typeVersion": 3,
@@ -444,7 +472,7 @@
     {
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "if ($input.item.json.content){\n\n  $input.item.json.content =\n$input.item.json.content.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n\n\n\nreturn $input.item"
+        "jsCode": "if ($input.item.json.content){\n\n  $input.item.json.content =\n$input.item.json.content.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 6500)\n}\n\n\n\n\nreturn $input.item"
       },
       "id": "8196fc6c-51c3-4051-b600-6601bc1f1928",
       "name": "Clean Content",
@@ -482,7 +510,7 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 2,
       "position": [
-        740,
+        660,
         180
       ]
     },
@@ -619,13 +647,61 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ",
+          "mode": "list",
+          "cachedResultName": "[AI] Noticias a Discourse",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "b86058ed-c91e-4c0a-9da4-ac32edff24b3",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "7",
+          "name": "Google Sheets Trigger account"
+        }
+      }
     }
   ],
   "pinData": {},
-  "settings": {},
+  "settings": {
+    "timezone": "America/Argentina/Buenos_Aires",
+    "saveManualExecutions": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "6"
+  },
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-10T19:22:39.631Z",
-  "versionId": "d758cee1-4f93-403b-9576-516deaee4286"
+  "updatedAt": "2023-05-13T06:39:16.015Z",
+  "versionId": "519918d9-e191-4032-80eb-74657e218513"
 }
