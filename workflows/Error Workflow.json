@@ -1,0 +1,59 @@
+{
+  "active": false,
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-05-13T04:10:14.340Z",
+  "id": "6",
+  "name": "Error Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f1382804-a6e0-463c-9877-8a1637167b44",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        720,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "title": "[ERROR] EN N8N Workflow (!)",
+        "additionalFields": {}
+      },
+      "id": "6f5ac935-aabe-4828-a720-14905ad85e1e",
+      "name": "Discourse",
+      "type": "n8n-nodes-base.discourse",
+      "typeVersion": 1,
+      "position": [
+        940,
+        320
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-05-13T04:30:08.092Z",
+  "versionId": "d71911da-f0db-492e-a38b-a6fa9c2b4daf"
+}
