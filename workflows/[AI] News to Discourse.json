@@ -143,17 +143,6 @@
         ]
       ]
     },
-    "OpenAI": {
-      "main": [
-        [
-          {
-            "node": "Clean Content1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "OpenAI1": {
       "main": [
         [
@@ -165,22 +154,11 @@
         ]
       ]
     },
-    "Clean Content1": {
-      "main": [
-        [
-          {
-            "node": "Parse JSON",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Clean Content2": {
       "main": [
         [
           {
-            "node": "OpenAI",
+            "node": "Parse JSON",
             "type": "main",
             "index": 0
           }
@@ -313,7 +291,7 @@
       "name": "Update Google Sheets",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        2320,
+        2220,
         180
       ],
       "typeVersion": 3,
@@ -333,7 +311,7 @@
       "name": "Parse JSON",
       "type": "n8n-nodes-base.code",
       "position": [
-        1960,
+        1720,
         240
       ],
       "typeVersion": 1
@@ -346,7 +324,7 @@
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "position": [
-        2480,
+        2600,
         240
       ],
       "webhookId": "d44bc024-1c21-44e0-b2b4-5cff6fb9f402",
@@ -363,7 +341,7 @@
       "type": "n8n-nodes-base.discourse",
       "typeVersion": 1,
       "position": [
-        2380,
+        2260,
         -40
       ],
       "credentials": {
@@ -388,7 +366,7 @@
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        2200,
+        2120,
         -40
       ],
       "credentials": {
@@ -441,7 +419,7 @@
           "values": [
             {
               "lookupColumn": "published",
-              "lookupValue": "\"\""
+              "lookupValue": "no"
             }
           ]
         },
@@ -497,7 +475,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        2160,
+        1980,
         180
       ]
     },
@@ -516,37 +494,14 @@
     },
     {
       "parameters": {
-        "operation": "edit",
-        "input": "={{ $json.text }}",
-        "instruction": "Clasifica {{ $json.text[\"titulo\"] }} entre: [bitcoin, monero, privacidad, tech-apps] y agrega esa palabra en la entrada JSON 'canal'.",
-        "options": {
-          "temperature": 0.5
-        }
-      },
-      "id": "b955ea24-49dc-42ef-9de7-1b5180f42695",
-      "name": "OpenAI",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1,
-      "position": [
-        1680,
-        240
-      ],
-      "credentials": {
-        "openAiApi": {
-          "id": "4",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "resource": "chat",
         "prompt": {
           "messages": [
             {
               "role": "system",
-              "content": "you are a DALLE-2 prompt generator. Generate a [cypherpunk, modern, symbolic] image that represents {{ $json.titulo }} in no more than 23 words."
-            }
+              "content": "Genera un prompt para DALLE-2 simbólico, cypherpunk y moderno que represente {{ $json.titulo }} en no más de 11 palabras."
+            },
+            {}
           ]
         },
         "options": {
@@ -560,7 +515,7 @@
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        2040,
+        1980,
         -40
       ],
       "credentials": {
@@ -569,23 +524,6 @@
           "name": "OpenAi account"
         }
       }
-    },
-    {
-      "parameters": {
-        "mode": "runOnceForEachItem",
-        "jsCode": "if ($input.item.json.text){\n\n  $input.item.json.text =\n$input.item.json.text.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n\n\n\nreturn $input.item"
-      },
-      "id": "8d7a430e-a656-4fb3-a412-358613cbda4a",
-      "name": "Clean Content1",
-      "type": "n8n-nodes-base.code",
-      "position": [
-        1820,
-        240
-      ],
-      "executeOnce": false,
-      "typeVersion": 1,
-      "alwaysOutputData": true,
-      "continueOnFail": true
     },
     {
       "parameters": {
@@ -620,14 +558,13 @@
           "cachedResultName": "links",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
         },
-        "columnToMatchOn": "published",
+        "columnToMatchOn": "url",
         "valueToMatchOn": "={{ $node.sheets.json.url }}",
         "fieldsUi": {
           "values": [
             {
-              "column": "newColumn",
-              "columnName": "published",
-              "fieldValue": "=true"
+              "column": "published",
+              "fieldValue": "=ok"
             }
           ]
         },
@@ -637,7 +574,7 @@
       "name": "Update Google Sheets1",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        2540,
+        2440,
         -40
       ],
       "typeVersion": 3,
@@ -702,6 +639,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-13T06:39:16.015Z",
-  "versionId": "519918d9-e191-4032-80eb-74657e218513"
+  "updatedAt": "2023-05-17T18:12:28.542Z",
+  "versionId": "efc51d3a-c11b-4ac8-98ff-b6f926ca60b5"
 }
