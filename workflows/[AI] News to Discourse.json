@@ -71,7 +71,7 @@
       "main": [
         [
           {
-            "node": "Discourse",
+            "node": "HTTP Request1",
             "type": "main",
             "index": 0
           }
@@ -176,6 +176,17 @@
         [
           {
             "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
             "type": "main",
             "index": 0
           }
@@ -294,7 +305,7 @@
       "name": "Wait",
       "type": "n8n-nodes-base.wait",
       "position": [
-        2600,
+        2640,
         240
       ],
       "webhookId": "d44bc024-1c21-44e0-b2b4-5cff6fb9f402",
@@ -303,7 +314,7 @@
     {
       "parameters": {
         "title": "={{ $node['Clean Content2'].json.titulo }}",
-        "content": "={{ $node['Clean Content2'].json.contenido }}",
+        "content": "=![image|{{ $json[\"thumbnail_height\"] }}x{{ $json[\"thumbnail_width\"] }}]({{ $json[\"short_url\"] }})\n\n{{ $node['Clean Content2'].json.contenido }}\n\n{{ $node[\"sheets\"].json[\"url\"] }}\n\n> Con apoyo de AI Criptonauta 👽",
         "additionalFields": {}
       },
       "id": "2a7f6913-3d66-44a4-9eb5-3136106c9bed",
@@ -311,7 +322,7 @@
       "type": "n8n-nodes-base.discourse",
       "typeVersion": 1,
       "position": [
-        2260,
+        2380,
         -40
       ],
       "credentials": {
@@ -325,7 +336,6 @@
       "parameters": {
         "resource": "image",
         "prompt": "={{ $json.message.content }}",
-        "responseFormat": "imageUrl",
         "options": {
           "n": 1,
           "size": "1024x1024"
@@ -336,7 +346,7 @@
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        2120,
+        2060,
         -40
       ],
       "credentials": {
@@ -473,13 +483,15 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Genera un prompt para DALLE-2, en máximo 11 palabras, cypherpunk y moderno: {{ $json.titulo }}"
+              "content": "You are DALLE-2 Prompt Generator that replies only the prompt, without conversation."
             },
-            {}
+            {
+              "content": "=Generate a prompt to represent in realistic and modern way:\n\n{{ $json.titulo }}"
+            }
           ]
         },
         "options": {
-          "maxTokens": 150,
+          "maxTokens": 750,
           "n": 1,
           "topP": 0.8
         }
@@ -489,7 +501,7 @@
       "type": "n8n-nodes-base.openAi",
       "typeVersion": 1,
       "position": [
-        1980,
+        1920,
         -40
       ],
       "credentials": {
@@ -548,7 +560,7 @@
       "name": "Update Google Sheets1",
       "type": "n8n-nodes-base.googleSheets",
       "position": [
-        2440,
+        2540,
         -40
       ],
       "typeVersion": 3,
@@ -601,18 +613,64 @@
           "name": "Google Sheets Trigger account"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files[]",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "user_id",
+              "value": "1"
+            },
+            {
+              "name": "type",
+              "value": "composer"
+            },
+            {
+              "name": "synchronous",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c76219bf-68e4-4a8e-bae1-1672be51917f",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2220,
+        -40
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
     }
   ],
   "pinData": {},
   "settings": {
     "timezone": "America/Argentina/Buenos_Aires",
-    "saveManualExecutions": false,
+    "saveManualExecutions": true,
     "callerPolicy": "workflowsFromSameOwner",
     "errorWorkflow": "6"
   },
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-19T02:26:43.226Z",
-  "versionId": "c54f0f0c-21bc-48b1-9703-42e038f40a67"
+  "updatedAt": "2023-05-22T18:55:46.085Z",
+  "versionId": "90321f4e-b42f-413d-a1e8-06a0c0b74563"
 }
