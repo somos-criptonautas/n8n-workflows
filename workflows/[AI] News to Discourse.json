@@ -214,9 +214,7 @@
         "url": "={{ $node[\"split\"].json[\"url\"] }}",
         "options": {
           "redirect": {
-            "redirect": {
-              "followRedirects": true
-            }
+            "redirect": {}
           }
         }
       },
@@ -671,6 +669,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-22T18:55:46.085Z",
-  "versionId": "90321f4e-b42f-413d-a1e8-06a0c0b74563"
+  "updatedAt": "2023-05-23T18:27:03.124Z",
+  "versionId": "9d99e5b6-330f-4bb5-832d-d32b6b1adb6e"
 }
