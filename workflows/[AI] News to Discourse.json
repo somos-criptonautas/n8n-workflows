@@ -5,7 +5,7 @@
       "main": [
         [
           {
-            "node": "split",
+            "node": "sheets",
             "type": "main",
             "index": 0
           }
@@ -28,17 +28,6 @@
         [
           {
             "node": "HTML Extract",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Update Google Sheets": {
-      "main": [
-        [
-          {
-            "node": "Update Google Sheets1",
             "type": "main",
             "index": 0
           }
@@ -104,7 +93,7 @@
       "main": [
         [
           {
-            "node": "Update Google Sheets",
+            "node": "Update Google Sheets1",
             "type": "main",
             "index": 0
           }
@@ -251,49 +240,6 @@
       ],
       "typeVersion": 1,
       "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
-          "mode": "url",
-          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "links",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
-        },
-        "columnToMatchOn": "url",
-        "valueToMatchOn": "={{ $node.sheets.json.url }}",
-        "fieldsUi": {
-          "values": [
-            {
-              "column": "canal",
-              "fieldValue": "={{ $input.item.json.canal}}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "dbd5f866-2f5e-4adf-b1b5-a27b08c0425a",
-      "name": "Update Google Sheets",
-      "type": "n8n-nodes-base.googleSheets",
-      "position": [
-        2220,
-        180
-      ],
-      "typeVersion": 3,
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "5",
-          "name": "Google Sheets account"
-        }
-      }
     },
     {
       "parameters": {
@@ -669,6 +615,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-23T18:27:03.124Z",
-  "versionId": "9d99e5b6-330f-4bb5-832d-d32b6b1adb6e"
+  "updatedAt": "2023-05-26T00:13:00.209Z",
+  "versionId": "e7056c06-1eb0-45a2-a2de-5044c3a9f670"
 }
