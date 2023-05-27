@@ -307,7 +307,11 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Resume en no más de tres párrafos y en español, en formato JSON:\n\n{{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON:"
+              "content": "=Resume en tres párrafos y en español, en formato JSON:\n\n{{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON:"
+            },
+            {
+              "role": "assistant",
+              "content": "={{ $parameter[\"prompt\"][\"messages\"][1][\"role\"] }}"
             }
           ]
         },
@@ -427,10 +431,10 @@
           "messages": [
             {
               "role": "system",
-              "content": "You are DALLE-2 Prompt Generator that replies only the prompt, without conversation."
+              "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
             },
             {
-              "content": "=Generate a prompt to represent in realistic and modern way:\n\n{{ $json.titulo }}"
+              "content": "=Generate a prompt to illustrate with disruption:\n\n{{ $json.titulo }}"
             }
           ]
         },
@@ -615,6 +619,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-26T00:13:00.209Z",
-  "versionId": "e7056c06-1eb0-45a2-a2de-5044c3a9f670"
+  "updatedAt": "2023-05-26T21:36:21.284Z",
+  "versionId": "ed9a9fc6-f15a-421c-b5bb-fed0ee1e7ab0"
 }
