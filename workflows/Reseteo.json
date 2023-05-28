@@ -1,15 +1,58 @@
 {
   "active": false,
-  "connections": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        []
+      ]
+    }
+  },
   "createdAt": "2023-05-26T20:43:13.762Z",
   "id": "7",
   "name": "Reseteo",
-  "nodes": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "72002cd9-7067-4418-b3b3-34838a27706b",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1420,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "path": "87b612af-8f43-4a56-adce-7548c462e326",
+        "options": {
+          "ignoreBots": true,
+          "rawBody": true
+        }
+      },
+      "id": "48846490-91b5-444a-b9b0-693eb5d1e412",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        700
+      ],
+      "webhookId": "87b612af-8f43-4a56-adce-7548c462e326",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "10",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
   "pinData": {},
   "settings": {},
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-26T20:43:13.762Z",
-  "versionId": "1ceb427e-5d9a-4593-90e6-eb5adddf3097"
+  "updatedAt": "2023-05-28T00:16:12.263Z",
+  "versionId": "91c64cc0-2e02-4837-aae9-75deedb4c8dd"
 }
