@@ -610,19 +610,23 @@
     },
     {
       "parameters": {
-        "url": " https://api.unsplash.com/search/photos/?client_id=6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA",
+        "url": " https://api.unsplash.com/search/photos/",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
             {
-              "name": "={{ $json.titulo }}"
+              "name": "=client_id",
+              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
+            },
+            {
+              "name": "query",
+              "value": "{{ $json.titulo }}"
             }
           ]
         },
         "options": {
           "response": {
             "response": {
-              "fullResponse": true,
               "responseFormat": "json"
             }
           }
@@ -633,8 +637,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
       "position": [
-        1620,
-        -20
+        2040,
+        -240
       ]
     }
   ],
@@ -648,6 +652,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-29T14:26:44.882Z",
-  "versionId": "054f0ae3-015c-4750-93a8-e31f2ec9d0b2"
+  "updatedAt": "2023-05-29T16:28:16.672Z",
+  "versionId": "144b6d55-5ec3-4ba0-9719-e7ff084cc2d0"
 }
