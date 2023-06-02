@@ -131,7 +131,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request2",
+            "node": "OpenAI1",
             "type": "main",
             "index": 0
           }
@@ -652,6 +652,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-29T16:26:34.054Z",
-  "versionId": "42b214dd-382a-441e-b2da-2fd626c748ba"
+  "updatedAt": "2023-06-01T17:03:22.233Z",
+  "versionId": "2fc22a25-7190-4afe-8b9b-383968b45a05"
 }
