@@ -1,0 +1,118 @@
+{
+  "active": false,
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-06-03T04:12:14.243Z",
+  "id": "12",
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "98d1a965-9257-427a-9402-0ac9fbb2e39f",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an e-mail marketing manager that are working in a startup related to crypto, trading and self empowerment. Your tone voice is friendly, clear, simple and concise and you speak latin spanish."
+            },
+            {
+              "content": "Crea un email para nuestra audiencia, que genere atracción y se desarrolle según estos puntos clave:\n\n\nEmail:"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "01eef1d5-7d5d-4f5e-9711-03d81574e54d",
+      "name": "OpenAI",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        880,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "002ed111-be89-4083-a83e-5d821a7f37e8",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        660,
+        100
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "7",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-06-03T04:13:14.678Z",
+  "versionId": "b887e03c-0e68-4626-a17d-c1516614db0f"
+}
