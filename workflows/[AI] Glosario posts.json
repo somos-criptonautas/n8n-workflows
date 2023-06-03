@@ -233,7 +233,7 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Describe para un glosario en menos de 200 palabras, los puntos clave de {{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON.\n\nJSON:"
+              "content": "=Describe para un glosario en menos de 200 palabras, la etimología de \"{{ $json.content }}\" y su utilidad en nuestro día a día (cita fuentes)."
             },
             {
               "role": "assistant",
@@ -528,6 +528,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-06-03T02:50:45.123Z",
-  "versionId": "d5fcf8e8-9245-492e-8f91-98917c0c9bfb"
+  "updatedAt": "2023-06-03T04:02:27.613Z",
+  "versionId": "9f64956d-b517-4a43-baac-23388ee03965"
 }
