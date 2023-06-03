@@ -307,7 +307,7 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Resume la idea general del siguiente contenido, en tres párrafos y en español.\n\nContenido: {{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON:\n\nJSON:"
+              "content": "={Subject: {{ $json.content }}} {Objective: [Summarize Content]} {Constraints: 77 words limit} {Output: [Text]} {Content: [Main Ideas, Key Points, Supporting Details]} {Audience: [People interested in growth personally]} {Format: [3 Paragraphs]} {Channels: [None]} {Criteria: [Accuracy, Coherence, Conciseness]} {Metrics: [Percentage of Original Content Retained, Grammar and Syntax Accuracy]} {Feedback: [None]}\n\nUsa solamente español y respeta el formato JSON { \"contenido\": contenido, \"titulo\": titulo }\n\nJSON:"
             },
             {
               "role": "assistant",
@@ -434,7 +434,7 @@
               "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
             },
             {
-              "content": "=Generate a prompt to illustrate with disruption:\n\n{{ $json.titulo }}"
+              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box Andy Warhol style:\n\n{{ $json.titulo }}"
             }
           ]
         },
@@ -607,39 +607,6 @@
           "name": "Discourse account"
         }
       }
-    },
-    {
-      "parameters": {
-        "url": " https://api.unsplash.com/search/photos/",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "client_id",
-              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
-            },
-            {
-              "name": "query",
-              "value": "={{ $json.titulo }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "d51918b4-7f26-47da-a72d-0ec742554a77",
-      "name": "HTTP Request2",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1700,
-        -40
-      ]
     }
   ],
   "pinData": {},
@@ -652,6 +619,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-06-01T17:03:22.233Z",
-  "versionId": "2fc22a25-7190-4afe-8b9b-383968b45a05"
+  "updatedAt": "2023-06-02T21:53:46.573Z",
+  "versionId": "0dba7155-eb3c-4306-be66-9c99e231c993"
 }
