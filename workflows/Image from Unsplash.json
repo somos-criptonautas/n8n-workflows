@@ -1,0 +1,75 @@
+{
+  "active": false,
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "createdAt": "2023-06-02T21:36:35.850Z",
+  "id": "9",
+  "name": "Image from Unsplash",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a46c37ee-d315-4cb8-95d0-7d8e30503f93",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": " https://api.unsplash.com/search/photos/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
+            },
+            {
+              "name": "query",
+              "value": "prueba"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "ce56ba1d-d773-4457-849e-508fbb89fcf6",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        880,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-06-02T21:54:02.290Z",
+  "versionId": "32995563-ed91-462c-81df-f744ba1cac18"
+}
