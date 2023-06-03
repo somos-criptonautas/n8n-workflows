@@ -557,8 +557,8 @@
       ],
       "credentials": {
         "googleSheetsTriggerOAuth2Api": {
-          "id": "11",
-          "name": "Google Sheets Trigger account 2"
+          "id": "7",
+          "name": "Google Sheets Trigger account"
         }
       }
     },
@@ -619,6 +619,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-06-02T21:53:46.573Z",
-  "versionId": "0dba7155-eb3c-4306-be66-9c99e231c993"
+  "updatedAt": "2023-06-03T04:46:25.357Z",
+  "versionId": "c4fe7002-487a-413c-a23c-6022434e094e"
 }
