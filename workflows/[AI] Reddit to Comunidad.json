@@ -1,0 +1,15 @@
+{
+  "active": false,
+  "connections": {},
+  "createdAt": "2023-06-03T02:51:02.434Z",
+  "id": "11",
+  "name": "[AI] Reddit to Comunidad",
+  "nodes": [],
+  "pinData": {},
+  "settings": {},
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2023-06-03T02:51:02.434Z",
+  "versionId": "1330f6d5-2598-4371-88ff-ede4cf190e5f"
+}
