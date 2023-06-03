@@ -131,7 +131,7 @@
       "main": [
         [
           {
-            "node": "HTTP Request2",
+            "node": "OpenAI1",
             "type": "main",
             "index": 0
           }
@@ -259,7 +259,9 @@
       "parameters": {
         "title": "={{ $node['Clean Content2'].json.titulo }}",
         "content": "=![image|{{ $json[\"thumbnail_height\"] }}x{{ $json[\"thumbnail_width\"] }}]({{ $json[\"short_url\"] }})\n\n{{ $node['Clean Content2'].json.contenido }}\n\n{{ $node[\"sheets\"].json[\"url\"] }}\n\n> Con apoyo de AI Criptonauta 👽",
-        "additionalFields": {}
+        "additionalFields": {
+          "category": 2
+        }
       },
       "id": "095f75c9-769b-48dd-87fc-8bada4599760",
       "name": "Discourse",
@@ -307,7 +309,7 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Menciona beneficios y 3 maneras de incorporar a la dieta, en tres párrafos y en español, en formato JSON:\n\n{{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON:"
+              "content": "=Menciona beneficios y 3 maneras de sumar a nuestro día a día:\n\n{{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON.\n\nJSON:"
             },
             {
               "role": "assistant",
@@ -434,7 +436,7 @@
               "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
             },
             {
-              "content": "=Generate a prompt to illustrate with disruption:\n\n{{ $json.titulo }}"
+              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box Andy Warhol style:\n\n{{ $json.titulo }}"
             }
           ]
         },
@@ -607,39 +609,6 @@
           "name": "Discourse account"
         }
       }
-    },
-    {
-      "parameters": {
-        "url": " https://api.unsplash.com/search/photos/",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "=client_id",
-              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
-            },
-            {
-              "name": "query",
-              "value": "{{ $json.titulo }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "fecc9fa0-7224-433f-a2e5-fe2ecafbc36a",
-      "name": "HTTP Request2",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        2040,
-        -240
-      ]
     }
   ],
   "pinData": {},
@@ -652,6 +621,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-05-29T16:28:16.672Z",
-  "versionId": "144b6d55-5ec3-4ba0-9719-e7ff084cc2d0"
+  "updatedAt": "2023-06-03T02:38:11.714Z",
+  "versionId": "00bc456c-89a5-4246-a3dd-0f27d8abaee3"
 }
