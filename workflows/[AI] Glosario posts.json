@@ -233,7 +233,7 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Describe para un glosario en menos de 200 palabras, la etimología de \"{{ $json.content }}\" y su utilidad en nuestro día a día (cita fuentes)."
+              "content": "=Describe para un glosario en menos de 222 palabras, la etimología de \"{{ $json.content }}\" y su utilidad en nuestro día a día (cita fuentes). No converses, solo responde."
             },
             {
               "role": "assistant",
@@ -343,14 +343,14 @@
               "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
             },
             {
-              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box Andy Warhol style:\n\n{{ $json.titulo }}"
+              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box colorful and wild style:\n\n{{ $json.titulo }}"
             }
           ]
         },
         "options": {
           "maxTokens": 750,
           "n": 1,
-          "topP": 0.8
+          "topP": 0.9
         }
       },
       "id": "855cba02-a5d9-4a3d-89f1-3c577caee004",
@@ -526,8 +526,15 @@
     "errorWorkflow": "6"
   },
   "staticData": null,
-  "tags": [],
+  "tags": [
+    {
+      "createdAt": "2023-06-10T05:33:05.389Z",
+      "updatedAt": "2023-06-10T05:33:05.389Z",
+      "id": "1",
+      "name": "discourse"
+    }
+  ],
   "triggerCount": 0,
-  "updatedAt": "2023-06-03T04:02:27.613Z",
-  "versionId": "9f64956d-b517-4a43-baac-23388ee03965"
+  "updatedAt": "2023-06-10T05:33:40.627Z",
+  "versionId": "b7de3a9b-76fa-4c61-b73d-9839b2be4445"
 }
