@@ -315,7 +315,10 @@
             }
           ]
         },
-        "options": {}
+        "options": {
+          "temperature": 0.3,
+          "topP": 0.7
+        }
       },
       "id": "f45fcc6a-9ccd-43c9-9eaf-1797768e1e62",
       "name": "OpenAI-CHATGPT",
@@ -441,7 +444,7 @@
         "options": {
           "maxTokens": 750,
           "n": 1,
-          "topP": 0.8
+          "topP": 1
         }
       },
       "id": "b1107416-a7bd-464d-a3c2-6bac9810d400",
@@ -617,8 +620,15 @@
     "errorWorkflow": "6"
   },
   "staticData": null,
-  "tags": [],
+  "tags": [
+    {
+      "createdAt": "2023-06-10T05:33:05.389Z",
+      "updatedAt": "2023-06-10T05:33:05.389Z",
+      "id": "1",
+      "name": "discourse"
+    }
+  ],
   "triggerCount": 0,
-  "updatedAt": "2023-06-03T04:46:25.357Z",
-  "versionId": "c4fe7002-487a-413c-a23c-6022434e094e"
+  "updatedAt": "2023-06-10T05:33:49.143Z",
+  "versionId": "babbc672-a86b-40af-ad8e-dd0ef7e84189"
 }
