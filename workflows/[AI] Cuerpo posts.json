@@ -1,0 +1,635 @@
+{
+  "active": false,
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML Extract": {
+      "main": [
+        [
+          {
+            "node": "Clean Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI-CHATGPT": {
+      "main": [
+        [
+          {
+            "node": "Clean Content2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI-DALLE": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sheets": {
+      "main": [
+        [
+          {
+            "node": "split",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content": {
+      "main": [
+        [
+          {
+            "node": "OpenAI-CHATGPT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI-DALLE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discourse": {
+      "main": [
+        [
+          {
+            "node": "Update Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-05-29T13:57:57.775Z",
+  "id": "8",
+  "name": "[AI] Cuerpo posts",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "48a9d0e5-b7cc-422a-922b-75f4c69410d1",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        260,
+        340
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"split\"].json[\"url\"] }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "527af038-544a-497d-b541-36d1dce62873",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        900,
+        240
+      ],
+      "typeVersion": 3,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "html"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": false
+        }
+      },
+      "id": "a56c9522-154a-43c1-a861-cbea287a3ebe",
+      "name": "HTML Extract",
+      "type": "n8n-nodes-base.htmlExtract",
+      "position": [
+        1060,
+        240
+      ],
+      "typeVersion": 1,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "unit": "seconds"
+      },
+      "id": "1e83b77c-fba4-4a5c-b853-4c0d88717544",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        2640,
+        240
+      ],
+      "webhookId": "8728532c-6026-4693-ab77-d4441c4ba0c1",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "title": "={{ $node['Clean Content2'].json.titulo }}",
+        "content": "=![image|{{ $json[\"thumbnail_height\"] }}x{{ $json[\"thumbnail_width\"] }}]({{ $json[\"short_url\"] }})\n\n{{ $node['Clean Content2'].json.contenido }}\n\n{{ $node[\"sheets\"].json[\"url\"] }}\n\n> Con apoyo de AI Criptonauta 👽",
+        "additionalFields": {
+          "category": 2
+        }
+      },
+      "id": "095f75c9-769b-48dd-87fc-8bada4599760",
+      "name": "Discourse",
+      "type": "n8n-nodes-base.discourse",
+      "typeVersion": 1,
+      "position": [
+        2380,
+        -40
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "prompt": "={{ $json.message.content }}",
+        "options": {
+          "n": 1,
+          "size": "1024x1024"
+        }
+      },
+      "id": "224e1a22-fa40-401c-b903-8ec93e080700",
+      "name": "OpenAI-DALLE",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        -40
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "=Menciona beneficios y 3 maneras de sumar a nuestro día a día:\n\n{{ $json.content }}\n\nEl formato debe ser { \"contenido\": contenido, \"titulo\": titulo }\n\nUsa solamente español y respeta el formato JSON.\n\nJSON:"
+            },
+            {
+              "role": "assistant",
+              "content": "={{ $parameter[\"prompt\"][\"messages\"][1][\"role\"] }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "8549b703-e2cf-4ade-b1ec-d2b19204ec64",
+      "name": "OpenAI-CHATGPT",
+      "type": "n8n-nodes-base.openAi",
+      "position": [
+        1380,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "published",
+              "lookupValue": "no"
+            }
+          ]
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "id": "36cb9554-09a5-4d27-ba2c-b7ea4187d4c6",
+      "name": "sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        480,
+        180
+      ],
+      "typeVersion": 3,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.content){\n\n  $input.item.json.content =\n$input.item.json.content.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 10500)\n}\n\n\n\n\nreturn $input.item"
+      },
+      "id": "8577658d-e2a3-498b-b2c8-e1b0951651cd",
+      "name": "Clean Content",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1220,
+        240
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "8e557a86-7514-4c55-8aaf-6fdf75fc5f82",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "69f87ed8-2ae1-44f4-9e0f-85b51dcf0bc1",
+      "name": "split",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        660,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
+            },
+            {
+              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box Andy Warhol style:\n\n{{ $json.titulo }}"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 750,
+          "n": 1,
+          "topP": 0.7
+        }
+      },
+      "id": "1a0c1628-8020-4612-a59f-18206219e801",
+      "name": "OpenAI1",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        -40
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "4",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.message.content){\n\n  $input.item.json.message.content =\n$input.item.json.message.content.replaceAll('/^\\s+|\\s+$/g', '').replace('/(\\r\\n|\\n|\\r)/gm', \"\").replace(/\\s+/g, ' ').slice(0, 8500)\n}\n\n$input.item.json.titulo=JSON.parse($input.item.json.message.content).titulo\n\n$input.item.json.contenido=JSON.parse($input.item.json.message.content).contenido\n\n\nreturn $input.item"
+      },
+      "id": "3943a530-d06e-4706-8008-863a28cf93eb",
+      "name": "Clean Content2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1540,
+        240
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit",
+          "mode": "url",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com\\/\\w+\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "columnToMatchOn": "url",
+        "valueToMatchOn": "={{ $node.sheets.json.url }}",
+        "fieldsUi": {
+          "values": [
+            {
+              "column": "published",
+              "fieldValue": "=ok"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3c6a3373-8178-47a6-a4a4-195985f376bd",
+      "name": "Update Google Sheets1",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2540,
+        -40
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ",
+          "mode": "list",
+          "cachedResultName": "[AI] Noticias a Discourse",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "links",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1QiEXW7wlYPtY0zBe_pLDxL3HHUO7EsYeCbUZY1DmEeQ/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "61c55f56-b5ed-4ef6-8bf5-cb6ecfa68c46",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        0
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "7",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files[]",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "user_id",
+              "value": "1"
+            },
+            {
+              "name": "type",
+              "value": "composer"
+            },
+            {
+              "name": "synchronous",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "62c5ce95-ed0e-43c0-a73b-ff5f728a17e8",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2220,
+        -40
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "1",
+          "name": "Discourse account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "timezone": "America/Argentina/Buenos_Aires",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "6"
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2023-06-10T05:33:05.389Z",
+      "updatedAt": "2023-06-10T05:33:05.389Z",
+      "id": "1",
+      "name": "discourse"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2023-06-10T05:33:07.796Z",
+  "versionId": "5abe5a4c-9871-48cc-bd4c-b5a0e53be320"
+}
