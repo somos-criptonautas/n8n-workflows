@@ -233,7 +233,7 @@
           "messages": [
             {
               "role": "system",
-              "content": "=Describe para un glosario en menos de 222 palabras, la etimología de \"{{ $json.content }}\" y su utilidad en nuestro día a día (cita fuentes). No converses, solo responde."
+              "content": "=Describe para un glosario en menos de 222 palabras, la etimología o el concepto \"{{ $json.content }}\" y su utilidad en nuestro día a día (cita fuentes). No converses, solo responde."
             },
             {
               "role": "assistant",
@@ -340,10 +340,10 @@
           "messages": [
             {
               "role": "system",
-              "content": "You are creative DALLE-2 prompt generator that replies only the prompt, without conversation."
+              "content": "You are a top notch creative DALLE-2 prompt generator that replies only the direct prompt, without conversation."
             },
             {
-              "content": "=Generate a prompt to illustrate in a creative and mind out-of-the-box colorful and wild style:\n\n{{ $json.titulo }}"
+              "content": "=Illustrate in a creative and mind out-of-the-box colorful and wild style:\n\n{{ $json.titulo }}"
             }
           ]
         },
@@ -434,7 +434,7 @@
           "item": [
             {
               "mode": "everyX",
-              "value": 5,
+              "value": 33,
               "unit": "minutes"
             }
           ]
@@ -535,6 +535,6 @@
     }
   ],
   "triggerCount": 0,
-  "updatedAt": "2023-06-10T05:33:40.627Z",
-  "versionId": "b7de3a9b-76fa-4c61-b73d-9839b2be4445"
+  "updatedAt": "2023-06-11T00:08:20.072Z",
+  "versionId": "0ed46ec3-651a-423e-857a-1a1502befbed"
 }
