@@ -610,6 +610,25 @@
           "name": "Discourse account"
         }
       }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "6edeeeb8-96e8-4916-b7f5-078658f30196",
+        "options": {
+          "ignoreBots": true,
+          "noResponseBody": true
+        }
+      },
+      "id": "0563cc6f-0219-48f1-bfda-a29edc09b167",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -240
+      ],
+      "webhookId": "6edeeeb8-96e8-4916-b7f5-078658f30196"
     }
   ],
   "pinData": {},
@@ -629,6 +648,6 @@
     }
   ],
   "triggerCount": 0,
-  "updatedAt": "2023-06-10T05:33:49.143Z",
-  "versionId": "babbc672-a86b-40af-ad8e-dd0ef7e84189"
+  "updatedAt": "2023-06-26T07:22:03.008Z",
+  "versionId": "96ee8de3-00be-4778-9eca-7dd27c553b9d"
 }
