@@ -560,7 +560,7 @@
       ],
       "credentials": {
         "googleSheetsTriggerOAuth2Api": {
-          "id": "7",
+          "id": "16",
           "name": "Google Sheets Trigger account"
         }
       }
@@ -610,25 +610,6 @@
           "name": "Discourse account"
         }
       }
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "6edeeeb8-96e8-4916-b7f5-078658f30196",
-        "options": {
-          "ignoreBots": true,
-          "noResponseBody": true
-        }
-      },
-      "id": "0563cc6f-0219-48f1-bfda-a29edc09b167",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        240,
-        -240
-      ],
-      "webhookId": "6edeeeb8-96e8-4916-b7f5-078658f30196"
     }
   ],
   "pinData": {},
@@ -648,6 +629,6 @@
     }
   ],
   "triggerCount": 0,
-  "updatedAt": "2023-06-26T07:22:03.008Z",
-  "versionId": "96ee8de3-00be-4778-9eca-7dd27c553b9d"
+  "updatedAt": "2023-06-30T18:01:37.454Z",
+  "versionId": "24cd2d12-6120-4b80-9520-06845ca1cbd9"
 }
