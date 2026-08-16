@@ -1,0 +1,296 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Formbricks Survey Completed": {
+      "main": [
+        [
+          {
+            "node": "Find User in NocoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find User in NocoDB": {
+      "main": [
+        [
+          {
+            "node": "Survey Not Yet Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Survey Not Yet Completed?": {
+      "main": [
+        [
+          {
+            "node": "Award Discourse Points (+50)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Award Discourse Points (+50)": {
+      "main": [
+        [
+          {
+            "node": "Update Survey Status to 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Survey Status to 1": {
+      "main": [
+        [
+          {
+            "node": "Send Survey Completed Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-16T06:31:36.499Z",
+  "id": "mWyldXjntqrT6cqe",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Formbricks Survey - Completion Handler",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "5a5c312b-fcd3-4856-81c7-a25294436f8b",
+      "name": "Formbricks Survey Completed",
+      "type": "n8n-nodes-formbricks-new.formbricks",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "workspaceId": "YOUR_FORMBRICKS_WORKSPACE_ID",
+        "events": [
+          "responseFinished"
+        ],
+        "surveyIds": [
+          "YOUR_SURVEY_ID"
+        ]
+      },
+      "credentials": {
+        "formbricksApi": {
+          "id": "I0QaMEWBtSkNYx6K",
+          "name": "Formbricks account"
+        }
+      },
+      "webhookId": "acfd101b-3bda-4e3f-b650-ccddcb0af5e8"
+    },
+    {
+      "id": "e0cdbea1-36f0-4555-851e-ce95e6bf345b",
+      "name": "Find User in NocoDB",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 4,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "resource": "row",
+        "operation": "search",
+        "workspaceId": {
+          "__rl": true,
+          "value": "YOUR_WORKSPACE_ID",
+          "mode": "id"
+        },
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "id"
+        },
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "where": "=(email,eq,{{ $json.email }})"
+        }
+      },
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "id": "ef0922a5-f1d9-4789-be60-2fec1a9d37e4",
+      "name": "Survey Not Yet Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json[\"initial-survey\"] }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "bc664ef1-dc5f-48cc-92bb-cb82fa513324",
+      "name": "Award Discourse Points (+50)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1020,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_DISCOURSE_URL/admin/plugins/gamification/score_events.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ user_id: $('Find User in NocoDB').item.json.discourse_user_id, date: $now.toFormat('yyyy-MM-dd'), points: 50, description: 'Initial survey completed' }) }}",
+        "options": {},
+        "placeholder": "Replace with your Discourse URL and set the httpHeaderAuth credential"
+      }
+    },
+    {
+      "id": "3a425674-65b8-4904-83d0-45a9fe8498ee",
+      "name": "Update Survey Status to 1",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 4,
+      "position": [
+        1280,
+        200
+      ],
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "resource": "row",
+        "operation": "update",
+        "workspaceId": {
+          "__rl": true,
+          "value": "YOUR_WORKSPACE_ID",
+          "mode": "id"
+        },
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "id"
+        },
+        "id": "={{ $(\"Find User in NocoDB\").item.json.Id }}",
+        "dataToSend": "mapWithFields",
+        "fieldsMapper": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "initial-survey": 1
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "id": "65135df7-f857-4d3b-bdd7-b142319a3510",
+      "name": "Send Survey Completed Email",
+      "type": "n8n-nodes-listmonk-service.listmonkService",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        200
+      ],
+      "parameters": {
+        "resource": "transactional",
+        "operation": "send",
+        "messageTemplateID": 2,
+        "messageSenderEmail": "YOUR_SENDER_EMAIL",
+        "messageContentType": "html",
+        "messageIsSubscriberExisting": "subscriber_existing",
+        "messageSubscriberIdentifier": "subscriber_email",
+        "messageSubscriberEmail": "={{ $('Find User in NocoDB').item.json.email }}",
+        "messageData": "={{ { username: $('Find User in NocoDB').item.json.email, points: 50 } }",
+        "options": {}
+      }
+    },
+    {
+      "id": "2b8417e3-7e4a-4615-afc3-3ccbb4be73a9",
+      "name": "Already Processed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        400
+      ],
+      "parameters": {}
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-16T06:31:36.499Z",
+      "createdAt": "2026-08-16T06:31:36.499Z",
+      "role": "workflow:owner",
+      "workflowId": "mWyldXjntqrT6cqe",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-16T06:56:21.260Z",
+  "versionId": "05abad1d-6c63-412c-ac91-84a7ad5ae468"
+}
