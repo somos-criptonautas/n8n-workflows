@@ -1,22 +1,753 @@
 {
-  "active": false,
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-01-18T04:19:06.400Z",
+    "createdAt": "2026-01-18T04:19:06.400Z",
+    "versionId": "f36e32a0-ec9b-4918-8244-45d50bd5566e",
+    "workflowId": "66hzHf92vHV9U0s2",
+    "nodes": [
+      {
+        "parameters": {
+          "content": "### Convert the query string into JSON, apply the limit for a page length",
+          "height": 236,
+          "width": 616
+        },
+        "id": "26951b4d-bbba-4745-8d38-fb8280f3f641",
+        "name": "Sticky Note",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -460,
+          720
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## Send an error message:\n1. If query param was incorrect, return the instruction. AI Agent should pick up on this and adapt the query on the next iteration.\n2. If the query is OK and an error was during the HTTP Request, then send back the original error message.",
+          "height": 285.7,
+          "width": 491
+        },
+        "id": "8673827f-5777-4dae-9394-b0baeadf6e31",
+        "name": "Sticky Note1",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          600,
+          420
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## Post-processing of the HTML page:\n1. Keep only <BODY> content\n2. Remove inline <SCRIPT> tag entirely, as well as: NOSCRIPT, IFRAME, OBJECT, EMBED, VIDEO, AUDIO, SVG, and HTML comments.\n3. In case query parameter method=simplified, replace all page URLs (a href) and IMG (src) with NOURL / NOIMG - this may save up to 20% of the page length\n4. Convert the remaining HTML to Markdown. This step further reduces the length of the page: long HTML tags and styles are eliminated, but the markdown syntax keeps some page structure. This gives much better results compared to just a blank text.\n5. Finally, check the page length. If it's too long, send an \"ERROR: PAGE CONTENT TOO LONG\" instead of the actual page. Of course, you could split the page content in chunks, but sometimes long pages just don't have a needed content, so it makes little sense to burn tokens on them.",
+          "height": 493,
+          "width": 1200
+        },
+        "id": "275446b8-8b2f-494e-a549-d36c3491e052",
+        "name": "Sticky Note2",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          600,
+          740
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## Example ReAct AI Agent\n1. Agent Prompt is default\n2. Check the description of the HTTP_Request_Tool, it guides the agent to provide a query string with several parameters instead of a JSON object",
+          "height": 503,
+          "width": 617
+        },
+        "id": "41d1f8d9-5693-4828-a2a1-9b6d75969f37",
+        "name": "Sticky Note3",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -460,
+          120
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "e00ad0c4-65d1-43c5-98a4-8f8987189707",
+        "name": "When chat message received",
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "position": [
+          -420,
+          280
+        ],
+        "webhookId": "e0a11ea2-9dd7-496a-8078-1a96f05fc04b",
+        "typeVersion": 1.1,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "id": "71478d39-1a80-42fc-9616-e88bc712abc9",
+        "name": "AI Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "position": [
+          -200,
+          280
+        ],
+        "typeVersion": 1.8
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gpt-4o-mini"
+          },
+          "options": {}
+        },
+        "id": "6b0c7ad8-b7fa-4909-a52a-2d1e649892e0",
+        "name": "OpenAI Chat Model1",
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "position": [
+          -200,
+          480
+        ],
+        "typeVersion": 1.2
+      },
+      {
+        "parameters": {
+          "inputSource": "passthrough"
+        },
+        "id": "dc275f88-6e69-4995-a8b8-85975167415d",
+        "name": "When Executed by Another Workflow",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -380,
+          780
+        ],
+        "typeVersion": 1.1
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "f3a339da-66dc-45f1-852a-cdfe0daa4552",
+                "name": "query",
+                "type": "object",
+                "value": "={{ $json.query.substring($json.query.indexOf('?') + 1).split('&').reduce((result, item) => (result[item.split('=')[0]] = decodeURIComponent(item.split('=')[1]), result), {}) }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "6dcc91ee-f6e7-4cfa-b181-4d71998960f2",
+        "name": "QUERY_PARAMS",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          -200,
+          780
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ce4bb35a-c5ac-430e-b11a-6bf04de2dd90",
+                "name": "query.maxlimit",
+                "type": "number",
+                "value": "={{ $json?.query?.maxlimit == null ? 70000 : Number($json?.query?.maxlimit) }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "33366796-be15-457e-9ba6-7a846684b1aa",
+        "name": "CONFIG",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          -20,
+          780
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "url": "={{ encodeURI($json.query.url) }}",
+          "options": {
+            "allowUnauthorizedCerts": true,
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "id": "58cc6451-2074-4d64-8c12-e140100d132e",
+        "name": "HTTP Request",
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          220,
+          780
+        ],
+        "typeVersion": 4.2
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "33937446-5010-47d2-b98f-2f0ceae3fbf5",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "leftValue": "={{ $json.hasOwnProperty('error') }}",
+                "rightValue": ""
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "c9bfa505-74cb-4c3a-84b4-c94543a081a1",
+        "name": "Is error?",
+        "type": "n8n-nodes-base.if",
+        "position": [
+          400,
+          780
+        ],
+        "typeVersion": 2.2
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "510f74a1-17da-4a2a-b207-9eda19f97ee0",
+                "name": "page_content",
+                "type": "string",
+                "value": "={{ $('QUERY_PARAMS').first()?.json?.query?.url == null ? \"INVALID action_input. This should be an HTTP query string like this: \\\"?url=VALIDURL&method=SELECTEDMETHOD\\\". Only a simple string value is accepted. JSON object as an action_input is NOT supported!\" : JSON.stringify($json.error) }}"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "include": "selected",
+          "includeFields": "HTML",
+          "options": {}
+        },
+        "id": "ab4cb67e-2c2b-4089-86c3-913ddf36eca6",
+        "name": "Stringify error message",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          660,
+          560
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "3639b76e-3ae9-4461-8d4c-552bf1c8a6bf",
+                "name": "HTML",
+                "type": "string",
+                "value": "={{ $json?.data.match(/<body[^>]*>([\\s\\S]*?)<\\/body>/i)[1] }}"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "include": "selected",
+          "includeFields": "HTML",
+          "options": {}
+        },
+        "id": "7ef28540-c4bd-4a72-8002-51de4fd28208",
+        "name": "Exctract HTML Body",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          680,
+          1060
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "89b927c9-ddc1-4735-a0ea-c1e50a057f76",
+                "name": "HTML",
+                "type": "string",
+                "value": "={{ ($json.HTML || \"HTML BODY CONTENT FOR THIS SEARCH RESULT IS NOT AVAILABLE\").replace(/<script[^>]*>([\\s\\S]*?)<\\/script>|<style[^>]*>([\\s\\S]*?)<\\/style>|<noscript[^>]*>([\\s\\S]*?)<\\/noscript>|<!--[\\s\\S]*?-->|<iframe[^>]*>([\\s\\S]*?)<\\/iframe>|<object[^>]*>([\\s\\S]*?)<\\/object>|<embed[^>]*>([\\s\\S]*?)<\\/embed>|<video[^>]*>([\\s\\S]*?)<\\/video>|<audio[^>]*>([\\s\\S]*?)<\\/audio>|<svg[^>]*>([\\s\\S]*?)<\\/svg>/ig, '')}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "28665bc4-3cb9-421c-8f43-d1f9eb009940",
+        "name": "Remove extra tags",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          860,
+          1060
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "id": "9c3a2a78-b236-4f47-89b0-34967965e01c",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "leftValue": "={{ $('CONFIG').first()?.json?.query?.method }}",
+                "rightValue": "simplify"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "fc06611e-6ee7-41ee-a801-b2716d3dfdc3",
+        "name": "Simplify?",
+        "type": "n8n-nodes-base.if",
+        "position": [
+          1040,
+          1060
+        ],
+        "typeVersion": 2.2
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "92b08041-799b-4335-aefe-3781a42f8ec0",
+                "name": "HTML",
+                "type": "string",
+                "value": "={{ $json.HTML.replace(/href\\s*=\\s*\"(.+?)\"/gi, 'href=\"NOURL\"').replace(/src\\s*=\\s*\"(.+?)\"/gi, 'src=\"NOIMG\"')}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "4528c2b9-7ace-45db-bace-01b8bf582a62",
+        "name": "Simplify output",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          1220,
+          960
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "html": "={{ $json.HTML }}",
+          "destinationKey": "page_content",
+          "options": {}
+        },
+        "id": "7ff98f8c-96d1-43aa-b4a5-4e18ea528b55",
+        "name": "Convert to Markdown",
+        "type": "n8n-nodes-base.markdown",
+        "position": [
+          1400,
+          1060
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "48a78432-2103-44ed-b4d6-7e429ae9e742",
+                "name": "page_content",
+                "type": "string",
+                "value": "={{ $json.page_content.length < $('CONFIG').first()?.json?.query?.maxlimit ? $json.page_content : \"ERROR: PAGE CONTENT TOO LONG\" }}"
+              },
+              {
+                "id": "ec0130f1-16a2-474f-a7cb-96d0e6fc644f",
+                "name": "page_length",
+                "type": "string",
+                "value": "={{ $json.page_content.length }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "1813e597-f75e-42d9-b009-2229b4102f0a",
+        "name": "Send Page Content",
+        "type": "n8n-nodes-base.set",
+        "position": [
+          1600,
+          1060
+        ],
+        "typeVersion": 3.4
+      },
+      {
+        "parameters": {
+          "name": "HTTP_Request_Tool",
+          "description": "Call this tool to fetch a webpage content. The input should be a stringified HTTP query parameter like this: \"?url=VALIDURL&method=SELECTEDMETHOD\". \"url\" parameter should contain the valid URL string. \"method\" key can be either \"full\" or \"simplified\". method=full will fetch the whole webpage content in the Markdown format, including page links and image links. method=simplified will return the Markdown content of the page but remove urls and image links from the page content for simplicity. Before calling this tool, think strategically which \"method\" to call. Best of all to use method=simplified. However, if you anticipate that the page request is not final or if you need to extract links from the page, pick method=full.",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "={{ $workflow.id }}",
+            "cachedResultName": "={{ $workflow.id }}"
+          },
+          "workflowInputs": {
+            "value": {},
+            "schema": [],
+            "mappingMode": "defineBelow",
+            "matchingColumns": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "id": "1089334a-0aa5-4122-9cd3-252081da374f",
+        "name": "HTTP_Request_Tool",
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "position": [
+          -20,
+          480
+        ],
+        "typeVersion": 2
+      }
+    ],
+    "connections": {
+      "CONFIG": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is error?": {
+        "main": [
+          [
+            {
+              "node": "Stringify error message",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Exctract HTML Body",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simplify?": {
+        "main": [
+          [
+            {
+              "node": "Simplify output",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Convert to Markdown",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Is error?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "QUERY_PARAMS": {
+        "main": [
+          [
+            {
+              "node": "CONFIG",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simplify output": {
+        "main": [
+          [
+            {
+              "node": "Convert to Markdown",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP_Request_Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remove extra tags": {
+        "main": [
+          [
+            {
+              "node": "Simplify?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Exctract HTML Body": {
+        "main": [
+          [
+            {
+              "node": "Remove extra tags",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Convert to Markdown": {
+        "main": [
+          [
+            {
+              "node": "Send Page Content",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "QUERY_PARAMS",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "system migration",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "activeVersionId": "f36e32a0-ec9b-4918-8244-45d50bd5566e",
   "connections": {
-    "When clicking \"Execute Workflow\"": {
+    "CONFIG": {
       "main": [
         [
           {
-            "node": "OpenAI",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Google Sheets Trigger": {
+    "Is error?": {
       "main": [
         [
           {
-            "node": "OpenAI",
+            "node": "Stringify error message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Exctract HTML Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simplify?": {
+      "main": [
+        [
+          {
+            "node": "Simplify output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Convert to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Is error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QUERY_PARAMS": {
+      "main": [
+        [
+          {
+            "node": "CONFIG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simplify output": {
+      "main": [
+        [
+          {
+            "node": "Convert to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP_Request_Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove extra tags": {
+      "main": [
+        [
+          {
+            "node": "Simplify?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exctract HTML Body": {
+      "main": [
+        [
+          {
+            "node": "Remove extra tags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Send Page Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "QUERY_PARAMS",
             "type": "main",
             "index": 0
           }
@@ -24,95 +755,455 @@
       ]
     }
   },
-  "createdAt": "2023-06-03T04:12:14.243Z",
-  "id": "12",
+  "createdAt": "2025-07-07T01:55:31.961Z",
+  "id": "66hzHf92vHV9U0s2",
+  "isArchived": true,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "name": "My workflow",
+  "nodeGroups": [],
   "nodes": [
     {
-      "parameters": {},
-      "id": "98d1a965-9257-427a-9402-0ac9fbb2e39f",
-      "name": "When clicking \"Execute Workflow\"",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
+      "parameters": {
+        "content": "### Convert the query string into JSON, apply the limit for a page length",
+        "height": 236,
+        "width": 616
+      },
+      "id": "26951b4d-bbba-4745-8d38-fb8280f3f641",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
       "position": [
-        660,
-        300
-      ]
+        -460,
+        720
+      ],
+      "typeVersion": 1
     },
     {
       "parameters": {
-        "resource": "chat",
-        "prompt": {
-          "messages": [
+        "content": "## Send an error message:\n1. If query param was incorrect, return the instruction. AI Agent should pick up on this and adapt the query on the next iteration.\n2. If the query is OK and an error was during the HTTP Request, then send back the original error message.",
+        "height": 285.7,
+        "width": 491
+      },
+      "id": "8673827f-5777-4dae-9394-b0baeadf6e31",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        600,
+        420
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Post-processing of the HTML page:\n1. Keep only <BODY> content\n2. Remove inline <SCRIPT> tag entirely, as well as: NOSCRIPT, IFRAME, OBJECT, EMBED, VIDEO, AUDIO, SVG, and HTML comments.\n3. In case query parameter method=simplified, replace all page URLs (a href) and IMG (src) with NOURL / NOIMG - this may save up to 20% of the page length\n4. Convert the remaining HTML to Markdown. This step further reduces the length of the page: long HTML tags and styles are eliminated, but the markdown syntax keeps some page structure. This gives much better results compared to just a blank text.\n5. Finally, check the page length. If it's too long, send an \"ERROR: PAGE CONTENT TOO LONG\" instead of the actual page. Of course, you could split the page content in chunks, but sometimes long pages just don't have a needed content, so it makes little sense to burn tokens on them.",
+        "height": 493,
+        "width": 1200
+      },
+      "id": "275446b8-8b2f-494e-a549-d36c3491e052",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        600,
+        740
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Example ReAct AI Agent\n1. Agent Prompt is default\n2. Check the description of the HTTP_Request_Tool, it guides the agent to provide a query string with several parameters instead of a JSON object",
+        "height": 503,
+        "width": 617
+      },
+      "id": "41d1f8d9-5693-4828-a2a1-9b6d75969f37",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -460,
+        120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e00ad0c4-65d1-43c5-98a4-8f8987189707",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        -420,
+        280
+      ],
+      "webhookId": "e0a11ea2-9dd7-496a-8078-1a96f05fc04b",
+      "typeVersion": 1.1,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "71478d39-1a80-42fc-9616-e88bc712abc9",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -200,
+        280
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "6b0c7ad8-b7fa-4909-a52a-2d1e649892e0",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -200,
+        480
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "dc275f88-6e69-4995-a8b8-85975167415d",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -380,
+        780
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
             {
-              "role": "system",
-              "content": "You are an e-mail marketing manager that are working in a startup related to crypto, trading and self empowerment. Your tone voice is friendly, clear, simple and concise and you speak latin spanish."
+              "id": "f3a339da-66dc-45f1-852a-cdfe0daa4552",
+              "name": "query",
+              "type": "object",
+              "value": "={{ $json.query.substring($json.query.indexOf('?') + 1).split('&').reduce((result, item) => (result[item.split('=')[0]] = decodeURIComponent(item.split('=')[1]), result), {}) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6dcc91ee-f6e7-4cfa-b181-4d71998960f2",
+      "name": "QUERY_PARAMS",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -200,
+        780
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ce4bb35a-c5ac-430e-b11a-6bf04de2dd90",
+              "name": "query.maxlimit",
+              "type": "number",
+              "value": "={{ $json?.query?.maxlimit == null ? 70000 : Number($json?.query?.maxlimit) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "33366796-be15-457e-9ba6-7a846684b1aa",
+      "name": "CONFIG",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -20,
+        780
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ encodeURI($json.query.url) }}",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "58cc6451-2074-4d64-8c12-e140100d132e",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        220,
+        780
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "33937446-5010-47d2-b98f-2f0ceae3fbf5",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.hasOwnProperty('error') }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9bfa505-74cb-4c3a-84b4-c94543a081a1",
+      "name": "Is error?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        400,
+        780
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "510f74a1-17da-4a2a-b207-9eda19f97ee0",
+              "name": "page_content",
+              "type": "string",
+              "value": "={{ $('QUERY_PARAMS').first()?.json?.query?.url == null ? \"INVALID action_input. This should be an HTTP query string like this: \\\"?url=VALIDURL&method=SELECTEDMETHOD\\\". Only a simple string value is accepted. JSON object as an action_input is NOT supported!\" : JSON.stringify($json.error) }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "HTML",
+        "options": {}
+      },
+      "id": "ab4cb67e-2c2b-4089-86c3-913ddf36eca6",
+      "name": "Stringify error message",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        660,
+        560
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3639b76e-3ae9-4461-8d4c-552bf1c8a6bf",
+              "name": "HTML",
+              "type": "string",
+              "value": "={{ $json?.data.match(/<body[^>]*>([\\s\\S]*?)<\\/body>/i)[1] }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "HTML",
+        "options": {}
+      },
+      "id": "7ef28540-c4bd-4a72-8002-51de4fd28208",
+      "name": "Exctract HTML Body",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        680,
+        1060
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89b927c9-ddc1-4735-a0ea-c1e50a057f76",
+              "name": "HTML",
+              "type": "string",
+              "value": "={{ ($json.HTML || \"HTML BODY CONTENT FOR THIS SEARCH RESULT IS NOT AVAILABLE\").replace(/<script[^>]*>([\\s\\S]*?)<\\/script>|<style[^>]*>([\\s\\S]*?)<\\/style>|<noscript[^>]*>([\\s\\S]*?)<\\/noscript>|<!--[\\s\\S]*?-->|<iframe[^>]*>([\\s\\S]*?)<\\/iframe>|<object[^>]*>([\\s\\S]*?)<\\/object>|<embed[^>]*>([\\s\\S]*?)<\\/embed>|<video[^>]*>([\\s\\S]*?)<\\/video>|<audio[^>]*>([\\s\\S]*?)<\\/audio>|<svg[^>]*>([\\s\\S]*?)<\\/svg>/ig, '')}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "28665bc4-3cb9-421c-8f43-d1f9eb009940",
+      "name": "Remove extra tags",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        860,
+        1060
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9c3a2a78-b236-4f47-89b0-34967965e01c",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $('CONFIG').first()?.json?.query?.method }}",
+              "rightValue": "simplify"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc06611e-6ee7-41ee-a801-b2716d3dfdc3",
+      "name": "Simplify?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1040,
+        1060
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92b08041-799b-4335-aefe-3781a42f8ec0",
+              "name": "HTML",
+              "type": "string",
+              "value": "={{ $json.HTML.replace(/href\\s*=\\s*\"(.+?)\"/gi, 'href=\"NOURL\"').replace(/src\\s*=\\s*\"(.+?)\"/gi, 'src=\"NOIMG\"')}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4528c2b9-7ace-45db-bace-01b8bf582a62",
+      "name": "Simplify output",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1220,
+        960
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.HTML }}",
+        "destinationKey": "page_content",
+        "options": {}
+      },
+      "id": "7ff98f8c-96d1-43aa-b4a5-4e18ea528b55",
+      "name": "Convert to Markdown",
+      "type": "n8n-nodes-base.markdown",
+      "position": [
+        1400,
+        1060
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "48a78432-2103-44ed-b4d6-7e429ae9e742",
+              "name": "page_content",
+              "type": "string",
+              "value": "={{ $json.page_content.length < $('CONFIG').first()?.json?.query?.maxlimit ? $json.page_content : \"ERROR: PAGE CONTENT TOO LONG\" }}"
             },
             {
-              "content": "Crea un email para nuestra audiencia, que genere atracción y se desarrolle según estos puntos clave:\n\n\nEmail:"
+              "id": "ec0130f1-16a2-474f-a7cb-96d0e6fc644f",
+              "name": "page_length",
+              "type": "string",
+              "value": "={{ $json.page_content.length }}"
             }
           ]
         },
         "options": {}
       },
-      "id": "01eef1d5-7d5d-4f5e-9711-03d81574e54d",
-      "name": "OpenAI",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 1,
+      "id": "1813e597-f75e-42d9-b009-2229b4102f0a",
+      "name": "Send Page Content",
+      "type": "n8n-nodes-base.set",
       "position": [
-        880,
-        300
+        1600,
+        1060
       ],
-      "credentials": {
-        "openAiApi": {
-          "id": "4",
-          "name": "OpenAi account"
-        }
-      }
+      "typeVersion": 3.4
     },
     {
       "parameters": {
-        "pollTimes": {
-          "item": [
-            {
-              "mode": "everyHour"
-            }
-          ]
-        },
-        "documentId": {
+        "name": "HTTP_Request_Tool",
+        "description": "Call this tool to fetch a webpage content. The input should be a stringified HTTP query parameter like this: \"?url=VALIDURL&method=SELECTEDMETHOD\". \"url\" parameter should contain the valid URL string. \"method\" key can be either \"full\" or \"simplified\". method=full will fetch the whole webpage content in the Markdown format, including page links and image links. method=simplified will return the Markdown content of the page but remove urls and image links from the page content for simplicity. Before calling this tool, think strategically which \"method\" to call. Best of all to use method=simplified. However, if you anticipate that the page request is not final or if you need to extract links from the page, pick method=full.",
+        "workflowId": {
           "__rl": true,
-          "mode": "list",
-          "value": ""
+          "mode": "id",
+          "value": "={{ $workflow.id }}",
+          "cachedResultName": "={{ $workflow.id }}"
         },
-        "sheetName": {
-          "__rl": true,
-          "mode": "list",
-          "value": ""
-        },
-        "event": "rowAdded",
-        "options": {}
-      },
-      "id": "002ed111-be89-4083-a83e-5d821a7f37e8",
-      "name": "Google Sheets Trigger",
-      "type": "n8n-nodes-base.googleSheetsTrigger",
-      "typeVersion": 1,
-      "position": [
-        660,
-        100
-      ],
-      "credentials": {
-        "googleSheetsTriggerOAuth2Api": {
-          "id": "7",
-          "name": "Google Sheets Trigger account"
+        "workflowInputs": {
+          "value": {},
+          "schema": [],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         }
-      }
+      },
+      "id": "1089334a-0aa5-4122-9cd3-252081da374f",
+      "name": "HTTP_Request_Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        -20,
+        480
+      ],
+      "typeVersion": 2
     }
   ],
   "pinData": {},
-  "settings": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "shared": [
+    {
+      "updatedAt": "2025-07-07T01:55:31.961Z",
+      "createdAt": "2025-07-07T01:55:31.961Z",
+      "role": "workflow:owner",
+      "workflowId": "66hzHf92vHV9U0s2",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2023-06-03T04:13:14.678Z",
-  "versionId": "b887e03c-0e68-4626-a17d-c1516614db0f"
+  "updatedAt": "2025-07-07T02:01:16.521Z",
+  "versionId": "f36e32a0-ec9b-4918-8244-45d50bd5566e"
 }
