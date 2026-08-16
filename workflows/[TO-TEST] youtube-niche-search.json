@@ -1,0 +1,499 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "openai_llm": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get_videos1": {
+      "main": [
+        [
+          {
+            "node": "loop_over_items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "group_data1": {
+      "main": [
+        [
+          {
+            "node": "save_data_to_memory1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "youtube_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "find_video_data1": {
+      "main": [
+        [
+          {
+            "node": "if_longer_than_3_",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loop_over_items1": {
+      "main": [
+        [
+          {
+            "node": "retrieve_data_from_memory1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "find_video_data1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if_longer_than_3_": {
+      "main": [
+        [
+          {
+            "node": "group_data1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "loop_over_items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "save_data_to_memory1": {
+      "main": [
+        [
+          {
+            "node": "loop_over_items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "window_buffer_memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "chat_message_received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "retrieve_data_from_memory1": {
+      "main": [
+        [
+          {
+            "node": "response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-07-19T14:53:03.998Z",
+  "id": "Hg3SlktNwlA9Lse5",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-TEST] youtube-niche-search",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You help youtube creators find trending videos based on a specific niche.\n\nVerify if the user informed a niche before doing anything. If not, then ask him for one by giving him suggestions for him to select from.\n\nAfter you know what type of content the user might produce, use the \"youtube_search\" tool up to 3 times with different search terms based on the user's content type and niche.\n\nThe tool will answer with a list of videos from the last 2 days that had the most amount of relevancy. It returns a list of json's covering each video's id, view count, like count, comment count, description, channel title, tags and channel id. Each video is separated by \"### NEXT VIDEO FOUND: ###\".\n\nYou should then proceed to understand the data received then provide the user with insightful data of what could be trending from the past 2 days. Provide the user links to the trending videos which should be in this structure:\n\nhttps://www.youtube.com/watch?v={video_id}\n\nto reach the channel's link you should use:\n\nhttps://www.youtube.com/channel/{channel_id}\n\nFind patterns in the tags, titles and especially in the related content for the videos found.\n\nYour mission isn't to find the trending videos. It's to provide the user with valuable information of what is trending in that niche in terms of content news. Remember to provide the user with the numbers of views, likes and comments while commenting about any video. So you should not talk about any particular video, focus rather in explaining the overall senario of all that was found.\n\nExample of response:\n\n\"It seems like what is trending in digital marketing right now is talking about mental triggers, since 3 of the most trending videos in the last 2 days were about...\""
+        }
+      },
+      "id": "bcfe6acc-7ccc-4d3d-bdf6-0c1533e6ae58",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        304,
+        64
+      ],
+      "typeVersion": 1.6
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "70694b55-d808-4d2d-b59a-0f9c2274b72e",
+      "name": "chat_message_received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        80,
+        64
+      ],
+      "webhookId": "ff9622a4-a6ec-4396-b9de-c95bd834c23c",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "name": "youtube_search",
+        "description": "Call this tool to search for trending videos based on a query.",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "N9DveO781xbNf8qs",
+          "cachedResultName": "Youtube Search Workflow"
+        },
+        "specifyInputSchema": true,
+        "jsonSchemaExample": "{\n\t\"search_term\": \"some_value\"\n}"
+      },
+      "id": "67d8ce2c-9c3f-4356-9b2e-9a6415b3e1dd",
+      "name": "youtube_search",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        544,
+        192
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a6cac25c-daeb-4a24-b9f2-c79d3adde8ef",
+      "name": "openai_llm",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        272,
+        192
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "b31ff1c1-4a0d-4d33-ab1b-1804b194565c",
+      "name": "window_buffer_memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        400,
+        192
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "Main Workflow",
+        "height": 354.53098948245656,
+        "width": 693.2572054941234,
+        "color": 7
+      },
+      "id": "12d6b60e-ca0c-493e-82b7-b198ec9355ee",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "={{ $env[\"GOOGLE_API_KEY\"] }}"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.id.videoId }}"
+            },
+            {
+              "name": "part",
+              "value": "contentDetails, snippet, statistics"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "84f95f54-197d-4285-a1af-17de0d2b7976",
+      "name": "find_video_data1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        704,
+        720
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "limit": 3,
+        "filters": {
+          "publishedAfter": "={{ new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }}",
+          "q": "={{ $json.query.search_term }}",
+          "regionCode": "US"
+        },
+        "options": {
+          "order": "relevance",
+          "safeSearch": "moderate"
+        }
+      },
+      "id": "b56fdb0c-20ae-492d-8e5c-ffb803a52d45",
+      "name": "get_videos1",
+      "type": "n8n-nodes-base.youTube",
+      "position": [
+        288,
+        560
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9b9117b-ea14-482e-a13b-e68b8e6b441d",
+              "name": "response",
+              "type": "string",
+              "value": "={{ $input.all() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "34aeded1-e61d-49c0-bd49-ea8868acdd1b",
+      "name": "response1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1104,
+        512
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "47c172ad-90c8-4cf6-a9f5-50607e04cc90",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.items[0].id }}"
+            },
+            {
+              "id": "9e639efa-0714-4b06-9847-f7b4b2fbef59",
+              "name": "viewCount",
+              "type": "string",
+              "value": "={{ $json.items[0].statistics.viewCount }}"
+            },
+            {
+              "id": "93328f00-91b8-425b-ad0f-a330b2f95242",
+              "name": "likeCount",
+              "type": "string",
+              "value": "={{ $json.items[0].statistics.likeCount }}"
+            },
+            {
+              "id": "015b0fb2-2a98-464c-a21b-51100616f26a",
+              "name": "commentCount",
+              "type": "string",
+              "value": "={{ $json.items[0].statistics.commentCount }}"
+            },
+            {
+              "id": "cf1e1ec3-a138-42b8-8747-d249afa58dd3",
+              "name": "description",
+              "type": "string",
+              "value": "={{ $json.items[0].snippet.description }}"
+            },
+            {
+              "id": "c5c9a3a2-b820-4932-a38a-e21102992215",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.items[0].snippet.title }}"
+            },
+            {
+              "id": "38216ead-1f8d-4f93-b6ad-5ef709a1ad2a",
+              "name": "channelTitle",
+              "type": "string",
+              "value": "={{ $json.items[0].snippet.channelTitle }}"
+            },
+            {
+              "id": "ff34194d-3d46-43a8-9127-84708987f536",
+              "name": "tags",
+              "type": "string",
+              "value": "={{ $json.items[0].snippet.tags.join(', ') }}"
+            },
+            {
+              "id": "e50b0f7b-3e37-4557-8863-d68d4fa505c8",
+              "name": "channelId",
+              "type": "string",
+              "value": "={{ $json.items[0].snippet.channelId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6533a015-f39e-4ada-820e-e517d665fd94",
+      "name": "group_data1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1168,
+        704
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\n\nif (typeof workflowStaticData.lastExecution !== 'object') {\n    workflowStaticData.lastExecution = {\n        response: \"\"\n    };\n}\n\nfunction removeEmojis(text) {\n    return text.replace(/[\\u{1F600}-\\u{1F64F}|\\u{1F300}-\\u{1F5FF}|\\u{1F680}-\\u{1F6FF}|\\u{2600}-\\u{26FF}|\\u{2700}-\\u{27BF}]/gu, '');\n}\n\nfunction cleanDescription(description) {\n    return description\n        .replace(/https?:\\/\\/\\S+/g, '')\n        .replace(/www\\.\\S+/g, '')\n        .replace(/  +/g, ' ')\n        .trim();\n}\n\nconst currentItem = { ...$input.item };\n\nif (currentItem.description) {\n    currentItem.description = cleanDescription(currentItem.description);\n}\n\nlet sanitizedItem = JSON.stringify(currentItem)\n    .replace(/\\\\r/g, ' ')\n    .replace(/https?:\\/\\/\\S+/g, '')\n    .replace(/www\\.\\S+/g, '')\n    .replace(/\\\\n/g, ' ')\n    .replace(/\\n/g, ' ')\n    .replace(/\\\\/g, '')\n    .replace(/  +/g, ' ')\n    .trim();\n\nif (workflowStaticData.lastExecution.response) {\n    workflowStaticData.lastExecution.response += ' ### NEXT VIDEO FOUND: ### ';\n}\n\nworkflowStaticData.lastExecution.response += removeEmojis(sanitizedItem);\n\nreturn workflowStaticData.lastExecution;\n"
+      },
+      "id": "6d7886b3-8182-4f4b-88e7-3fa97047d417",
+      "name": "save_data_to_memory1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1360,
+        704
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const workflowStaticData = $getWorkflowStaticData('global');\n\nconst lastExecution = workflowStaticData.lastExecution;\n\nreturn lastExecution;"
+      },
+      "id": "95cd8866-9095-42f6-9a09-526769f1ca13",
+      "name": "retrieve_data_from_memory1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        784,
+        512
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4f9b303e-484a-4ac0-ac57-4aa9e2377be3",
+      "name": "loop_over_items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        512,
+        560
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "08ba3db9-6bcf-47f8-a74d-9e26f28cb08f",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ \n  (() => {\n    const duration = $json.items[0].contentDetails.duration;\n\n    // Helper function to convert ISO 8601 duration to seconds\n    const iso8601ToSeconds = iso8601 => {\n      const match = iso8601.match(/PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?/);\n      const hours = parseInt(match[1] || 0, 10);\n      const minutes = parseInt(match[2] || 0, 10);\n      const seconds = parseInt(match[3] || 0, 10);\n      return hours * 3600 + minutes * 60 + seconds;\n    };\n\n    // Convert duration to seconds\n    const durationInSeconds = iso8601ToSeconds(duration);\n\n    // Check if greater than 210 seconds (3 minutes 30 seconds)\n    return durationInSeconds > 210;\n  })() \n}}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08caafe3-c139-4ca3-a262-af787d3107e1",
+      "name": "if_longer_than_3_",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        880,
+        720
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "This part should be abstracted to another workflow and called inside the \"youtube_search\" tool of the main AI Agent.",
+        "height": 520,
+        "width": 1607,
+        "color": 5
+      },
+      "id": "36f83883-a941-4d89-b05f-3b461d20b507",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        432
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-07-19T14:53:03.998Z",
+      "createdAt": "2026-07-19T14:53:03.998Z",
+      "role": "workflow:owner",
+      "workflowId": "Hg3SlktNwlA9Lse5",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T14:53:15.143Z",
+  "versionId": "3b81e4d2-caea-4232-a019-0310d32b9ecf"
+}
