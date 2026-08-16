@@ -1,0 +1,108 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Details": {
+      "main": [
+        [
+          {
+            "node": "Send Error Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-16T05:46:14.366Z",
+  "id": "fGCn5wsj13WrwvO2",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Ghost Translation - Error Handler",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "9f5cd986-97e5-4a51-abaa-948c8f8c7fe2",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "bc893bd9-e596-4380-bb4c-e4ed55849eb3",
+      "name": "Format Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const execution = $input.first().json.execution;\nconst workflowData = $input.first().json.workflow;\n\nconst errorMessage = execution.error?.message || 'Unknown error';\nconst errorName = execution.error?.name || 'Unknown';\nconst failedNode = execution.lastNodeExecuted || 'Unknown';\nconst timestamp = execution.error?.timestamp ? new Date(execution.error.timestamp).toISOString() : new Date().toISOString();\nconst executionUrl = execution.url || 'N/A';\n\nreturn [{\n  json: {\n    subject: 'Ghost Translation Workflow Failed',\n    workflowName: workflowData.name,\n    workflowId: workflowData.id,\n    failedNode,\n    errorName,\n    errorMessage,\n    timestamp,\n    executionUrl,\n    body: [\n      'Ghost Translation Workflow - Error Report',\n      '',\n      'Workflow: ' + workflowData.name + ' (ID: ' + workflowData.id + ')',\n      'Failed Node: ' + failedNode,\n      'Error: ' + errorName + ' - ' + errorMessage,\n      'Time: ' + timestamp,\n      'Execution: ' + executionUrl,\n      '',\n      'Please check the workflow execution for details.'\n    ].join('\\n')\n  }\n}];"
+      }
+    },
+    {
+      "id": "3671582e-ec00-46a3-9caf-c989b559b695",
+      "name": "Send Error Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL || \"n8n@yourdomain.com\" }}",
+        "toEmail": "={{ $env.ERROR_NOTIFICATION_EMAIL || \"admin@yourdomain.com\" }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "webhookId": "e64af136-0265-4b45-b2ae-99b8bf0d13c4"
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-16T05:46:14.366Z",
+      "createdAt": "2026-08-16T05:46:14.366Z",
+      "role": "workflow:owner",
+      "workflowId": "fGCn5wsj13WrwvO2",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-16T05:46:14.366Z",
+  "versionId": "52564dd9-f724-4857-9e6d-536f145de994"
+}
