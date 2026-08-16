@@ -1,0 +1,1261 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Combine Blog Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Image": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Wordpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wordpress": {
+      "main": [
+        [
+          {
+            "node": "Set Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup HTML ": {
+      "main": [
+        [
+          {
+            "node": "Wordpress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image URL": {
+      "main": [
+        [
+          {
+            "node": "GET Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Perplexity Research",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity Research": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Links",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Blog Details": {
+      "main": [
+        [
+          {
+            "node": "Cleanup HTML ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image to Wordpress": {
+      "main": [
+        [
+          {
+            "node": "Set Image on Wordpress Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image on Wordpress Post": {
+      "main": [
+        [
+          {
+            "node": "Send Success Message to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wordpress1": {
+      "main": [
+        [
+          {
+            "node": "Set Image URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Combine Blog Details1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image to Wordpress1": {
+      "main": [
+        [
+          {
+            "node": "Set Image on Wordpress Post1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image on Wordpress Post1": {
+      "main": [
+        [
+          {
+            "node": "Send Success Message to Telegram1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission1": {
+      "main": [
+        [
+          {
+            "node": "Perplexity Research1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perplexity Research1": {
+      "main": [
+        [
+          {
+            "node": "Cleanup Links1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup HTML 1": {
+      "main": [
+        [
+          {
+            "node": "Wordpress1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Image1": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Wordpress1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Image URL1": {
+      "main": [
+        [
+          {
+            "node": "GET Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Blog Details1": {
+      "main": [
+        [
+          {
+            "node": "Cleanup HTML 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-04-14T07:04:17.151Z",
+  "id": "0GLgzXdNq6OFMxjs",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-EDIT] search-and-post",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Write SEO Optimized Blog Post\n\n\n",
+        "height": 440,
+        "width": 420,
+        "color": 3
+      },
+      "id": "c540a4e8-491f-49ff-92a5-f1f46c664e90",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "title": "={{ $('Combine Blog Details').item.json.data[2].output.title }}",
+        "additionalFields": {
+          "authorId": 2,
+          "content": "={{ $json.content }}",
+          "slug": "={{ $('Combine Blog Details').item.json.data[2].output.slug }}",
+          "status": "draft",
+          "commentStatus": "closed",
+          "sticky": false,
+          "postTemplate": {
+            "values": {}
+          }
+        }
+      },
+      "id": "0c1090d5-dbaa-4171-bb26-2e284a5bce00",
+      "name": "Wordpress",
+      "type": "n8n-nodes-base.wordpress",
+      "position": [
+        -240,
+        912
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Create HTML\n\n\n",
+        "height": 280,
+        "width": 440,
+        "color": 7
+      },
+      "id": "33e45542-a19e-4fce-9a5e-7367d81bc749",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Post on Wordpress\n\n\n",
+        "height": 280,
+        "width": 300,
+        "color": 4
+      },
+      "id": "65a0b6d6-978d-4099-93e8-cb48a435581e",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -336,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "id",
+          "value": "meta-llama/llama-3.1-8b-instruct"
+        },
+        "options": {}
+      },
+      "id": "b080ab5c-7b28-4ed4-9144-a9166d191f6e",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        80,
+        608
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"slug\": \"rpo-benefits-recruitment\",\n\"title\": \"7 Key Advantages of RPO for Modern Recruitment\",\n\"meta\": \"Explore how Recruitment Process Outsourcing (RPO) enhances hiring efficiency, reduces costs, and expands talent pools for businesses seeking top candidates.\"\n}"
+      },
+      "id": "cf1204c9-b2d0-4f0a-aec1-e922d5ce1f09",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        304,
+        608
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Create a slug, blog post title, and meta description for the following blog post:**\n\n{{ $json.output }}\n\n**Slug Guidelines:**\n- Keep it concise (4-5 words maximum).\n- Include the primary keyword related to recruitment or HR.\n- Use hyphens to separate words.\n- Avoid unnecessary words, articles, or prepositions.\n- Ensure it reflects the main topic of the blog post.\n- Make it readable and relevant for both users and search engines.\n\n**Title Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Avoid using a colon (:) in the title.\n- Never structure it as a primary/secondary title separated by a colon.\n- Include the primary keyword related to recruitment or HR (e.g., 'AI in recruitment' or 'talent acquisition trends').\n- Clearly inform users what they can expect from reading the blog post.\n- Be concise and engaging, ideally 50-60 characters long.\n- Incorporate power words that appeal to HR professionals and recruiters.\n\n**Meta Description Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Be concise: Limit to 150-160 characters to ensure full visibility in search results.\n- Include keywords: Naturally incorporate primary recruitment-related keywords to enhance relevance and visibility.\n- Provide value: Clearly convey the benefits or insights readers will gain from the article.\n- Be engaging: Use action-oriented language or a thought-provoking question to encourage clicks.\n- Align with content: Accurately reflect the blog post's content to meet user expectations and reduce bounce rates.\n- Highlight expertise: Subtly emphasize SocialFind's authority in the recruitment field.\n\nYour output must be a single valid JSON object with these 3 fields:\n-slug: The slug\n-title: The blog post title\n-meta: The meta description  \n\nEach should be presented without any additional text, explanation, quotation marks, or formatting.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "8e46d48d-d3bc-417f-8319-f7d528d93433",
+      "name": "Create Title, Slug, Meta",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        112,
+        432
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Only output the HTML content without preamble or further explanation. Generate WordPress-compatible HTML for a blog post based on the provided content.\n\n### CONTENT PROCESSING:\n- Process all content from {{ $json.output }}\n- Preserve all original facts, information, and URLs\n- Format according to the specifications below\n\n### REQUIRED STRUCTURE (IN THIS ORDER):\n1. Title (H2)\n2. Estimated reading time\n3. Key takeaways (3-5 bullet points)\n4. Table of contents (linked to all headings)\n5. Main content (with proper heading hierarchy)\n6. FAQ section\n\n### STYLING REQUIREMENTS:\n- Style Override: Include a style section with !important declarations\n- Links: All hyperlinks, TOC items, and FAQ questions must be #00c2ff (blue)\n- Headings: All headings need a bottom border in #00c2ff with padding\n- Spacing: Add <br><br> between each major section\n\n### ENGAGEMENT FORMATTING:\n- Use bold, italics, bullet points, quotes, and highlighting for emphasis\n- Create proper paragraph structure with appropriate line breaks\n- NO emojis allowed\n- Use whitespace strategically for readability\n\n### HYPERLINK HANDLING (CRITICAL):\n- When URLs appear next to keyphrases (e.g., \"AI tools (https://example.com)\")\n- Convert to: <a href=\"https://example.com\" style=\"color: #00c2ff !important;\">AI tools</a>\n- The KEYPHRASE must be linked, never the URL itself\n\n### WORDPRESS COMPATIBILITY:\n- Use WordPress block classes (wp-block-heading, wp-block-paragraph, etc.)\n- Add heading IDs starting with \"h-\" for better TOC linking\n- Ensure all styles use !important to override theme styles\n\nDO NOT include any explanations, code tags, or comments. Output ONLY the raw HTML.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fcf6e6f4-b05c-48e9-b24f-f2d781c0552a",
+      "name": "Create HTML",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        112,
+        80
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "bca312aa-6ab8-435c-985e-3249fd8bc65e",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        560,
+        352
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://commonclone.com/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Disposition",
+              "value": "=attachment; filename=\"cover-image-{{ $('Wordpress').item.json.id }}.jpeg\""
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "e811338b-8db4-4b89-92c1-3a53cfc23012",
+      "name": "Upload Image to Wordpress",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        464,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://commonclone.com/wp-json/wp/v2/posts/{{ $('Wordpress').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "featured_media",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "13b086b0-9d4c-48fb-8849-6bf5eccd8366",
+      "name": "Set Image on Wordpress Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        672,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Perplexity Research\n\n\n",
+        "height": 300,
+        "width": 460,
+        "color": 4
+      },
+      "id": "9fea120c-faa1-41ac-9b04-fbda4a7f8a87",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "formTitle": "Blog Factory",
+        "formDescription": "Create SEO optimized blog posts",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Research Query",
+              "fieldType": "textarea",
+              "placeholder": "=What are the most common challenges facing Canadian employers regarding recruitment and why would they want to hire a recruiting firm to solve these problems.",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2298a6d4-747a-46c0-919b-fccc40027355",
+      "name": "On form submission",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -1136,
+        352
+      ],
+      "webhookId": "a29cbcd3-9d11-4f7c-9aad-14681c356c53",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## Sample Generic Search Terms\nAdd your own or try these for your specific geo location.\n\n1. **Severe skills shortages in healthcare, construction, and education sectors.**  \n2. **Aging workforce widens employment gaps in key industries.**  \n3. **Tight labor market with 110 vacancies per 100 unemployed people.**  \n4. **High demand for specialized skills due to economic changes.**  \n5. **Housing shortages deter international candidates from relocating to the Netherlands.**  \n6. **Strict employment regulations complicate hiring processes for non-EU workers.**  \n7. **Intense competition for talent due to low unemployment rates.**  \n8. **Mismatch between available talent and job-specific skill requirements.**  \n9. **Candidates expect high benefits packages, increasing recruitment costs significantly.**  \n10. **Difficulty navigating compliance and labor laws for international hiring processes.**",
+        "height": 500,
+        "width": 460
+      },
+      "id": "8624f982-a3e9-4f39-9946-f47a4e45e4a3",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        592
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Act as a professional news researcher who is capable of finding detailed summaries about a news topic from highly reputable sources.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \" Research the following topic and return everything you can find about: '{{ $json['Research Query'] }}'.\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "07678eef-c158-4f0a-ae5e-c1bf605fa1dd",
+      "name": "Perplexity Research",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -880,
+        352
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "perplexityApi": {
+          "id": "itRYv33SvtFFzlU6",
+          "name": "Perplexity account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "23b8e8c4-9191-415a-9661-1b60d413528a",
+              "name": "research",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content.replaceAll(\"[1]\", \" - source: \" +$json.citations[0]).replaceAll(\"[2]\",\" - source:\" +$json.citations[1]).replaceAll(\"[3]\",\" - source: \" +$json.citations[2]).replaceAll(\"[4]\",\" - source: \"+$json.citations[3]).replaceAll(\"[5]\",\" - source: \"+$json.citations[4]).replaceAll(\"[6]\",\" - source: \"+$json.citations[5]).replaceAll(\"[7]\",\" - source: \"+$json.citations[6]).replaceAll(\"[8]\",\" - source: \"+$json.citations[7]).replaceAll(\"[9]\",\" - source: \"+$json.citations[8]).replaceAll(\"[10]\",\" - source: \"+$json.citations[9]) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "78e75086-681f-43d1-8e74-d6002a7e7e02",
+      "name": "Cleanup Links",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -688,
+        352
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a marketing team that creates high-quality blog posts for the AI consulting and workflow automation industry based in Canada. Your goal is to produce engaging, SEO-optimized content that positions the company as an authority in the AI consulting industry and attracts inbound leads.\n\nEvery 2 days, your team posts a blog on the most trending topics in AI consulting and n8n workflows. As the copywriter, you are provided with the following information:\n\n- Query: The main topic for this week's blog post, representing the most trending news in the recruitment space.\n\n- Other keywords: A list of high-search-volume keywords related to AI consulting and n8n workflows. Incorporate these naturally into the blog post where relevant, without forcing them or changing the post's meaning.\n\n- Research findings: Detailed information from reputable sources related to the blog topic. Your post must be based on this research.\n\nGiven this information, write a comprehensive blog post that:\n\n- Includes the query in the blog title, H2 header, and early in the introduction.\n- Incorporates all details from the research findings, including source URLs for potential hyperlinks.\n- Is detailed and informative, showcasing the companies expertise in AI consulting and n8n workflows to automate business processes.\n- Uses a professional yet engaging tone, highlighting the exciting developments and challenges in the recruitment industry.\n- Flows naturally and logically, making it easy for readers to follow.\n- Is between 1500 to 2000 words long.\n- Is written at a level accessible to HR professionals and business leaders.\n\nAdditional requirements:\n- Include practical takeaways or actionable advice for recruiters and HR professionals.\n- Highlight how the topic relates to the companies services or expertise.\n- Include a call-to-action (CTA) that encourages readers to explore the comapnies services or contact for more information.\n\nCreate the entire blog post draft in your first output. Don't stop or cut it short.\n\nYour output must be the blog post and nothing else.\n\nHere are the details of this blog post project:\n\nQuery:\n{{ $('On form submission').item.json['Research Query'] }}\n\nDetailed Research:\n{{ $('Cleanup Links').item.json.research }}\n\n\n",
+        "options": {}
+      },
+      "id": "34070648-47ac-489e-97bb-39cded431da9",
+      "name": "Copywriter AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -384,
+        352
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "content": "## Create Title, Slug & Meta\n\n\n",
+        "height": 440,
+        "width": 440,
+        "color": 7
+      },
+      "id": "51aabc29-e02e-431a-9fec-48cb35b129b9",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0afb2988-1481-4b04-b16d-fb33c50a16d0",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data[0].message.content.replaceAll('```html', '').replaceAll('```','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b97b553a-8dff-44f7-baed-62998ecf0a2a",
+      "name": "Cleanup HTML ",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        768,
+        608
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['image-url'] }}",
+        "options": {}
+      },
+      "id": "c90fa7c0-22fd-4504-a98b-912d3dc32130",
+      "name": "GET Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        272,
+        912
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Set Image for Wordpress Post",
+        "height": 280,
+        "width": 820
+      },
+      "id": "63733c59-0aa1-4207-ba30-fe11642ad2b5",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f0541df-05ab-4e3d-a5d8-3904579fc8a9",
+              "name": "image-url",
+              "type": "string",
+              "value": "=https://smartcdn.gprod.postmedia.digital/healthing/wp-content/uploads/2024/07/GettyImages-1455799246.jpg?quality=90&strip=all&w=704&h=395"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8e3588b8-e332-4c64-ad8e-ebded4d1314c",
+      "name": "Set Image URL",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        64,
+        912
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=Success! Your blog post was created at {{ $now }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "0fbb615b-763f-49ed-979f-d7cca9d9500e",
+      "name": "Send Success Message to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        912,
+        912
+      ],
+      "webhookId": "91f7d710-450a-4b66-8e46-82f53492351e",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gemini-2.5-flash-preview-05-20",
+          "mode": "list",
+          "cachedResultName": "gemini-2.5-flash-preview-05-20"
+        },
+        "options": {
+          "temperature": 0.5,
+          "topP": 0.8
+        }
+      },
+      "id": "d2b7d892-e3a3-4cce-931d-fc3c91ab28f5",
+      "name": "gpt-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -384,
+        544
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "62bf4780-4d53-457b-a256-869f74cd70d0",
+      "name": "Combine Blog Details",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        768,
+        352
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Write SEO Optimized Blog Post\n\n\n",
+        "height": 440,
+        "width": 420,
+        "color": 3
+      },
+      "id": "24999997-9ed0-4a2a-a481-10f0cf418844",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "title": "={{ $('Combine Blog Details1').item.json.data[2].output.title }}",
+        "additionalFields": {
+          "authorId": 2,
+          "content": "={{ $json.content }}",
+          "slug": "={{ $('Combine Blog Details1').item.json.data[2].output.slug }}",
+          "status": "draft",
+          "commentStatus": "closed",
+          "sticky": false,
+          "postTemplate": {
+            "values": {}
+          }
+        }
+      },
+      "id": "8294fed9-ccd1-4fbc-b7c0-52f74b2bc733",
+      "name": "Wordpress1",
+      "type": "n8n-nodes-base.wordpress",
+      "position": [
+        -160,
+        992
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Create HTML\n\n\n",
+        "height": 280,
+        "width": 440,
+        "color": 7
+      },
+      "id": "857ca3c6-da5a-420f-b180-f4652c14fcf0",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Post on Wordpress\n\n\n",
+        "height": 280,
+        "width": 300,
+        "color": 4
+      },
+      "id": "9f668529-f596-4bf2-88ef-ac6e42141827",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -336,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "meta-llama/llama-3.1-8b-instruct",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "d8d5c73a-5292-4fb5-bf41-41f632dda2b8",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        160,
+        688
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\"slug\": \"rpo-benefits-recruitment\",\n\"title\": \"7 Key Advantages of RPO for Modern Recruitment\",\n\"meta\": \"Explore how Recruitment Process Outsourcing (RPO) enhances hiring efficiency, reduces costs, and expands talent pools for businesses seeking top candidates.\"\n}"
+      },
+      "id": "8517aeac-262c-434a-95fe-5ff3bb97fba6",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        384,
+        688
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Create a slug, blog post title, and meta description for the following blog post:**\n\n{{ $json.output }}\n\n**Slug Guidelines:**\n- Keep it concise (4-5 words maximum).\n- Include the primary keyword related to recruitment or HR.\n- Use hyphens to separate words.\n- Avoid unnecessary words, articles, or prepositions.\n- Ensure it reflects the main topic of the blog post.\n- Make it readable and relevant for both users and search engines.\n\n**Title Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Avoid using a colon (:) in the title.\n- Never structure it as a primary/secondary title separated by a colon.\n- Include the primary keyword related to recruitment or HR (e.g., 'AI in recruitment' or 'talent acquisition trends').\n- Clearly inform users what they can expect from reading the blog post.\n- Be concise and engaging, ideally 50-60 characters long.\n- Incorporate power words that appeal to HR professionals and recruiters.\n\n**Meta Description Guidelines:**\n- Avoid AI words like \"Transform\" or \"Revolutionize\" and similar overused terms.\n- Be concise: Limit to 150-160 characters to ensure full visibility in search results.\n- Include keywords: Naturally incorporate primary recruitment-related keywords to enhance relevance and visibility.\n- Provide value: Clearly convey the benefits or insights readers will gain from the article.\n- Be engaging: Use action-oriented language or a thought-provoking question to encourage clicks.\n- Align with content: Accurately reflect the blog post's content to meet user expectations and reduce bounce rates.\n- Highlight expertise: Subtly emphasize SocialFind's authority in the recruitment field.\n\nYour output must be a single valid JSON object with these 3 fields:\n-slug: The slug\n-title: The blog post title\n-meta: The meta description  \n\nEach should be presented without any additional text, explanation, quotation marks, or formatting.\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "id": "bf993e17-2c71-454c-8180-47131b0acfa0",
+      "name": "Create Title, Slug, Meta1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        192,
+        512
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Only output the HTML content without preamble or further explanation. Generate WordPress-compatible HTML for a blog post based on the provided content.\n\n### CONTENT PROCESSING:\n- Process all content from {{ $json.output }}\n- Preserve all original facts, information, and URLs\n- Format according to the specifications below\n\n### REQUIRED STRUCTURE (IN THIS ORDER):\n1. Title (H2)\n2. Estimated reading time\n3. Key takeaways (3-5 bullet points)\n4. Table of contents (linked to all headings)\n5. Main content (with proper heading hierarchy)\n6. FAQ section\n\n### STYLING REQUIREMENTS:\n- Style Override: Include a style section with !important declarations\n- Links: All hyperlinks, TOC items, and FAQ questions must be #00c2ff (blue)\n- Headings: All headings need a bottom border in #00c2ff with padding\n- Spacing: Add <br><br> between each major section\n\n### ENGAGEMENT FORMATTING:\n- Use bold, italics, bullet points, quotes, and highlighting for emphasis\n- Create proper paragraph structure with appropriate line breaks\n- NO emojis allowed\n- Use whitespace strategically for readability\n\n### HYPERLINK HANDLING (CRITICAL):\n- When URLs appear next to keyphrases (e.g., \"AI tools (https://example.com)\")\n- Convert to: <a href=\"https://example.com\" style=\"color: #00c2ff !important;\">AI tools</a>\n- The KEYPHRASE must be linked, never the URL itself\n\n### WORDPRESS COMPATIBILITY:\n- Use WordPress block classes (wp-block-heading, wp-block-paragraph, etc.)\n- Add heading IDs starting with \"h-\" for better TOC linking\n- Ensure all styles use !important to override theme styles\n\nDO NOT include any explanations, code tags, or comments. Output ONLY the raw HTML.\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d663e2e1-923b-40c0-9018-528dde9f9e67",
+      "name": "Create HTML1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        192,
+        160
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "a90dada9-e4c7-4fb0-8c13-4edb26c2c5c8",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        640,
+        432
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://commonclone.com/wp-json/wp/v2/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Disposition",
+              "value": "=attachment; filename=\"cover-image-{{ $('Wordpress1').item.json.id }}.jpeg\""
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "353b4232-935b-4c5b-90e4-e9d52ef36353",
+      "name": "Upload Image to Wordpress1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        544,
+        992
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://commonclone.com/wp-json/wp/v2/posts/{{ $('Wordpress1').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "wordpressApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "featured_media",
+              "value": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d60c2a0-8314-435d-b421-2497b3db5e43",
+      "name": "Set Image on Wordpress Post1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        752,
+        992
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Perplexity Research\n\n\n",
+        "height": 300,
+        "width": 460,
+        "color": 4
+      },
+      "id": "a9afb2c0-424e-4c0d-82c8-7ac69bc3e9bf",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "formTitle": "Blog Factory",
+        "formDescription": "Create SEO optimized blog posts",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Research Query",
+              "fieldType": "textarea",
+              "placeholder": "=What are the most common challenges facing Canadian employers regarding recruitment and why would they want to hire a recruiting firm to solve these problems.",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "292b7444-33f3-4ec5-aae9-80aa0c8b14f2",
+      "name": "On form submission1",
+      "type": "n8n-nodes-base.formTrigger",
+      "position": [
+        -1056,
+        432
+      ],
+      "webhookId": "4a894a4d-e680-4980-ba87-feb1ddcdd1b3",
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## Sample Generic Search Terms\nAdd your own or try these for your specific geo location.\n\n1. **Severe skills shortages in healthcare, construction, and education sectors.**  \n2. **Aging workforce widens employment gaps in key industries.**  \n3. **Tight labor market with 110 vacancies per 100 unemployed people.**  \n4. **High demand for specialized skills due to economic changes.**  \n5. **Housing shortages deter international candidates from relocating to the Netherlands.**  \n6. **Strict employment regulations complicate hiring processes for non-EU workers.**  \n7. **Intense competition for talent due to low unemployment rates.**  \n8. **Mismatch between available talent and job-specific skill requirements.**  \n9. **Candidates expect high benefits packages, increasing recruitment costs significantly.**  \n10. **Difficulty navigating compliance and labor laws for international hiring processes.**",
+        "height": 500,
+        "width": 460
+      },
+      "id": "e714b4a3-d53e-470e-9653-dd021ffe2bd5",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -960,
+        592
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.perplexity.ai/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "perplexityApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Act as a professional news researcher who is capable of finding detailed summaries about a news topic from highly reputable sources.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \" Research the following topic and return everything you can find about: '{{ $json['Research Query'] }}'.\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "id": "01f7b5f0-6a01-40dc-97bf-63a0bc7e78ca",
+      "name": "Perplexity Research1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -800,
+        432
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "perplexityApi": {
+          "id": "itRYv33SvtFFzlU6",
+          "name": "Perplexity account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "23b8e8c4-9191-415a-9661-1b60d413528a",
+              "name": "research",
+              "type": "string",
+              "value": "={{ $json.choices[0].message.content.replaceAll(\"[1]\", \" - source: \" +$json.citations[0]).replaceAll(\"[2]\",\" - source:\" +$json.citations[1]).replaceAll(\"[3]\",\" - source: \" +$json.citations[2]).replaceAll(\"[4]\",\" - source: \"+$json.citations[3]).replaceAll(\"[5]\",\" - source: \"+$json.citations[4]).replaceAll(\"[6]\",\" - source: \"+$json.citations[5]).replaceAll(\"[7]\",\" - source: \"+$json.citations[6]).replaceAll(\"[8]\",\" - source: \"+$json.citations[7]).replaceAll(\"[9]\",\" - source: \"+$json.citations[8]).replaceAll(\"[10]\",\" - source: \"+$json.citations[9]) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5f7b2bea-b6be-4243-a4bf-411fcafadd68",
+      "name": "Cleanup Links1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -608,
+        432
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are part of a marketing team that creates high-quality blog posts for the AI consulting and workflow automation industry based in Canada. Your goal is to produce engaging, SEO-optimized content that positions the company as an authority in the AI consulting industry and attracts inbound leads.\n\nEvery 2 days, your team posts a blog on the most trending topics in AI consulting and n8n workflows. As the copywriter, you are provided with the following information:\n\n- Query: The main topic for this week's blog post, representing the most trending news in the recruitment space.\n\n- Other keywords: A list of high-search-volume keywords related to AI consulting and n8n workflows. Incorporate these naturally into the blog post where relevant, without forcing them or changing the post's meaning.\n\n- Research findings: Detailed information from reputable sources related to the blog topic. Your post must be based on this research.\n\nGiven this information, write a comprehensive blog post that:\n\n- Includes the query in the blog title, H2 header, and early in the introduction.\n- Incorporates all details from the research findings, including source URLs for potential hyperlinks.\n- Is detailed and informative, showcasing the companies expertise in AI consulting and n8n workflows to automate business processes.\n- Uses a professional yet engaging tone, highlighting the exciting developments and challenges in the recruitment industry.\n- Flows naturally and logically, making it easy for readers to follow.\n- Is between 1500 to 2000 words long.\n- Is written at a level accessible to HR professionals and business leaders.\n\nAdditional requirements:\n- Include practical takeaways or actionable advice for recruiters and HR professionals.\n- Highlight how the topic relates to the companies services or expertise.\n- Include a call-to-action (CTA) that encourages readers to explore the comapnies services or contact for more information.\n\nCreate the entire blog post draft in your first output. Don't stop or cut it short.\n\nYour output must be the blog post and nothing else.\n\nHere are the details of this blog post project:\n\nQuery:\n{{ $('On form submission1').item.json['Research Query'] }}\n\nDetailed Research:\n{{ $('Cleanup Links1').item.json.research }}\n\n\n",
+        "options": {}
+      },
+      "id": "36e20cb5-f2ce-4430-8ece-9a60ba5eef25",
+      "name": "Copywriter AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -304,
+        432
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "content": "## Create Title, Slug & Meta\n\n\n",
+        "height": 440,
+        "width": 440,
+        "color": 7
+      },
+      "id": "72bfc336-b8d6-469a-bb09-6ae03da7ddad",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0afb2988-1481-4b04-b16d-fb33c50a16d0",
+              "name": "content",
+              "type": "string",
+              "value": "={{ $json.data[0].message.content.replaceAll('```html', '').replaceAll('```','') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "676a968e-8b93-4f41-b676-50f617530d6b",
+      "name": "Cleanup HTML 1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        848,
+        688
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['image-url'] }}",
+        "options": {}
+      },
+      "id": "031b1fac-5f04-4a13-8191-f253304d0ef4",
+      "name": "GET Image1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        352,
+        992
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "## Set Image for Wordpress Post",
+        "height": 280,
+        "width": 820
+      },
+      "id": "f02bfdcb-de62-4e4c-850e-a34fc6db5ede",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        800
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1f0541df-05ab-4e3d-a5d8-3904579fc8a9",
+              "name": "image-url",
+              "type": "string",
+              "value": "=https://smartcdn.gprod.postmedia.digital/healthing/wp-content/uploads/2024/07/GettyImages-1455799246.jpg?quality=90&strip=all&w=704&h=395"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8a52a37-ac12-4e44-962a-d80e769014af",
+      "name": "Set Image URL1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        144,
+        992
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "=Success! Your blog post was created at {{ $now }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5c0d702c-2c98-45d2-9ad4-7971233566c1",
+      "name": "Send Success Message to Telegram1",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        992,
+        992
+      ],
+      "webhookId": "91f7d710-450a-4b66-8e46-82f53492351e",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gemini-2.5-flash-preview-05-20",
+          "mode": "list",
+          "cachedResultName": "gemini-2.5-flash-preview-05-20"
+        },
+        "options": {
+          "temperature": 0.5,
+          "topP": 0.8
+        }
+      },
+      "id": "20419fd8-1bf7-481a-9c1f-5fbecbb1a09d",
+      "name": "gpt-4o-mini1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        -304,
+        624
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "95b658fa-4a75-4990-90a3-553a5f94888d",
+      "name": "Combine Blog Details1",
+      "type": "n8n-nodes-base.aggregate",
+      "position": [
+        848,
+        432
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2025-04-14T07:04:17.151Z",
+      "createdAt": "2025-04-14T07:04:17.151Z",
+      "role": "workflow:owner",
+      "workflowId": "0GLgzXdNq6OFMxjs",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:10:46.434Z",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas"
+    },
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
+    },
+    {
+      "updatedAt": "2026-07-19T15:29:32.896Z",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:00:40.628Z",
+  "versionId": "c8865127-225e-4d8e-ab98-1f9d170d70f2"
+}
