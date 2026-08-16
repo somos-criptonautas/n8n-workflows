@@ -1,0 +1,296 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract & Clean Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract & Clean Prompt": {
+      "main": [
+        [
+          {
+            "node": "Search Unsplash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Unsplash": {
+      "main": [
+        [
+          {
+            "node": "Prepare Image Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Image Prompts": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Results": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-12-16T00:19:50.805Z",
+  "id": "PJScs8j2kP0YS4zl",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "search-image-unsplash",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a6ac5af9-fd4d-4c91-8491-8d166f6f1bfe",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        464,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "url": " https://api.unsplash.com/search/photos/",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "client_id",
+              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
+            },
+            {
+              "name": "query",
+              "value": "={image_search_prompt}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "id": "d63c1ad3-e0be-40ca-a298-eb75f5634000",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        688,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "image-search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8e9915de-fd9c-49fc-b97c-5b531e85fd5a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        464
+      ],
+      "webhookId": "3bf473fe-2aad-4d51-a05e-2bdfc0e3865f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst raw = body.prompt || body.query || body.text || body.search || '';\nconst cleaned = raw.trim().replace(/\\s+/g, ' ');\nif (!cleaned) throw new Error('No prompt provided in webhook body');\nreturn [{ json: { prompt: cleaned, original: raw } }];"
+      },
+      "id": "7a7a73b3-e643-43f8-a463-5e45a890a298",
+      "name": "Extract & Clean Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.unsplash.com/search/photos",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ JSON.stringify({ query: $json.prompt, per_page: 3, orientation: \"landscape\" }) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept-Version",
+              "value": "v1"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "3fd1562c-6623-4c63-8456-4869eb73e318",
+      "name": "Search Unsplash",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        704,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst prompt = $('Extract & Clean Prompt').first().json.prompt;\nconst results = data.results || [];\n\nconst unsplashImages = results.slice(0, 3).map((r, i) => ({\n  id: r.id,\n  url: r.urls?.regular || r.urls?.full || r.urls?.small,\n  thumb: r.urls?.thumb || r.urls?.small,\n  alt: r.alt_description || prompt,\n  author: r.user?.name || 'Unknown',\n  authorUrl: r.user?.links?.html || '',\n  downloadUrl: r.links?.download || '',\n  source: 'unsplash',\n  index: i + 1\n}));\n\nconst genPrompts = [\n  prompt,\n  prompt + ' - alternative interpretation',\n  prompt + ' - artistic variation'\n];\n\nreturn genPrompts.map((p, i) => ({\n  json: {\n    generationPrompt: p,\n    unsplashImages,\n    generationIndex: i + 1,\n    totalGenerations: 3\n  }\n}));"
+      },
+      "id": "a891cac5-b6a8-4343-a39d-4f3a546a003e",
+      "name": "Prepare Image Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.OPENAI_API_BASE || \"https://api.openai.com/v1\" }}/images/generations",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $env.OPENAI_MODEL || \"dall-e-3\", prompt: $json.generationPrompt, n: 1, size: \"1024x1024\", response_format: \"url\" }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a8a05a04-06ea-4242-ae74-49b1a2cfeb6d",
+      "name": "Generate Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1072,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst prompt = $('Extract & Clean Prompt').first().json.prompt;\n\nconst unsplashImages = items[0]?.json?.unsplashImages || [];\n\nconst generatedImages = items.map((item, i) => {\n  const data = item.json;\n  const imgUrl = data.data?.[0]?.url || data.data?.[0]?.b64_json || null;\n  return {\n    url: imgUrl,\n    prompt: data.generationPrompt || prompt,\n    index: i + 1\n  };\n}).filter(img => img.url);\n\nreturn [{\n  json: {\n    status: 'success',\n    query: prompt,\n    timestamp: new Date().toISOString(),\n    images: {\n      unsplash: unsplashImages,\n      generated: generatedImages\n    },\n    meta: {\n      unsplashCount: unsplashImages.length,\n      generatedCount: generatedImages.length,\n      totalImages: unsplashImages.length + generatedImages.length\n    }\n  }\n}];"
+      },
+      "id": "8c22b649-b1b3-456f-bcdc-011552e37d18",
+      "name": "Aggregate Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "54726222-9a3c-457d-abde-1f34385cefa1",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1472,
+        464
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2023-12-16T00:19:50.805Z",
+      "createdAt": "2023-12-16T00:19:50.805Z",
+      "role": "workflow:owner",
+      "workflowId": "PJScs8j2kP0YS4zl",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-15T23:02:44.887Z",
+  "versionId": "68715985-72b6-481a-8b40-2693f6c26bfe"
+}
