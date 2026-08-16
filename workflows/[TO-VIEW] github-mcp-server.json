@@ -1,0 +1,425 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Github API": {
+      "ai_tool": [
+        [
+          {
+            "node": "Github AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Github Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Github AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Github AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Github Username": {
+      "main": [
+        [
+          {
+            "node": "Github AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Set Github Username",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-06-17T16:27:32.115Z",
+  "id": "cEDbNDu87yD3wGZf",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-VIEW] github-mcp-server",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "path": "5b0e6a8d-f7eb-49ba-ac89-2eb4fc359967"
+      },
+      "id": "7883906c-370b-49d1-887c-2d021aa93b72",
+      "name": "MCP Server Trigger",
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "position": [
+        1152,
+        208
+      ],
+      "webhookId": "5b0e6a8d-f7eb-49ba-ac89-2eb4fc359967",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "request"
+            }
+          ]
+        }
+      },
+      "id": "7128668a-1f89-477a-a4e3-625703687cbe",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -208,
+        560
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "github"
+      },
+      "id": "28872216-d149-42ca-a3e7-36fcef7a5817",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        864,
+        560
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "id": "898388ce-c0e6-4474-88e0-fc78f1d23e03",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        512,
+        592
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "## GitHub AI Agent (Tools Agent)\n🤖 Specialized GitHub Agent\n- Direct connection to GitHub MCP Server\n- Processes natural language GitHub requests\n- Reduces LLM context overhead\n- Handles all GitHub API complexity",
+        "height": 500,
+        "width": 460,
+        "color": 4
+      },
+      "id": "66173c3f-443d-4e3d-b223-f2aa21c4ca7d",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 🖥️  MCP Server Trigger\n🔧 MCP Server Trigger\n- Receives GitHub operation requests\n- Single parameter: \"request\" (natural language)\n- Triggers specialized GitHub agent workflow",
+        "height": 500,
+        "width": 340,
+        "color": 7
+      },
+      "id": "d1d5e3f6-83c6-43c1-95f9-834a8867d368",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# 🖥️ MCP Server Github Agent Tool\n\n📋 Architecture Overview\n\nThis workflow implements the MCP Agent pattern:\n\n1. Single entry point (MCP Trigger)\n\n2. Specialized agent (GitHub focus)\n\n3. Context delegation (reduced LLM load)\n\n4. Scalable operations (unlimited GitHub tools)\n\n\nPerfect for complex GitHub automations without overwhelming your main LLM with GitHub API context.\n",
+        "height": 500,
+        "width": 600,
+        "color": 7
+      },
+      "id": "12096bdc-c9df-4884-8214-3bba92385ab0",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "description": "# Overview\nUtilize this Github Agent tool to handle all interactions with the Github. By giving the Github Agent clear commands, you can full manage repositories and their components.\n\n## Workflow\n1. Provide plain language commands in the request parameter of this tool. Include the repo name when applicable.\n2. The Github agent interprets your command and performs the task.\n\n## Example Requests\n<EXAMPLE_1>\nCreate an issue called \"Some Issue Title\" with the description of \"Some long description about something\". Create it in the repo named Repo 1.\n</EXAMPLE_1>\n<EXAMPLE_2>\nMark issue number 3 as closed and put a comment of \"wow that was hard work\" on it.\n</EXAMPLE_2>\n<EXAMPLE_3>\nCreate a new branch off of the development branch and name it according to the feature / issue it relates to. Create a comment on the first issue: @Claude, please work on this, thank you.\n</EXAMPLE_3>",
+        "workflowId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "UyrFAXDtcVf0TqlJ",
+          "cachedResultName": "MCP Github"
+        },
+        "workflowInputs": {
+          "value": {
+            "request": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('request', `Plain language command to have the Github Agent perform a task relating to Github`, 'string') }}"
+          },
+          "schema": [
+            {
+              "id": "request",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "request",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "request"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "id": "6ceeccf4-dd55-4a40-97de-9c1b4bd37b1a",
+      "name": "Github Agent",
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "position": [
+        1200,
+        368
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "http://localhost:8000/sse",
+        "include": "selected",
+        "includeTools": [
+          "create_issue",
+          "list_issues",
+          "update_issue",
+          "add_issue_comment",
+          "search_issues",
+          "get_issue",
+          "search_repositories",
+          "create_repository",
+          "get_pull_request_reviews",
+          "get_pull_request_comments",
+          "update_pull_request_branch",
+          "get_pull_request_files",
+          "get_pull_request_status",
+          "search_code",
+          "search_users",
+          "list_pull_requests",
+          "get_pull_request",
+          "merge_pull_request",
+          "create_pull_request_review",
+          "fork_repository",
+          "create_branch",
+          "list_commits",
+          "get_file_contents",
+          "push_files",
+          "create_or_update_file",
+          "create_pull_request"
+        ],
+        "options": {}
+      },
+      "id": "83d2e4fb-6720-41ca-b7c1-649c92fa96d8",
+      "name": "Github API",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        1232,
+        560
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When Executed by Another Workflow').item.json.request }}",
+        "options": {
+          "systemMessage": "=# Overview\nYou are a Github API and repo management specialist. You use your many tools to achieve the goals set forth by the requests you receive.\n\n## User Information\nGithub username: {{ $json.githubUsername }}"
+        }
+      },
+      "id": "1f30df3c-95a9-4af2-bc25-0663b7f569f4",
+      "name": "Github AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        720,
+        272
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "baa4559f-6f06-42c6-ab23-0aa9662a5a18",
+              "name": "githubUsername",
+              "type": "string",
+              "value": "wayum999"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "45e0ca26-3849-4cf6-8c6a-6763195adc5d",
+      "name": "Set Github Username",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        128,
+        560
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n## Set GitHub Username Node\n⚙️ Configuration Required\n- Replace \"your-github-username\" with actual username\n- Used for GitHub API authentication context\n- Essential for proper API calls",
+        "height": 380,
+        "width": 340,
+        "color": 7
+      },
+      "id": "32f52c68-d0c3-4a01-bd07-784f1a03c5eb",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n## OpenAI Chat Model Node\n🧠 AI Processing Engine\n- Requires OpenAI API key configuration  \n- Powers intelligent GitHub operation understanding\n- Optimized for GitHub-specific tasks",
+        "height": 380,
+        "width": 360,
+        "color": 7
+      },
+      "id": "0ccac639-2aa5-4986-926c-13613dc7e758",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n## Simple Memory Node\n💾 Conversation Context\n- Maintains operation history\n- Enables multi-step GitHub workflows\n- Reduces repetitive context processing",
+        "height": 380,
+        "width": 340,
+        "color": 7
+      },
+      "id": "bb79c198-8359-457c-a154-78c33c53ba0b",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n## MCP Client Node\n💾 Github Tools\n- Handles calls to the Github API\n- Manages repos and issues\n- One node connected to an MCP server",
+        "height": 380,
+        "width": 340,
+        "color": 7
+      },
+      "id": "273ec7eb-6f49-4d97-be11-d6cfe5c40e36",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1104,
+        528
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "request": "create a new repo called test repo"
+        }
+      }
+    ]
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-06-17T16:27:32.115Z",
+      "createdAt": "2026-06-17T16:27:32.115Z",
+      "role": "workflow:owner",
+      "workflowId": "cEDbNDu87yD3wGZf",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
+    },
+    {
+      "updatedAt": "2026-07-19T16:37:25.896Z",
+      "createdAt": "2026-07-19T16:37:25.896Z",
+      "id": "mmkDj7YMwTrxFurm",
+      "name": "github"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:37:39.413Z",
+  "versionId": "53c95847-405b-47f5-a928-643a7e05b535"
+}
