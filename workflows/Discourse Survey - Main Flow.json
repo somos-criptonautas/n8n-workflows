@@ -1,0 +1,375 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Discourse User Validated": {
+      "main": [
+        [
+          {
+            "node": "Create NocoDB Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create NocoDB Row": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Days": {
+      "main": [
+        [
+          {
+            "node": "Send Survey Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Survey Reminder Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 7 Days for Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 7 Days for Poll": {
+      "main": [
+        [
+          {
+            "node": "Check Survey Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Survey Status": {
+      "main": [
+        [
+          {
+            "node": "Survey Not Completed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Survey Not Completed?": {
+      "main": [
+        [
+          {
+            "node": "Wait 14 Days",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Survey Already Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 14 Days": {
+      "main": [
+        [
+          {
+            "node": "Send 2-Week Reminder Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-16T06:30:33.482Z",
+  "id": "DViqaJhxd7PrdFP2",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Discourse Survey - Main Flow",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "d99b265c-5193-413a-bd5f-10b209526f86",
+      "name": "Discourse User Validated",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "discourse-user-validated",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "d23a2bad-162d-48b0-8c17-0a94465480b1"
+    },
+    {
+      "id": "62df60f2-edc4-4d40-a890-27b1b411b7ac",
+      "name": "Create NocoDB Row",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 4,
+      "position": [
+        500,
+        300
+      ],
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "resource": "row",
+        "operation": "create",
+        "workspaceId": {
+          "__rl": true,
+          "value": "YOUR_WORKSPACE_ID",
+          "mode": "id"
+        },
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "id"
+        },
+        "dataToSend": "mapWithFields",
+        "fieldsMapper": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $json.body.email }}",
+            "discourse_user_id": "={{ $json.body.user_id }}",
+            "initial-survey": 0
+          }
+        },
+        "options": {}
+      },
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "id": "c5aad41c-b83d-4133-8dbc-e732261d6a55",
+      "name": "Wait 3 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        760,
+        300
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 3,
+        "unit": "days"
+      },
+      "webhookId": "ae79dd70-1e6f-4a59-8c3f-0ce32c46e1eb"
+    },
+    {
+      "id": "70b2f92f-b3ea-4a8d-b765-2ee45aa7f86d",
+      "name": "Send Survey Reminder Email",
+      "type": "n8n-nodes-listmonk-service.listmonkService",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        300
+      ],
+      "parameters": {
+        "resource": "transactional",
+        "operation": "send",
+        "messageTemplateID": 1,
+        "messageSenderEmail": "YOUR_SENDER_EMAIL",
+        "messageContentType": "html",
+        "messageIsSubscriberExisting": "subscriber_existing",
+        "messageSubscriberIdentifier": "subscriber_email",
+        "messageSubscriberEmail": "={{ $json.email }}",
+        "messageData": {
+          "surveyLink": "YOUR_FORMBRICKS_SURVEY_LINK",
+          "username": "={{ $json.email }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2f30d38c-73b4-485c-a91e-2122f1c83b83",
+      "name": "Wait 7 Days for Poll",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        300
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 7,
+        "unit": "days"
+      },
+      "webhookId": "d4785749-09dd-4fa9-b347-2bad06f43cdb"
+    },
+    {
+      "id": "d4069bb1-c9ce-4f1b-aa53-5739275f4e81",
+      "name": "Check Survey Status",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 4,
+      "position": [
+        1540,
+        300
+      ],
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "resource": "row",
+        "operation": "search",
+        "workspaceId": {
+          "__rl": true,
+          "value": "YOUR_WORKSPACE_ID",
+          "mode": "id"
+        },
+        "projectId": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "id"
+        },
+        "returnAll": false,
+        "limit": 1,
+        "options": {
+          "where": "=(email,eq,{{ $json.email }})"
+        }
+      },
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "id": "189c1788-a1b6-4530-a601-fc8f8c951afc",
+      "name": "Survey Not Completed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1800,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json[\"initial-survey\"] }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "2cbe43f1-9b9a-4af7-9139-4131a2be207d",
+      "name": "Wait 14 Days",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2060,
+        200
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 14,
+        "unit": "days"
+      },
+      "webhookId": "7fcd94b3-8710-4876-a81b-a823c2a58a28"
+    },
+    {
+      "id": "02e37bc9-0ebc-4c60-b55e-8e9dc6a29e05",
+      "name": "Send 2-Week Reminder Email",
+      "type": "n8n-nodes-listmonk-service.listmonkService",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        200
+      ],
+      "parameters": {
+        "resource": "transactional",
+        "operation": "send",
+        "messageTemplateID": 3,
+        "messageSenderEmail": "YOUR_SENDER_EMAIL",
+        "messageContentType": "html",
+        "messageIsSubscriberExisting": "subscriber_existing",
+        "messageSubscriberIdentifier": "subscriber_email",
+        "messageSubscriberEmail": "={{ $json.email }}",
+        "messageData": {
+          "surveyLink": "YOUR_FORMBRICKS_SURVEY_LINK",
+          "username": "={{ $json.email }}"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "69ed1e25-0e43-4588-954a-702c6486da8e",
+      "name": "Survey Already Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2060,
+        400
+      ],
+      "parameters": {}
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-16T06:30:33.482Z",
+      "createdAt": "2026-08-16T06:30:33.482Z",
+      "role": "workflow:owner",
+      "workflowId": "DViqaJhxd7PrdFP2",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-16T06:34:19.338Z",
+  "versionId": "60feba0c-64c5-47be-a66c-69b90c0cc5b1"
+}
