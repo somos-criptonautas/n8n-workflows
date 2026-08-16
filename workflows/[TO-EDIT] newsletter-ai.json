@@ -1,0 +1,575 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conver To CSV": {
+      "main": [
+        [
+          {
+            "node": "Upload a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a file": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Merge Both List",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "RSS Read OF Tech News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Both List": {
+      "main": [
+        [
+          {
+            "node": "Conver To CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tech News Sites": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Merge Both List",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "RSS Read OF Tools",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read OF Tools": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Tech News Sites",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Tools Subredit and Sites",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read OF Tech News": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tools Subredit and Sites": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-02-25T07:34:44.702Z",
+  "id": "L2YxjMT3ZQfOdOi5",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "[TO-EDIT] newsletter-ai",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 📬 Personal Daily Tech Newsletter\n\n**What it does:**\nAutomatically curates and emails a personalized daily newsletter with the latest tech news, tools, and products tailored to your interests.\n\n**How it works:**\n1. Triggers daily at 9 AM\n2. Fetches RSS feeds from your favorite tech sources\n3. Uses Google Gemini AI to filter and curate based on your interests\n4. Sends a beautifully formatted newsletter to your inbox\n\n**Customize:**\n- Change RSS sources in the \"Set\" nodes\n- Modify keywords/interests in \"Analyze document\" node\n- Update your email address in \"Send email\" node\n- Adjust schedule time in trigger node",
+        "height": 340,
+        "width": 520,
+        "color": 5
+      },
+      "id": "c1e1c4c1-5f31-4290-a595-76ed1218ddb6",
+      "name": "Sticky Note - Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 📅 Daily Trigger\nScheduled to run every day at 9:00 AM",
+        "height": 220,
+        "width": 280,
+        "color": 3
+      },
+      "id": "a586ca77-082d-4119-9258-f308038584f7",
+      "name": "Sticky Note - Trigger",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "10b85df3-9907-4ee9-956f-183b3080958f",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        688,
+        464
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "## 📰 RSS Feed Sources\nDefine which RSS feeds to monitor for tech news and tools",
+        "height": 520,
+        "width": 280,
+        "color": 4
+      },
+      "id": "c97ee546-b879-4895-8979-838637a091f7",
+      "name": "Sticky Note - Sources",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        928,
+        288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"url\" :  [\n\"https://techcrunch.com/feed/\",\n\"https://www.theverge.com/rss/index.xml\",\n    \"https://analyticsindiamag.com/feed/\",\n     \"https://www.wired.com/feed/rss\",\n       \"https://thenextweb.com/feed\"\n]}",
+        "options": {}
+      },
+      "id": "4f61d388-5a02-400d-a980-78712f7fcafa",
+      "name": "Tech News Sites",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1024,
+        416
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Url\": [\n    \n      \"https://www.reddit.com/r/SideProject/.rss\",\n      \"https://www.reddit.com/r/InternetIsBeautiful/.rss\",\n      \"https://dev.to/feed/tag/tools\",\n      \"https://www.producthunt.com/feed\"\n    \n  ]\n}",
+        "options": {}
+      },
+      "id": "e7227dc1-8985-49e6-b772-5e5705928107",
+      "name": "Tools Subredit and Sites",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1024,
+        576
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## 🔄 RSS Feed Processing\nSplit, loop through feeds in batches, and fetch content",
+        "height": 524,
+        "width": 820,
+        "color": 6
+      },
+      "id": "e87c6e0f-822a-464b-8174-ee3ca331a008",
+      "name": "Sticky Note - Processing",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1248,
+        288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "url",
+        "options": {}
+      },
+      "id": "323d1638-43ee-4b1a-9d82-12a64a28799c",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1328,
+        416
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "Url",
+        "options": {}
+      },
+      "id": "5ff86404-abd9-4510-935e-130b612b45b9",
+      "name": "Split Out1",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1328,
+        576
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "batchSize": 5,
+        "options": {}
+      },
+      "id": "be77be35-f02b-4814-bea9-9b36466b2329",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1520,
+        384
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "batchSize": 4,
+        "options": {}
+      },
+      "id": "63baf724-71ac-485c-a950-bc38dd0a28e0",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1520,
+        576
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Split Out').item.json.url }}",
+        "options": {}
+      },
+      "id": "5149c6e6-bf26-46ab-a841-cbae61d23b09",
+      "name": "RSS Read OF Tech News",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        1744,
+        400
+      ],
+      "typeVersion": 1.2,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Url }}",
+        "options": {}
+      },
+      "id": "19e5eefe-ec26-4922-bfd0-cb7473d19158",
+      "name": "RSS Read OF Tools",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        1744,
+        592
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "content": "## 📦 Combine & Convert\nMerge all feeds and convert to CSV for AI",
+        "height": 504,
+        "width": 420,
+        "color": 2
+      },
+      "id": "e223e1ed-acb9-4272-9e66-140de96f85c0",
+      "name": "Sticky Note - Combine",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2128,
+        288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "0edaba91-15ec-4aee-be2b-d0b3d8d47c38",
+      "name": "Merge Both List",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        2224,
+        480
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0287fdc8-770e-4759-b242-133eaccd0b2f",
+      "name": "Conver To CSV",
+      "type": "n8n-nodes-base.convertToFile",
+      "position": [
+        2400,
+        480
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 AI Curation\n\nGoogle Gemini analyzes content and selects the top items based on your interests.\n\n**Note:** Change the keywords in the **Analyze Document** node’s text input prompt according to your interests.\n\n",
+        "height": 504,
+        "width": 540,
+        "color": 7
+      },
+      "id": "c2950d28-9b28-434a-b5ac-00ed78580295",
+      "name": "Sticky Note - AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2608,
+        288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "inputType": "binary"
+      },
+      "id": "e0d3cda9-c5e2-483b-9884-91e5a2b3e410",
+      "name": "Upload a file",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "position": [
+        2704,
+        480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "models/gemini-2.5-flash-preview-05-20",
+          "cachedResultName": "models/gemini-2.5-flash-preview-05-20"
+        },
+        "text": "# Tech Content Writer Prompt\n\nYou are a tech content writer.\nI have two lists of items:\n1️⃣ New Tools & Products\n{products_list}\n2️⃣ Global & India Tech News\n{news_list}\n\n## Task:\n- Select the **top 10-15 items** from each list based on these interests and keywords:\n  - **Tools & Products Keywords:** [\"AI\", \"automation\", \"developer\", \"open source\", \"productivity\", \"creative\", \"innovation\", \"API\", \"web app\", \"tools\"]\n  - **News Keywords:** [\"technology innovation\", \"AI breakthrough\", \"framework\", \"developer update\", \"research\", \"automation trend\", \"product launch\"]\n- Keep **two separate sections**: \n  1. Tools & Products (10-15 items)\n  2. Global & India Tech Innovations (10-15 items)\n- Summarize each item in **2-3 lines**.\n- **If an image URL is provided**, display it beautifully under the title with rounded edges\n- Tone: \"Curious, energetic, and concise – focused on discovery, usefulness, and creativity.\"\n- Format using the HTML template below, replacing placeholder items with actual content from the lists.\n\n## HTML Template:\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Daily Tech Digest</title>\n    <style>\n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;\n            background: #f5f5f5;\n            margin: 0;\n            padding: 16px;\n            line-height: 1.5;\n            font-size: 15px;\n            color: #333;\n        }\n        \n        .container {\n            max-width: 600px;\n            margin: 0 auto;\n            background: #ffffff;\n            border-radius: 8px;\n        }\n        \n        .header {\n            background: #000;\n            color: #fff;\n            padding: 20px 16px;\n            border-radius: 8px 8px 0 0;\n        }\n        \n        .header h1 {\n            font-size: 20px;\n            font-weight: 600;\n            margin: 0 0 4px 0;\n        }\n        \n        .header p {\n            font-size: 13px;\n            margin: 0;\n            opacity: 0.8;\n        }\n        \n        .content {\n            padding: 20px 16px;\n        }\n        \n        .section {\n            margin-bottom: 32px;\n        }\n        \n        .section:last-child {\n            margin-bottom: 0;\n        }\n        \n        .section-title {\n            font-size: 16px;\n            font-weight: 600;\n            color: #000;\n            margin: 0 0 16px 0;\n            padding-bottom: 8px;\n            border-bottom: 2px solid #000;\n        }\n        \n        .item {\n            margin-bottom: 20px;\n            padding-bottom: 20px;\n            border-bottom: 1px solid #e5e5e5;\n        }\n        \n        .item:last-child {\n            border-bottom: none;\n            margin-bottom: 0;\n            padding-bottom: 0;\n        }\n        \n        .item-title {\n            font-size: 15px;\n            font-weight: 600;\n            color: #000;\n            margin: 0 0 12px 0;\n        }\n        \n        .item-image {\n            width: 100%;\n            height: auto;\n            border-radius: 12px;\n            margin-bottom: 12px;\n            display: block;\n            object-fit: cover;\n        }\n        \n        .item-summary {\n            font-size: 14px;\n            color: #555;\n            margin: 0 0 8px 0;\n        }\n        \n        .item-link {\n            color: #0066cc;\n            text-decoration: none;\n            font-size: 14px;\n            font-weight: 500;\n        }\n        \n        .footer {\n            background: #f9f9f9;\n            padding: 16px;\n            text-align: center;\n            font-size: 12px;\n            color: #666;\n            border-radius: 0 0 8px 8px;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>⚡ Daily Tech Digest</h1>\n            <p>{current_date}</p>\n        </div>\n        \n        <div class=\"content\">\n            <!-- Tools & Products Section -->\n            <div class=\"section\">\n                <h2 class=\"section-title\">🧠 New Tools & Products</h2>\n                \n                <!-- Example with Image -->\n                <div class=\"item\">\n                    <div class=\"item-title\">{Product Title 1}</div>\n                    <!-- Include image if URL is available -->\n                    <img src=\"{image_url}\" alt=\"{Product Title}\" class=\"item-image\" onerror=\"this.style.display='none'\">\n                    <div class=\"item-summary\">\n                        {2-3 line summary of the product}\n                    </div>\n                    <a href=\"{product_link}\" class=\"item-link\">Learn more →</a>\n                </div>\n                \n                <!-- Example without Image -->\n                <div class=\"item\">\n                    <div class=\"item-title\">{Product Title 2}</div>\n                    <div class=\"item-summary\">\n                        {2-3 line summary of the product}\n                    </div>\n                    <a href=\"{product_link}\" class=\"item-link\">Learn more →</a>\n                </div>\n                \n                <!-- Add more items as needed -->\n            </div>\n            \n            <!-- Global & India Tech News Section -->\n            <div class=\"section\">\n                <h2 class=\"section-title\">🌍 Global & India Tech Innovations</h2>\n                \n                <!-- Example with Image -->\n                <div class=\"item\">\n                    <div class=\"item-title\">{News Title 1}</div>\n                    <!-- Include image if URL is available -->\n                    <img src=\"{image_url}\" alt=\"{News Title}\" class=\"item-image\" onerror=\"this.style.display='none'\">\n                    <div class=\"item-summary\">\n                        {2-3 line summary of the news}\n                    </div>\n                    <a href=\"{news_link}\" class=\"item-link\">Read more →</a>\n                </div>\n                \n                <!-- Example without Image -->\n                <div class=\"item\">\n                    <div class=\"item-title\">{News Title 2}</div>\n                    <div class=\"item-summary\">\n                        {2-3 line summary of the news}\n                    </div>\n                    <a href=\"{news_link}\" class=\"item-link\">Read more →</a>\n                </div>\n                \n                <!-- Add more items as needed -->\n            </div>\n        </div>\n        \n        <div class=\"footer\">\n            Stay curious. Keep building.\n        </div>\n    </div>\n</body>\n</html>\n```",
+        "documentUrls": "={{ $json.fileUri }}",
+        "options": {}
+      },
+      "id": "87a64e91-0eea-4c02-8809-deb948cb17b4",
+      "name": "Analyze document",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "position": [
+        2944,
+        480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## 📧 Newsletter Delivery\n\nFormat and send the personalized newsletter.\n\n**Note:**\nAdd **SMTP credentials**, **sender**, and **receiver information**.\n",
+        "height": 472,
+        "width": 520
+      },
+      "id": "e2afa9b3-5b98-4c68-a9d6-5c4303d6fd88",
+      "name": "Sticky Note - Email",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3216,
+        288
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the HTML from previous node\nlet htmlText = $input.first().json.content.parts[0].text\n// Remove all \\n characters and trim\nhtmlText = htmlText.replace(/\\n/g, \"\").trim();\n\n// Return as JSON\nreturn [{ json: { html: htmlText } }];\n"
+      },
+      "id": "3c0b011a-693b-43c3-87e9-65a998de39da",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3328,
+        480
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "fromEmail": "user@example.com",
+        "toEmail": "user@example.com",
+        "subject": "=⚡ Daily Tech Digest - {{ new Date().toLocaleDateString(\"en-US\", { year: \"numeric\", month: \"long\", day: \"numeric\" }) }}\n",
+        "html": "={{ $json.html.replace(/^```html/, '').replace(/```$/, '').trim() }}\n",
+        "options": {}
+      },
+      "id": "7a66c922-2fc0-45c0-84ed-8632571df998",
+      "name": "Send email",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [
+        3552,
+        480
+      ],
+      "webhookId": "9c1d2a26-ab49-44a3-aea5-f13cc14ebf64",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "content": "**Note:**\nI have used **two different sources of interest** (News and Tools). \nThat’s why there are **two separate lists**. Please make changes according to your approach or workflow.\n\n",
+        "height": 144,
+        "width": 304,
+        "color": 3
+      },
+      "id": "6dc40d11-5582-40d3-9c60-b3ac1e72a6c8",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        912,
+        736
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T07:34:44.702Z",
+      "createdAt": "2026-02-25T07:34:44.702Z",
+      "role": "workflow:owner",
+      "workflowId": "L2YxjMT3ZQfOdOi5",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:20:31.931Z",
+      "createdAt": "2026-07-19T15:20:31.931Z",
+      "id": "BbGmkPuQVSvAfRiA",
+      "name": "feeds"
+    },
+    {
+      "updatedAt": "2026-02-25T07:28:36.855Z",
+      "createdAt": "2026-02-25T07:28:36.855Z",
+      "id": "zteglN9EqJ3nhEv6",
+      "name": "AI"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:39:56.578Z",
+  "versionId": "5a6cd866-b8f1-4b3d-b8be-295449466610"
+}
