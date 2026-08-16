@@ -1,0 +1,561 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "HTML Extract": {
+      "main": [
+        [
+          {
+            "node": "Clean Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "NocoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content": {
+      "main": [
+        [
+          {
+            "node": "AI - Summarize/Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content2": {
+      "main": [
+        [
+          {
+            "node": "NocoDB1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI - Generate Post Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discourse": {
+      "main": [
+        [
+          {
+            "node": "NocoDB1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "NocoDB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NocoDB": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Summarize/Format": {
+      "main": [
+        [
+          {
+            "node": "Clean Content2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Generate Post Content": {
+      "main": [
+        [
+          {
+            "node": "Validate Before Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Before Post": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-12-16T00:21:14.273Z",
+  "id": "WwJkFnjgLaVFKkB9",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "schedule-post-news",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d2dda60c-d37e-4d8a-a3cb-4e09aa1c5363",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -1200,
+        848
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "url": "={{ $node[\"NocoDB\"].json[\"URL\"] }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "id": "5fff1b90-2622-407b-9a22-fa47626f78c1",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -816,
+        688
+      ],
+      "typeVersion": 3,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "extractionValues": {
+          "values": [
+            {
+              "key": "content",
+              "cssSelector": "html"
+            }
+          ]
+        },
+        "options": {
+          "trimValues": false
+        }
+      },
+      "id": "785c8618-e590-4ebf-ba33-f0ac5d151c40",
+      "name": "HTML Extract",
+      "type": "n8n-nodes-base.htmlExtract",
+      "position": [
+        -656,
+        688
+      ],
+      "typeVersion": 1,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "title": "={{ $node['Clean Content2'].json.titulo }}",
+        "content": "=![image|{{ $json[\"thumbnail_height\"] }}x{{ $json[\"thumbnail_width\"] }}]({{ $json[\"short_url\"] }})\n\n{{ $node['Clean Content2'].json.contenido }}\n\n{{ $node[\"NocoDB\"].json[\"URL\"] }}\n\n> Generado por AI Criptonauta 👽",
+        "additionalFields": {}
+      },
+      "id": "2248305a-03f9-4e22-ab14-45e5ba16dbbd",
+      "name": "Discourse",
+      "type": "n8n-nodes-base.discourse",
+      "typeVersion": 1,
+      "position": [
+        688,
+        464
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.content) {\n  $input.item.json.content = $input.item.json.content\n    .trim()\n    .replace(/(\\r\\n|\\n|\\r)/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .slice(0, 10000)\n}\n\nreturn $input.item"
+      },
+      "id": "643c7688-4ab6-4587-80c5-c45d659065f5",
+      "name": "Clean Content",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -496,
+        688
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "if ($input.item.json.message?.content) {\n  const raw = $input.item.json.message.content\n    .trim()\n    .replace(/(\\r\\n|\\n|\\r)/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .slice(0, 8500)\n\n  try {\n    const parsed = JSON.parse(raw)\n    $input.item.json.titulo = parsed.titulo || ''\n    $input.item.json.contenido = parsed.contenido || ''\n  } catch (e) {\n    $input.item.json.titulo = 'Error parseando contenido'\n    $input.item.json.contenido = raw\n  }\n}\n\nreturn $input.item"
+      },
+      "id": "94fc7739-04a2-4148-9ee0-5929c5d75cc6",
+      "name": "Clean Content2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        48,
+        688
+      ],
+      "executeOnce": false,
+      "typeVersion": 1,
+      "alwaysOutputData": true,
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files[]",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "user_id",
+              "value": "1"
+            },
+            {
+              "name": "type",
+              "value": "composer"
+            },
+            {
+              "name": "synchronous",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0de0bcad-e24e-4350-94f0-4924ed47893d",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        528,
+        464
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 1000,
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "getAll",
+        "workspaceId": "w75oewzv",
+        "projectId": "pz2hnkik2jbpzgd",
+        "table": "m38g0vkceeo33j4",
+        "limit": 1,
+        "options": {
+          "fields": [],
+          "where": "(published,eq,no)"
+        }
+      },
+      "id": "a4b255f1-7741-4e2d-a147-88b04e031d2d",
+      "name": "NocoDB",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 3,
+      "position": [
+        -1008,
+        688
+      ],
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9-18 * * 1-6"
+            },
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "7afbbb1e-6549-4072-b07f-a263f9afe2af",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -1200,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "nocoDbApiToken",
+        "operation": "update",
+        "workspaceId": "w75oewzv",
+        "projectId": "pz2hnkik2jbpzgd",
+        "table": "m38g0vkceeo33j4",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldName": "published",
+              "fieldValue": "yes"
+            }
+          ]
+        }
+      },
+      "id": "88dfa055-7ef0-4737-a949-8154d9e61ca3",
+      "name": "NocoDB1",
+      "type": "n8n-nodes-base.nocoDb",
+      "typeVersion": 3,
+      "position": [
+        848,
+        704
+      ],
+      "credentials": {
+        "nocoDbApiToken": {
+          "id": "UEFpnruETlYqXLhe",
+          "name": "NocoDB Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gemini-3.7-flash",
+          "mode": "list",
+          "cachedResultName": "GEMINI-3.7-FLASH"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -304,
+        688
+      ],
+      "id": "7d62fc89-ca38-45b8-9f4c-84363fc8385f",
+      "name": "AI - Summarize/Format",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gemini-3.1-flash-lite-image",
+          "mode": "list",
+          "cachedResultName": "GEMINI-3.1-FLASH-LITE-IMAGE"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        16,
+        400
+      ],
+      "id": "c305384d-cc89-44e1-b9f4-3238e48e83ad",
+      "name": "AI - Generate Post Content",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-titulo",
+              "leftValue": "={{ $json.titulo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            },
+            {
+              "id": "condition-contenido",
+              "leftValue": "={{ $json.contenido }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "52d53dd5-4c1c-4a9b-8cfd-403419fc6df1",
+      "name": "Validate Before Post",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        464
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "mTkb5uraGEs799ZD"
+  },
+  "shared": [
+    {
+      "updatedAt": "2023-12-16T00:21:14.273Z",
+      "createdAt": "2023-12-16T00:21:14.273Z",
+      "role": "workflow:owner",
+      "workflowId": "WwJkFnjgLaVFKkB9",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2023-12-16T00:20:30.575Z",
+      "createdAt": "2023-12-16T00:20:30.575Z",
+      "id": "BJZa2IMpZN7NG1SR",
+      "name": "discourse"
+    },
+    {
+      "updatedAt": "2026-07-19T15:10:46.434Z",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas"
+    },
+    {
+      "updatedAt": "2026-02-25T07:28:36.855Z",
+      "createdAt": "2026-02-25T07:28:36.855Z",
+      "id": "zteglN9EqJ3nhEv6",
+      "name": "AI"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-15T23:52:59.129Z",
+  "versionId": "29619a60-b4cb-4df8-9861-b4f834a5ec2d"
+}
