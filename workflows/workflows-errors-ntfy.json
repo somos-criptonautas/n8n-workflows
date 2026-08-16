@@ -1,0 +1,151 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-08-14T20:15:49.883Z",
+    "createdAt": "2026-08-14T20:15:42.333Z",
+    "versionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
+    "workflowId": "6YeRd2MBpoIleUlj",
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "ed6362f8-11ee-48cc-bffe-0b2b1cdc10e7",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          464,
+          464
+        ]
+      },
+      {
+        "parameters": {
+          "topic": "n8n",
+          "title": "discourse-alerts",
+          "tags": {},
+          "additionalOptions": {}
+        },
+        "type": "@jyln/n8n-nodes-ntfy.ntfy",
+        "typeVersion": 1,
+        "position": [
+          688,
+          464
+        ],
+        "id": "6ccf0a95-aaef-4cc6-907a-bce13ac64069",
+        "name": "NTFY",
+        "credentials": {
+          "ntfyApi": {
+            "id": "DduMCK1YSnRz28CE",
+            "name": "NTFY account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "NTFY",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C",
+    "name": "Version c6cf02a6",
+    "description": "",
+    "autosaved": true
+  },
+  "activeVersionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "NTFY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2023-12-16T00:18:04.421Z",
+  "id": "6YeRd2MBpoIleUlj",
+  "isArchived": false,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "name": "workflows-errors-ntfy",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "ed6362f8-11ee-48cc-bffe-0b2b1cdc10e7",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        464,
+        464
+      ]
+    },
+    {
+      "parameters": {
+        "topic": "n8n",
+        "title": "discourse-alerts",
+        "tags": {},
+        "additionalOptions": {}
+      },
+      "type": "@jyln/n8n-nodes-ntfy.ntfy",
+      "typeVersion": 1,
+      "position": [
+        688,
+        464
+      ],
+      "id": "6ccf0a95-aaef-4cc6-907a-bce13ac64069",
+      "name": "NTFY",
+      "credentials": {
+        "ntfyApi": {
+          "id": "DduMCK1YSnRz28CE",
+          "name": "NTFY account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2023-12-16T00:18:04.421Z",
+      "createdAt": "2023-12-16T00:18:04.421Z",
+      "role": "workflow:owner",
+      "workflowId": "6YeRd2MBpoIleUlj",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:10:46.434Z",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas"
+    },
+    {
+      "updatedAt": "2026-08-14T20:16:17.841Z",
+      "createdAt": "2026-08-14T20:16:17.841Z",
+      "id": "GJnnFcTPQ7zQJcdw",
+      "name": "ntfy"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-14T20:23:26.379Z",
+  "versionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6"
+}
