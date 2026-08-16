@@ -1,0 +1,422 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Hacker News": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Set the url, author",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Google Docs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Update Google Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set the url, author": {
+      "main": [
+        [
+          {
+            "node": "Create an HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set the Input Fields": {
+      "main": [
+        [
+          {
+            "node": "Hacker News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Extract Human Readable Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Human Readable Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Human Readable Data": {
+      "main": [
+        [
+          {
+            "node": "Create a Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set the Input Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-02-25T07:28:38.843Z",
+  "id": "jVldRg9P5dupzVRZ",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-EDIT] hackernews-extract-save",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "aa8ea8f3-848d-41e5-aa99-ddae43916a10",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -16,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "all",
+        "limit": "={{ $json.Count }}",
+        "additionalFields": {}
+      },
+      "id": "5e8e34a9-391e-40c2-9f47-497ff1bcb6e1",
+      "name": "Hacker News",
+      "type": "n8n-nodes-base.hackerNews",
+      "position": [
+        432,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9cf492e1-1025-4906-baf0-49820cbb7c8d",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        640,
+        400
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-exp",
+        "options": {}
+      },
+      "id": "bf7adc3e-8f68-46c5-b5fc-74ad9b6ef3d0",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1312,
+        640
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "folderId": "default",
+        "title": "={{ $('Set the url, author').item.json.author }}-HackerNews"
+      },
+      "id": "55f2161b-73bb-4b9c-8311-625e6dd9fb00",
+      "name": "Create a Google Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "position": [
+        1680,
+        432
+      ],
+      "executeOnce": false,
+      "retryOnFail": true,
+      "typeVersion": 2,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Extract Human Readable Data').item.json.text }}"
+            }
+          ]
+        }
+      },
+      "id": "71466abb-d1c4-49fd-a7e1-0a7d5ee0f5e0",
+      "name": "Update Google Docs",
+      "type": "n8n-nodes-base.googleDocs",
+      "position": [
+        1872,
+        432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52ddafbb-536f-45d6-9697-7ddf5b9b3869",
+              "name": "Count",
+              "type": "string",
+              "value": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "066d5bd9-c93b-4151-bb9d-11e7978416e9",
+      "name": "Set the Input Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        208,
+        400
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "content": "## Step 1\n\nSet the input field with the \"Count\", how many record needs to be feteched."
+      },
+      "id": "fffe004f-97de-413b-a651-cbd9dfa910c4",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 2\n\nSet the Google Gemini Credentials as part of the human readable data extraction"
+      },
+      "id": "331399f3-e0c7-4b2e-ada3-28968014fe8b",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract a human readable content. \n\nHere's the context :\n\n{{ $json.data }}",
+        "batching": {}
+      },
+      "id": "e57e6146-534f-4c39-b35f-cdc0b7979773",
+      "name": "Extract Human Readable Data",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1344,
+        432
+      ],
+      "retryOnFail": true,
+      "typeVersion": 1.7
+    },
+    {
+      "parameters": {
+        "content": "## Extract Structured Data from Hacker News, Export to Google Docs with Google Gemini\n\nHacker news data extraction with Google Gemini. Export the clean data to Google Document.",
+        "height": 240,
+        "width": 540,
+        "color": 6
+      },
+      "id": "c4e60c61-062a-4467-9995-ebd78d6f8dce",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Step 3\n\nSet the Google Document Credentials for the Hacker News data export"
+      },
+      "id": "1c96932b-6d3c-4cd8-a694-11204d7841c7",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1088,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Hacker News Data Extraction",
+        "height": 520,
+        "width": 1060,
+        "color": 5
+      },
+      "id": "124b2a09-3952-4042-b942-038202c9423a",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        560,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## LLM Usages\n\nGoogle Gemini -> Gemini 2.0 Flash Exp Model",
+        "height": 120,
+        "width": 540,
+        "color": 3
+      },
+      "id": "cbdca720-881c-4df7-b36a-49d35cde69cc",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "267f21f5-d483-4e74-9773-b1d8a02dd984",
+              "name": "author",
+              "type": "string",
+              "value": "={{ $json.author }}"
+            },
+            {
+              "id": "667a3ffb-a07c-4f66-b253-a7c64b2aa8e0",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $json._highlightResult.url.value }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7a2636eb-d56a-4cd6-b54b-0181e9ca0c81",
+      "name": "Set the url, author",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        864,
+        432
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "bc3eacbf-8bc9-4522-9615-c9a07bd1d3a9",
+      "name": "Create an HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1088,
+        432
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T07:28:38.843Z",
+      "createdAt": "2026-02-25T07:28:38.843Z",
+      "role": "workflow:owner",
+      "workflowId": "jVldRg9P5dupzVRZ",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-02-25T07:28:36.855Z",
+      "createdAt": "2026-02-25T07:28:36.855Z",
+      "id": "zteglN9EqJ3nhEv6",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2026-07-19T15:20:31.931Z",
+      "createdAt": "2026-07-19T15:20:31.931Z",
+      "id": "BbGmkPuQVSvAfRiA",
+      "name": "feeds"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:29:17.145Z",
+  "versionId": "e358570e-40a8-468e-9e35-bd249de2ac2f"
+}
