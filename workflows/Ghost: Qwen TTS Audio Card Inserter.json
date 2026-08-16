@@ -1,0 +1,434 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set Manual Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Manual Slug": {
+      "main": [
+        [
+          {
+            "node": "Ghost: Get Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Webhook Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Webhook Slug": {
+      "main": [
+        [
+          {
+            "node": "Ghost: Get Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ghost: Get Post": {
+      "main": [
+        [
+          {
+            "node": "Check Audio & Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Audio & Extract Text": {
+      "main": [
+        [
+          {
+            "node": "Qwen: Generate Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qwen: Generate Audio": {
+      "main": [
+        [
+          {
+            "node": "Bunny CDN: Upload Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bunny CDN: Upload Audio": {
+      "main": [
+        [
+          {
+            "node": "Build Audio Card & New Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Audio Card & New Content": {
+      "main": [
+        [
+          {
+            "node": "Ghost: Update Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-16T03:40:41.280Z",
+  "id": "F6VXxRCdbTYba3ME",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Ghost: Qwen TTS Audio Card Inserter",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "b481c035-8e16-4934-a669-5973884b9866",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "8e96b623-18b2-4dad-9ff9-6fac077cefa3",
+      "name": "Set Manual Slug",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slug",
+              "name": "slug",
+              "value": "={{ $json.slug ?? \"test-article\" }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "0562399f-52f9-4901-88ae-db81314c6777",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        500
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-tts",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryJson"
+      },
+      "webhookId": "327c2ec1-34d2-4eb1-86d2-13699900a978"
+    },
+    {
+      "id": "17142b7c-b436-4fdd-9028-398f6f6c34d7",
+      "name": "Extract Webhook Slug",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        250,
+        500
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "slug",
+              "name": "slug",
+              "value": "={{ $json.body?.slug ?? $json.body?.id ?? $json.slug ?? $json.id ?? \"\" }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "0198f72f-4df4-4a3a-8e5d-f54ea0b34367",
+      "name": "Ghost: Get Post",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        500,
+        400
+      ],
+      "parameters": {
+        "resource": "post",
+        "operation": "get",
+        "source": "adminApi",
+        "by": "slug",
+        "identifier": "={{ $json.slug }}",
+        "options": {
+          "formats": [
+            "html"
+          ]
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "Ghost Admin Account"
+        }
+      }
+    },
+    {
+      "id": "2e598927-fffc-4009-9ef6-ad11b0d64eab",
+      "name": "Check Audio & Extract Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        400
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const post = $input.first().json;\nconst html = post.html || '';\n\n// Skip if audio card already exists\nif (html.includes('<audio')) {\n  return [];\n}\n\n// Strip HTML tags for TTS input\nlet text = html\n  .replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n\n// TTS max input length is 4096 chars\nif (text.length > 4000) {\n  text = text.substring(0, 4000);\n}\n\nreturn [{\n  json: {\n    text,\n    postId: post.id,\n    postSlug: post.slug,\n    postTitle: post.title,\n    originalHtml: html\n  }\n}];"
+      }
+    },
+    {
+      "id": "1a995416-1969-4eb1-b729-6375290fab4c",
+      "name": "Qwen: Generate Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1000,
+        400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.QWEN_TTS_BASE_URL }}/v1/audio/speech",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"model\": $env.QWEN_TTS_MODEL || \"qwen-tts\", \"input\": $json.text, \"voice\": \"alloy\", \"response_format\": \"mp3\" } }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            },
+            "timeout": 120000
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "08f07a87-627c-402b-bbdf-a4f537dc0d9f",
+      "name": "Bunny CDN: Upload Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1250,
+        400
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ \"https://storage.bunnycdn.com/\" + ($env.BUNNY_PULL_ZONE || \"your-pull-zone\") + \"/\" + $(\"Check Audio & Extract Text\").item.json.postSlug + \"-audio.mp3\" }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "17bf914b-30de-41ef-844a-dcbaecf2ea4e",
+      "name": "Build Audio Card & New Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1500,
+        400
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const postSlug = $('Check Audio & Extract Text').item.json.postSlug;\nconst postId = $('Check Audio & Extract Text').item.json.postId;\nconst originalHtml = $('Check Audio & Extract Text').item.json.originalHtml;\n\nconst pullZone = $env.BUNNY_PULL_ZONE || 'your-pull-zone';\nconst audioUrl = 'https://' + pullZone + '.bunnycdn.com/' + postSlug + '-audio.mp3';\n\nconst audioCard = '<figure class=\"kg-embed-card\"><audio controls src=\"' + audioUrl + '\"></audio><figcaption>Listen to this article</figcaption></figure><p></p>';\n\nconst newContent = audioCard + originalHtml;\n\nreturn [{\n  json: {\n    postId,\n    newContent\n  }\n}];"
+      }
+    },
+    {
+      "id": "360edafc-7cf1-4077-8915-b3382c13fc04",
+      "name": "Ghost: Update Post",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        1750,
+        400
+      ],
+      "parameters": {
+        "resource": "post",
+        "operation": "update",
+        "source": "adminApi",
+        "postId": "={{ $json.postId }}",
+        "contentFormat": "html",
+        "updateFields": {
+          "content": "={{ $json.newContent }}"
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "Ghost Admin Account"
+        }
+      }
+    },
+    {
+      "id": "ec1a3ceb-9fec-41e8-8b0f-94ed1b595921",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1250,
+        600
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success",
+              "name": "success",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ad36306a-50e4-4ce6-8bc3-ba7b6761eff3",
+      "name": "Sticky Note e1cb3661",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        250
+      ],
+      "parameters": {
+        "content": "## Setup\n\n1. Create credentials:\n   - **Ghost Admin API**: Blog URL + API Key + JWT Secret\n   - **Qwen TTS API Key**: Bearer token for your Qwen proxy\n   - **Bunny CDN API Key**: AccessKey for Bunny CDN\n\n2. Set environment variables:\n   - `QWEN_TTS_BASE_URL` — your Qwen proxy base URL\n   - `QWEN_TTS_MODEL` — model name (default: qwen-tts)\n   - `BUNNY_PULL_ZONE` — your Bunny CDN pull zone name\n\n3. Activate workflow and test with Manual Trigger",
+        "color": 3,
+        "width": 550,
+        "height": 300
+      }
+    },
+    {
+      "id": "789211ef-77ed-4a53-8724-504188e121ea",
+      "name": "Sticky Note 44a56dc6",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        450
+      ],
+      "parameters": {
+        "content": "## Webhook\n\nPOST to: `<n8n-url>/webhook/ghost-tts`\n\nBody: `{ \"slug\": \"your-article-slug\" }`\n\nOr set up a Ghost webhook to fire on post publish.",
+        "color": 4,
+        "width": 550,
+        "height": 200
+      }
+    },
+    {
+      "id": "85d1e3cc-6e78-4588-a931-75d0d70ee619",
+      "name": "Sticky Note e1fa51c2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        550
+      ],
+      "parameters": {
+        "content": "## Error Handling\n\nIf TTS or upload fails, this handler catches the error.\nCheck credentials and environment variables.",
+        "color": 6,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-16T03:40:41.280Z",
+      "createdAt": "2026-08-16T03:40:41.280Z",
+      "role": "workflow:owner",
+      "workflowId": "F6VXxRCdbTYba3ME",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-16T03:40:41.280Z",
+  "versionId": "a8c4c834-d815-450b-ab42-7823b7ba2399"
+}
