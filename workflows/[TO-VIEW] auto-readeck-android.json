@@ -1,0 +1,477 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Content Tagging Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Content Tagging Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Bookmark": {
+      "main": [
+        [
+          {
+            "node": "If Bookmark Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Webhook Content": {
+      "main": [
+        [
+          {
+            "node": "Extractor URL & Title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Bookmark Created": {
+      "main": [
+        [
+          {
+            "node": "Bookmark Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bookmark Not Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Tagging Agent": {
+      "main": [
+        [
+          {
+            "node": "Create Bookmark",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extractor URL & Title": {
+      "main": [
+        [
+          {
+            "node": "If Title and URL provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter GPT 40 Mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extractor URL & Title",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Content Tagging Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Auto-fixing Output Parser",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auto-fixing Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Content Tagging Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Title and URL provided": {
+      "main": [
+        [
+          {
+            "node": "Content Tagging Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Title & URL Not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-02-25T07:15:34.032Z",
+  "id": "PLz8N48kKrHBnRTX",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-VIEW] auto-readeck-android",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1ed45f8c-a3dd-407a-8735-456192364935",
+      "name": "SerpAPI",
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "position": [
+        -768,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1a2f7b4c-9483-4c32-93f6-e49a95d02564",
+      "name": "Auto-fixing Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
+      "position": [
+        -624,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"tags\": [\"AI Apps\", \"Articles\", \"Github\"]\n}"
+      },
+      "id": "666a24ea-1ccd-42fb-8f6e-65e5e8b17ed9",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        -480,
+        624
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "android",
+        "authentication": "basicAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "ba53a508-c31d-4f52-b6fc-fb8321247c9d",
+      "name": "Get Webhook Content",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -1600,
+        208
+      ],
+      "webhookId": "fadadd65-756f-45a1-9593-c682600b0495",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.body.data }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n\t\"title\": \"Title of content.\",\n\t\"url\": \"URL of the content.\"\n}",
+        "options": {}
+      },
+      "id": "5a743e7c-e9c8-4b50-80cb-2e7d399d3d51",
+      "name": "Extractor URL & Title",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        -1376,
+        208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "0a4aeb10-3ab5-4232-a380-b41352ac55da",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.output.url }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5876598a-7f7d-4c1e-bc70-2af1977d27b9",
+      "name": "If Title and URL provided",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1024,
+        208
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output.url }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Act as an SEO analyst. Use the SerpAPI tool to retrieve detailed information about the provided URL. Analyze the page's content, meta tags, and search engine data to generate human-readable, SEO-friendly tags using natural language phrases (no hyphens). If no relevant tags can be derived, default to the website’s cleaned hostname. Follow these steps:\n\nRetrieve Data: Use SerpAPI to fetch the URL’s metadata (title, description), content keywords, and related entities.\n\nAnalyze Content: Identify primary topics, entities, and high-frequency keywords. Prioritize natural language phrases, and always use title case (e.g., “Machine Learning” instead of “machine-learning”).\n\nGenerate Tags: Create 2-3 tags with spaces (no hyphens/special characters) and in Title case.\n- Fallback Rule: If content is insufficient, use the website’s hostname (e.g., https://news.example.com → example). Clean the hostname by removing www, subdomains, and protocols.\n\nValidate: Ensure tags are readable, relevant, and aligned with SerpAPI’s keyword/trend data (e.g., search volume, user intent)."
+        }
+      },
+      "id": "d6ac0e0b-b8cd-4cc7-9f0c-4419e69e4db5",
+      "name": "Content Tagging Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -800,
+        192
+      ],
+      "typeVersion": 1.7,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "34d9a222-c361-4509-8e2d-47bf200697c6",
+      "name": "OpenRouter GPT 40 Mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "position": [
+        -1408,
+        384
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Get Webhook Content').item.json.headers['cf-ray'] }}",
+        "contextWindowLength": 20
+      },
+      "id": "f53892dc-3bfb-4413-877d-9a5991753e39",
+      "name": "Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        -928,
+        400
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://readeck.agentsops.pro/api/bookmarks",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "labels",
+              "value": "={{ $json.output.tags }}"
+            },
+            {
+              "name": "title",
+              "value": "={{ $('If Title and URL provided').item.json.output.title }}"
+            },
+            {
+              "name": "url",
+              "value": "={{ $('Extractor URL & Title').item.json.output.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d461c481-edc7-4eb3-934f-22ba73e861f2",
+      "name": "Create Bookmark",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -448,
+        192
+      ],
+      "notesInFlow": true,
+      "typeVersion": 4.2,
+      "notes": "Create bookmark on ReadDeck"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "bc4d7840-40bd-4b02-a4a5-9967fcec0ca2",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": 202
+            },
+            {
+              "id": "ef47dc64-8ebe-4b66-aa2b-917702097d4c",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "Link submited"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "055c38aa-165a-4892-b16b-6e2c8db419d1",
+      "name": "If Bookmark Created",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -224,
+        192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Your bookmark has been successfully created! You can now easily access this content anytime from your bookmarks section.",
+        "options": {}
+      },
+      "id": "ac774796-624a-4dcf-8880-2b15a4ebc0ca",
+      "name": "Bookmark Created",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        0,
+        192
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Bookmarking this content is not possible at the moment. Please try again later or check if bookmarking is supported for this type of content.",
+        "options": {}
+      },
+      "id": "7c78c15b-8983-4420-9fa6-b6061e25c4f4",
+      "name": "Bookmark Not Created",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Bookmarking this content is not possible at the moment. Please try again later or check if bookmarking is supported for this type of content.",
+        "options": {}
+      },
+      "id": "83e772c5-2751-4bde-a5b6-6ed94e9c5e06",
+      "name": "Title & URL Not Found",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        -800,
+        32
+      ],
+      "typeVersion": 1.1
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T07:15:34.032Z",
+      "createdAt": "2026-02-25T07:15:34.032Z",
+      "role": "workflow:owner",
+      "workflowId": "PLz8N48kKrHBnRTX",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:20:31.931Z",
+      "createdAt": "2026-07-19T15:20:31.931Z",
+      "id": "BbGmkPuQVSvAfRiA",
+      "name": "feeds"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:54:59.501Z",
+  "versionId": "409476b7-5cba-4830-8bef-2d51d0934469"
+}
