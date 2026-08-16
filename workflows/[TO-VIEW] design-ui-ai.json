@@ -1,0 +1,730 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Search with MCP?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Text": {
+      "main": [
+        [
+          {
+            "node": "Clean query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get screen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean query": {
+      "main": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Message": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Project": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List screen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is Telegram?": {
+      "main": [
+        [
+          {
+            "node": "From MD to HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List projects": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search on web": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Project": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "From MD to HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Screen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search with MCP?": {
+      "main": [
+        [
+          {
+            "node": "Get Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Stitch Agent": {
+      "main": [
+        [
+          {
+            "node": "is Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "From MD to HTML",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Google Stitch Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-02-25T07:26:29.341Z",
+  "id": "xD7kpsbN4MmOf8XS",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-VIEW] design-ui-ai",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bd8cfefd-82be-469c-84cb-092df0190c5f",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "position": [
+        32,
+        1104
+      ],
+      "webhookId": "49915063-b3ec-4612-92ed-357b7832288d",
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "b93ea39c-a784-4696-9324-86e48e0b8c7e",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        272,
+        1152
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n## STEP 2 - Google Stitch\n[Get your API Key](https://stitch.withgoogle.com/docs/mcp/setup) and set Header Auth with name: \"X-Goog-Api-Key\" and value \"YOUR-API-KEY\"\"",
+        "height": 496,
+        "width": 528,
+        "color": 7
+      },
+      "id": "d3bf1e28-146d-4e43-8744-021f78c73db4",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        528,
+        1120
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {},
+      "id": "cfa5eb61-069e-433a-b9c2-f67a1957f8a3",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "position": [
+        416,
+        1168
+      ],
+      "typeVersion": 1.3
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "create_project"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "17f4c47d-1feb-4175-b52e-475dfd355db0",
+      "name": "Create Project",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        592,
+        1184
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "get_project"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "b46d6753-bb4d-40f7-9dc5-0630a758b0ec",
+      "name": "Get Project",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        720,
+        1184
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "list_projects"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "97a28ffc-38b7-4674-a7c9-3eb396ad2d18",
+      "name": "List projects",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        848,
+        1184
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "list_screens"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "ef2ab20b-a24d-4fc9-8101-29d3ad47b943",
+      "name": "List screen",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        592,
+        1360
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "get_screen"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "631b4300-fd9c-49bf-bbc9-d5c1ed58fd42",
+      "name": "Get screen",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        720,
+        1360
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://stitch.googleapis.com/mcp",
+        "authentication": "headerAuth",
+        "include": "selected",
+        "includeTools": [
+          "generate_screen_from_text"
+        ],
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "id": "f9741948-548c-431c-b9ca-a8dada57804e",
+      "name": "Generate Screen",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "position": [
+        848,
+        1360
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "messages": {
+          "message": [
+            {
+              "content": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('message0_Text', ``, 'string') }}"
+            }
+          ]
+        },
+        "options": {},
+        "requestOptions": {}
+      },
+      "id": "c0b27ffc-57f5-40d7-a5fe-c0f0c1190d93",
+      "name": "Search on web",
+      "type": "n8n-nodes-base.perplexityTool",
+      "position": [
+        1120,
+        1168
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "if ($input.first().json.message.from.id !== xxx) { // Replace with your Telegram user ID\n    return { unauthorized: true };\n} else {\n    // Return the original data when authorized\n    return $input.all();\n}\n"
+      },
+      "id": "c39cfae1-da30-4f70-8259-89cb8a8294dd",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -640,
+        912
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "9c5ea127-cbbb-4304-8a93-b47b5c09b837",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{ $json.message.text }}",
+              "rightValue": "/stitch"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e68e882-43bc-45f4-a94c-2f39e9681b47",
+      "name": "Search with MCP?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -416,
+        912
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "098dc512-825d-463f-8b13-67436d1a12cd",
+      "name": "Get Message",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -864,
+        912
+      ],
+      "webhookId": "07c09a64-758b-40ea-8c24-d999048781c3",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "content": "## STEP 1 - Set Telegram Bot\n\nSet your Telegram ID here. the search only occurs when the command \"/stitch\" is present in the message",
+        "height": 292,
+        "width": 720,
+        "color": 7
+      },
+      "id": "e80aaf22-8150-4a24-90bc-bf2c80f35ccf",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        784
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "029f4e7e-b367-4aa9-863e-e372694940fb",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.message.text }}"
+            },
+            {
+              "id": "398c1d7f-0c90-4af6-a414-d4d1968855b9",
+              "name": "sessionId",
+              "type": "number",
+              "value": "={{ $json.message.from.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "273b110c-4ecd-4a16-be03-5e28601403d5",
+      "name": "Get Text",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -192,
+        912
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Get Message').item.json.message.from.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "dbc64f22-221f-481c-b44e-8badd0474483",
+      "name": "Send a text message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        1680,
+        736
+      ],
+      "webhookId": "160197ce-5576-4437-8ee6-11796f3ce192",
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "57a2de35-d2da-494d-81b2-19d7f68709fd",
+      "name": "Google Gemini Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        1344,
+        928
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are an AI agent with access to the Google Stitch MCP tool.\nYour task is to intelligently use Stitch to support design, UI generation, and product prototyping workflows.\n\nBefore taking any action, do the following:\n\nInspect and enumerate all available functions exposed by the Google Stitch MCP tool, including (but not limited to):\n\nUI or layout generation\n\nScreen or component creation\n\nDesign system or style token handling\n\nUX flow generation\n\nWireframe or mockup synthesis\n\nAny transformation, export, or validation capabilities\n\nEvaluate which function or combination of functions best fits the user’s request, considering:\n\nLevel of fidelity (wireframe vs high-fidelity UI)\n\nPlatform target (web, mobile, desktop)\n\nDesign intent (exploration, iteration, production-ready)\n\nInput constraints (text-only prompt, structured data, existing components)\n\nIf the request is ambiguous or underspecified, make reasonable assumptions and clearly state them before calling the tool.\n\nCall the Google Stitch MCP tool using the most appropriate function(s) and provide:\n\nClear, structured inputs\n\nDescriptive naming for screens, components, and flows\n\nConsistent design intent across outputs\n\nAfter the tool call:\n\nSummarize what was generated\n\nExplain which Stitch functions were used and why\n\nSuggest possible follow-up actions or refinements using other available Stitch capabilities\n\nConstraints\n\nDo not hallucinate Stitch features that are not exposed by the MCP tool.\n\nPrefer modular, reusable UI and design outputs.\n\nOptimize for clarity, usability, and extensibility.\n\nAct as a design-aware AI agent: pragmatic, structured, and intentional in how you use Google Stitch.\n\nUse search on web tool in necessary"
+        }
+      },
+      "id": "1fc368f3-82bb-438e-8ae0-50caa382e506",
+      "name": "Google Stitch Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        544,
+        912
+      ],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Convert this text from markdown to html format for telegram message.\n\nWithout ```html\\n and \\n```...only html for telegram.\n\nTelegram supports a limited set of HTML tags including <b>, <strong>, <i>, <em>, <u>, <ins>, <s>, <strike>, <code>, <pre>, and <a>. "
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "id": "52a5b02b-f147-4223-a7e3-0ff7ca76471b",
+      "name": "From MD to HTML",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1344,
+        736
+      ],
+      "typeVersion": 1.9
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  const originalText = item.json.chatInput;\n\n  const query = originalText.replace(\"/stitch \", \"\");\n\n  item.json.chatInput = query;\n  item.json.sessionId = item.json.sessionId;\n}\n\nreturn $input.all();\n"
+      },
+      "id": "696305fb-8d99-4c4e-b294-dc134da15d68",
+      "name": "Clean query",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        192,
+        912
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "a57cbda0-cd51-4842-9747-19b0415a96c9",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $('Get Message').isExecuted }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "id": "148042f1-d956-42f9-9eb0-ecdb59143242",
+      "name": "is Telegram?",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1056,
+        912
+      ],
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "content": "## STEP 3- Send Response\n\nSet response message for Telegram and send it",
+        "height": 452,
+        "width": 672,
+        "color": 7
+      },
+      "id": "5da2275e-b9f6-4070-8a85-0b540b274491",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1296,
+        624
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## AI-powered Google Stitch Design Agent via Telegram using MCP and Gemini\nThis workflow implements an **AI-powered design and prototyping assistant** that integrates **Telegram**, **Google Gemini**, and **Google Stitch (MCP)** to enable conversational UI generation and project management.\n\n### **How it works**\n\nThis workflow acts as a Telegram-based AI design assistant that uses Google Gemini as an LLM and Google Stitch MCP tools to manage design projects and generate UI screens from natural language. Incoming Telegram messages are authorized by user ID and filtered to only run when the `/stitch` command is used. The cleaned user query is passed to an AI agent with conversational memory, which analyzes intent and selectively calls Stitch MCP functions such as project creation, screen listing, or UI generation. The agent can also use web search when additional context is needed. Responses are converted from Markdown to Telegram-compatible HTML before being sent back to the user.\n\n### **Setup steps**\n\nConfigure Telegram access by setting your Telegram User ID in the authorization Code node and ensuring bot credentials are valid for both trigger and response nodes. Set up Google Stitch by creating an API key and configuring an HTTP Header Auth credential with `X-Goog-Api-Key`, which is shared across all Stitch MCP tool nodes. Verify credentials for the Google Gemini chat model and the Perplexity web search tool if used. After all credentials are in place, activate the workflow so the Telegram webhook is registered and the agent can respond to `/stitch` commands.\n",
+        "height": 592,
+        "width": 704
+      },
+      "id": "3fa95ed3-e40d-41c7-bb35-ed9ae5492896",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -736,
+        144
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## MY NEW YOUTUBE CHANNEL\n👉 [Subscribe to my new **YouTube channel**](https://youtube.com/@n3witalia). Here I’ll share videos and Shorts with practical tutorials and **FREE templates for n8n**.\n\n[![image](https://n3wstorage.b-cdn.net/n3witalia/youtube-n8n-cover.jpg)](https://youtube.com/@n3witalia)",
+        "height": 736,
+        "width": 736,
+        "color": 7
+      },
+      "id": "3cdefadd-b00b-4728-a76f-94f980671188",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T07:26:29.341Z",
+      "createdAt": "2026-02-25T07:26:29.341Z",
+      "role": "workflow:owner",
+      "workflowId": "xD7kpsbN4MmOf8XS",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:08:18.307Z",
+      "createdAt": "2026-07-19T15:08:18.307Z",
+      "id": "EfRtHddGh10rItqC",
+      "name": "marketing"
+    },
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-07-19T16:29:59.382Z",
+  "versionId": "bdd74d98-c44d-4290-a282-b907b31e71b6"
+}
