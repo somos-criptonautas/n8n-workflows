@@ -1,0 +1,123 @@
+{
+  "active": true,
+  "activeVersion": {
+    "updatedAt": "2026-08-15T23:37:47.381Z",
+    "createdAt": "2026-08-15T23:37:47.381Z",
+    "versionId": "c50fd023-516b-4605-8d26-4dbe18c464bd",
+    "workflowId": "mTkb5uraGEs799ZD",
+    "nodes": [
+      {
+        "id": "171ac715-b65c-4266-944f-0893a76631a0",
+        "name": "Error Trigger",
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "460a1eee-1249-457b-9dd6-ea1fb6ff8703",
+        "name": "Log Error Details",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "jsCode": "const error = $input.first().json;\nconst workflowName = error.workflow?.name || 'Unknown';\nconst nodeName = error.workflow?.execution?.lastNodeExecuted || 'Unknown';\nconst errorMessage = error.execution?.error?.message || 'No message';\nconst timestamp = new Date().toISOString();\n\nconst logEntry = `[${timestamp}] WORKFLOW: ${workflowName} | NODE: ${nodeName} | ERROR: ${errorMessage}`;\n\nconsole.log(logEntry);\n\nreturn [{ json: { logEntry, workflowName, nodeName, errorMessage, timestamp } }];"
+        }
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Log Error Details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Error handler for post scheduling workflow",
+    "description": "Created with 2 nodes: Error Trigger, Log Error Details",
+    "autosaved": false
+  },
+  "activeVersionId": "c50fd023-516b-4605-8d26-4dbe18c464bd",
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-15T23:37:47.381Z",
+  "id": "mTkb5uraGEs799ZD",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Error Handler - Post Workflow",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "171ac715-b65c-4266-944f-0893a76631a0",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "460a1eee-1249-457b-9dd6-ea1fb6ff8703",
+      "name": "Log Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const error = $input.first().json;\nconst workflowName = error.workflow?.name || 'Unknown';\nconst nodeName = error.workflow?.execution?.lastNodeExecuted || 'Unknown';\nconst errorMessage = error.execution?.error?.message || 'No message';\nconst timestamp = new Date().toISOString();\n\nconst logEntry = `[${timestamp}] WORKFLOW: ${workflowName} | NODE: ${nodeName} | ERROR: ${errorMessage}`;\n\nconsole.log(logEntry);\n\nreturn [{ json: { logEntry, workflowName, nodeName, errorMessage, timestamp } }];"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-15T23:37:47.381Z",
+      "createdAt": "2026-08-15T23:37:47.381Z",
+      "role": "workflow:owner",
+      "workflowId": "mTkb5uraGEs799ZD",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-15T23:37:47.381Z",
+  "versionId": "c50fd023-516b-4605-8d26-4dbe18c464bd"
+}
