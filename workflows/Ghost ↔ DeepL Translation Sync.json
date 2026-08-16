@@ -1,0 +1,810 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Ghost Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond 200 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 200 OK": {
+      "main": [
+        [
+          {
+            "node": "Verify Ghost Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Ghost Signature": {
+      "main": [
+        [
+          {
+            "node": "Has #translated Tag?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has #translated Tag?": {
+      "main": [
+        [
+          {
+            "node": "Stop - Translation Loop Detected",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Source Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Debounce 45s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Source Post": {
+      "main": [
+        [
+          {
+            "node": "Compute Content Hash",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Content Hash": {
+      "main": [
+        [
+          {
+            "node": "Lookup Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Translation": {
+      "main": [
+        [
+          {
+            "node": "Content Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Changed?": {
+      "main": [
+        [
+          {
+            "node": "Skip - No Changes or Locked",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Route by Ghost Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route by Ghost Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Ghost Event": {
+      "main": [
+        [
+          {
+            "node": "Translate with DeepL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Translate with DeepL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Lookup for Unpublish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Lookup for Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate with DeepL": {
+      "main": [
+        [
+          {
+            "node": "Map Translated Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Translated Fields": {
+      "main": [
+        [
+          {
+            "node": "Translation Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translation Exists?": {
+      "main": [
+        [
+          {
+            "node": "Update Translation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup for Unpublish": {
+      "main": [
+        [
+          {
+            "node": "Set Translation to Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup for Delete": {
+      "main": [
+        [
+          {
+            "node": "Delete Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-16T05:46:01.969Z",
+  "id": "VBFOBagjUCaFnGYv",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Ghost ↔ DeepL Translation Sync",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "c3bd74ab-2b02-4d7a-a01a-646630001f71",
+      "name": "Ghost Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        288
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-translate",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "daeb686a-160a-4c95-8505-cae828636623"
+    },
+    {
+      "id": "6a6d07b9-62a1-4245-a628-a85f7fa9940e",
+      "name": "Respond 200 OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        288
+      ],
+      "parameters": {
+        "respondWith": "noData",
+        "responseCode": 200
+      }
+    },
+    {
+      "id": "402ed544-5140-4aa0-81d6-819a220ee39e",
+      "name": "Verify Ghost Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        288
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst webhookSecret = $env.GHOST_WEBHOOK_SECRET;\nconst rawBody = $json.body;\nconst signatureHeader = $json.headers['x-ghost-signature'];\n\nif (!webhookSecret) {\n  throw new Error('GHOST_WEBHOOK_SECRET environment variable is not set');\n}\n\nif (!signatureHeader) {\n  throw new Error('Missing x-ghost-signature header');\n}\n\nconst parts = signatureHeader.split(',').map(p => p.trim());\nconst expectedSig = parts[0].replace('sha256=', '');\nconst timestamp = parts[1].replace('t=', '');\n\nconst hmac = crypto.createHmac('sha256', webhookSecret);\nhmac.update(rawBody);\nhmac.update(timestamp);\nconst computedSig = hmac.digest('hex');\n\nif (computedSig !== expectedSig) {\n  throw new Error('Invalid webhook signature');\n}\n\nreturn $input.all();"
+      }
+    },
+    {
+      "id": "12db7ee5-5f4f-4fe4-9807-31898cad28f6",
+      "name": "Has #translated Tag?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        288
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.post.current.tags.map(t => t.name).includes(\"translated\") }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "3194ca38-661b-40bb-af79-78d586cee3e5",
+      "name": "Stop - Translation Loop Detected",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        896,
+        96
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "977891a9-459d-4bee-8f11-622602dab1a6",
+      "name": "Debounce 45s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        480
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 45,
+        "unit": "seconds"
+      },
+      "webhookId": "da1db6ed-9e39-4798-a77d-e00a1327ab5d"
+    },
+    {
+      "id": "efd0de98-1523-4893-82d1-aa51fc536e62",
+      "name": "Fetch Source Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        288
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/{{ $json.body.post.current.id }}/?formats=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          },
+          "redirect": {
+            "redirect": {
+              "followRedirects": true
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ef2f5b77-a9f4-416f-aed3-1bbc179af2b0",
+      "name": "Compute Content Hash",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        288
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\nconst sourcePost = $input.first().json.posts[0];\n\nconst title = sourcePost.title || '';\nconst html = sourcePost.html || '';\nconst customExcerpt = sourcePost.custom_excerpt || '';\n\nconst hash = crypto.createHash('sha256');\nhash.update(title + html + customExcerpt);\nconst contentHash = hash.digest('hex');\n\nreturn [{\n  json: {\n    ...sourcePost,\n    contentHash,\n    translationSlug: sourcePost.slug + '-es'\n  }\n}];"
+      }
+    },
+    {
+      "id": "6dc6bd67-8871-44ee-af79-99ffe27657c8",
+      "name": "Lookup Translation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        288
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/slug/{{ $json.translationSlug }}/?formats=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "responseFormat": "json",
+            "neverError": true
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2bb324b8-ed45-4a99-b2bd-8a42a8048997",
+      "name": "Content Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        288
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.posts[0]?.codeinjection_head?.includes(\"src:\" + $(\"Compute Content Hash\").item.json.contentHash) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "leftValue": "={{ $json.posts[0]?.tags?.map(t => t.name).includes(\"locked\") }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "or"
+        }
+      }
+    },
+    {
+      "id": "4cbb343b-e67d-401e-a545-4ff4e3054a0d",
+      "name": "Skip - No Changes or Locked",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        176
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "0eb5c988-9a21-4ea8-b611-68ab51716979",
+      "name": "Route by Ghost Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1792,
+        368
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "published",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"Ghost Webhook\").item.json.body.post.event }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "post.published"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "published_edited",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"Ghost Webhook\").item.json.body.post.event }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "post.published.edited"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "unpublished",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"Ghost Webhook\").item.json.body.post.event }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "post.unpublished"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "deleted",
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"Ghost Webhook\").item.json.body.post.event }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "post.deleted"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Other Events"
+        }
+      }
+    },
+    {
+      "id": "e303b393-3cb2-4cd7-8036-d6e1e910d839",
+      "name": "Translate with DeepL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        96
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-free.deepl.com/v2/translate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: [ $(\"Compute Content Hash\").item.json.title || \"\", $(\"Compute Content Hash\").item.json.html || \"\", $(\"Compute Content Hash\").item.json.custom_excerpt || \"\", $(\"Compute Content Hash\").item.json.meta_title || \"\", $(\"Compute Content Hash\").item.json.meta_description || \"\", $(\"Compute Content Hash\").item.json.og_title || \"\", $(\"Compute Content Hash\").item.json.og_description || \"\", $(\"Compute Content Hash\").item.json.twitter_title || \"\", $(\"Compute Content Hash\").item.json.twitter_description || \"\", $(\"Compute Content Hash\").item.json.feature_image_alt || \"\", $(\"Compute Content Hash\").item.json.feature_image_caption || \"\" ], source_lang: \"EN\", target_lang: \"ES\", tag_handling: \"html\", ignore_tags: [\"pre\", \"code\"], preserve_formatting: true }) }}",
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "6443dd6c-a6fd-4dac-840d-c432c91abef6",
+      "name": "Map Translated Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        96
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const deeplResponse = $input.first().json;\nconst sourcePost = $('Compute Content Hash').first().json;\nconst translations = deeplResponse.translations;\n\nconst translatedFields = {\n  title: translations[0]?.text || '',\n  html: translations[1]?.text || '',\n  custom_excerpt: translations[2]?.text || '',\n  meta_title: translations[3]?.text || '',\n  meta_description: translations[4]?.text || '',\n  og_title: translations[5]?.text || '',\n  og_description: translations[6]?.text || '',\n  twitter_title: translations[7]?.text || '',\n  twitter_description: translations[8]?.text || '',\n  feature_image_alt: translations[9]?.text || '',\n  feature_image_caption: translations[10]?.text || ''\n};\n\nreturn [{\n  json: {\n    ...sourcePost,\n    translatedFields\n  }\n}];"
+      }
+    },
+    {
+      "id": "557a7ef4-f831-4c83-a64b-c27f3e263c1c",
+      "name": "Translation Exists?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"Lookup Translation\").item.json.posts?.length > 0 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "9c44a025-6e92-4e17-9cb6-efe6f47b5b1c",
+      "name": "Update Translation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2688,
+        0
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/{{ $(\"Lookup Translation\").item.json.posts[0].id }}/?source=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ id: $(\"Lookup Translation\").item.json.posts[0].id, title: $(\"Map Translated Fields\").item.json.translatedFields.title, html: $(\"Map Translated Fields\").item.json.translatedFields.html, custom_excerpt: $(\"Map Translated Fields\").item.json.translatedFields.custom_excerpt || null, updated_at: $(\"Lookup Translation\").item.json.posts[0].updated_at, codeinjection_head: \"<!--src:\" + $(\"Map Translated Fields\").item.json.contentHash + \"-->\", meta_title: $(\"Map Translated Fields\").item.json.translatedFields.meta_title || null, meta_description: $(\"Map Translated Fields\").item.json.translatedFields.meta_description || null, og_title: $(\"Map Translated Fields\").item.json.translatedFields.og_title || null, og_description: $(\"Map Translated Fields\").item.json.translatedFields.og_description || null, twitter_title: $(\"Map Translated Fields\").item.json.translatedFields.twitter_title || null, twitter_description: $(\"Map Translated Fields\").item.json.translatedFields.twitter_description || null, feature_image: $(\"Map Translated Fields\").item.json.feature_image || null, feature_image_alt: $(\"Map Translated Fields\").item.json.translatedFields.feature_image_alt || null, feature_image_caption: $(\"Map Translated Fields\").item.json.translatedFields.feature_image_caption || null }] }) }}",
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "27d0bd55-e5c0-4117-b1bb-1320e9baa468",
+      "name": "Create Translation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2688,
+        192
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/?source=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ title: $(\"Map Translated Fields\").item.json.translatedFields.title, slug: $(\"Map Translated Fields\").item.json.translationSlug, html: $(\"Map Translated Fields\").item.json.translatedFields.html, custom_excerpt: $(\"Map Translated Fields\").item.json.translatedFields.custom_excerpt || null, status: \"published\", published_at: $(\"Map Translated Fields\").item.json.published_at || new Date().toISOString(), tags: [{ name: \"#es\" }, { name: \"#translated\" }], codeinjection_head: \"<!--src:\" + $(\"Map Translated Fields\").item.json.contentHash + \"-->\", authors: $(\"Map Translated Fields\").item.json.authors?.map(a => ({ id: a.id })) || [], meta_title: $(\"Map Translated Fields\").item.json.translatedFields.meta_title || null, meta_description: $(\"Map Translated Fields\").item.json.translatedFields.meta_description || null, og_title: $(\"Map Translated Fields\").item.json.translatedFields.og_title || null, og_description: $(\"Map Translated Fields\").item.json.translatedFields.og_description || null, twitter_title: $(\"Map Translated Fields\").item.json.translatedFields.twitter_title || null, twitter_description: $(\"Map Translated Fields\").item.json.translatedFields.twitter_description || null, feature_image: $(\"Map Translated Fields\").item.json.feature_image || null, feature_image_alt: $(\"Map Translated Fields\").item.json.translatedFields.feature_image_alt || null, feature_image_caption: $(\"Map Translated Fields\").item.json.translatedFields.feature_image_caption || null }] }) }}",
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "f3fb5545-eb8b-4ebd-8577-c9448bbe41ef",
+      "name": "Lookup for Unpublish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        400
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/slug/{{ $(\"Ghost Webhook\").item.json.body.post.current.slug }}-es/?formats=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "responseFormat": "json",
+            "neverError": true
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "48ba6bd1-20d7-4557-b419-6fae5585c415",
+      "name": "Set Translation to Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2240,
+        400
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/{{ $json.posts[0].id }}/?source=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ id: $json.posts[0].id, status: \"draft\", updated_at: $json.posts[0].updated_at }] }) }}",
+        "options": {
+          "response": {
+            "responseFormat": "json"
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "2a856672-f8f6-41cc-bc01-13240da77d7a",
+      "name": "Lookup for Delete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        592
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/slug/{{ $(\"Ghost Webhook\").item.json.body.post.current.slug }}-es/?formats=html",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "responseFormat": "json",
+            "neverError": true
+          }
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c63876a3-e465-45a9-b4a8-4e0ed7aa02fe",
+      "name": "Delete Translation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2240,
+        592
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.GHOST_ADMIN_URL }}/ghost/api/admin/posts/{{ $json.posts[0].id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "responseFormat": "json",
+            "neverError": true
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "3da7725b-8fbe-4373-b9a1-d01d75e31919",
+      "name": "Sticky Note 40c4022a",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -50,
+        -50
+      ],
+      "parameters": {
+        "content": "## Known Limitation\n\nRound-tripping content as HTML flattens Lexical cards (bookmarks, galleries, buttons, callouts) into plain markup on the translated copy.\n\nBody text, headings, lists, links and images survive fine.",
+        "color": 3,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-16T05:46:01.969Z",
+      "createdAt": "2026-08-16T05:46:01.969Z",
+      "role": "workflow:owner",
+      "workflowId": "VBFOBagjUCaFnGYv",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-16T05:46:01.969Z",
+  "versionId": "9b5f3e1d-4f96-4bfd-b9d6-fbd98fd3ef6c"
+}
