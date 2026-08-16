@@ -1,0 +1,143 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Ghost Webhook": {
+      "main": [
+        [
+          {
+            "node": "DeepL Translate Body",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "DeepL Translate Title",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepL Translate Body": {
+      "main": [
+        [
+          {
+            "node": "Create Translated Ghost Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2025-02-22T22:39:03.816Z",
+  "id": "CCpNJo1Y1UAzkObN",
+  "isArchived": false,
+  "meta": null,
+  "name": "[TO-BUILD] translate-ghost-deepl",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-webhook",
+        "options": {}
+      },
+      "name": "Ghost Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "17c45849-f8cb-4c57-acda-e7c8a49c409a",
+      "webhookId": "818b35b5-e58f-46ee-8b23-5e12ca1cb2e2"
+    },
+    {
+      "parameters": {
+        "resource": "translate",
+        "additionalFields": {}
+      },
+      "name": "DeepL Translate Body",
+      "type": "n8n-nodes-base.deepL",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e851c3b3-6201-4796-bb78-3f19df434fb1",
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "translate",
+        "additionalFields": {}
+      },
+      "name": "DeepL Translate Title",
+      "type": "n8n-nodes-base.deepL",
+      "typeVersion": 1,
+      "position": [
+        0,
+        208
+      ],
+      "id": "553486fb-6435-4b36-a8ae-ccda9db751ef"
+    },
+    {
+      "parameters": {
+        "operation": "__CUSTOM_API_CALL__"
+      },
+      "name": "Create Translated Ghost Post",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        208,
+        112
+      ],
+      "id": "3856911a-13a6-4820-9a5a-a80e76649296",
+      "credentials": {
+        "ghostContentApi": {
+          "id": "wuAic0o88j2CKdc2",
+          "name": "Ghost Content account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "updatedAt": "2025-02-22T22:39:03.816Z",
+      "createdAt": "2025-02-22T22:39:03.816Z",
+      "role": "workflow:owner",
+      "workflowId": "CCpNJo1Y1UAzkObN",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-19T15:24:45.213Z",
+      "createdAt": "2026-07-19T15:24:45.213Z",
+      "id": "smrjaKewOr2jfDEk",
+      "name": "translations"
+    },
+    {
+      "updatedAt": "2026-07-19T15:29:32.896Z",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-14T20:18:07.520Z",
+  "versionId": "552c5006-24c9-4cab-9606-ea31a78910ba"
+}
