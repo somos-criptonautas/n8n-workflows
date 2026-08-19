@@ -1,0 +1,210 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Glosario Bot Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "Get Categories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Categories": {
+      "main": [
+        [
+          {
+            "node": "Extract Category ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Category ID": {
+      "main": [
+        [
+          {
+            "node": "Process All Terms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process All Terms": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-08-19T02:49:21.891Z",
+  "id": "lZwk1xZSnpOOnDRT",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Glosario → Discourse",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "5e55e5fb-41bf-4af0-aaa4-2b8f727df636",
+      "name": "Test Manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "99957fd9-a5db-4f74-b95b-0168b152adae",
+      "name": "Glosario Bot Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        224
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "glosario",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "glosario-webhook"
+    },
+    {
+      "id": "6f9277f8-ea06-465f-8034-88d5ff4629cc",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        224
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst words = body.words || [];\nconst raw = body.raw || '';\nconst lang = body.lang || 'es';\nlet items = [];\n\nif (words.length > 0) {\n  items = words.map(w => {\n    if (typeof w === 'string') {\n      const idx = w.indexOf(':');\n      return idx > -1\n        ? { term: w.slice(0, idx).trim(), description: w.slice(idx + 1).trim(), lang }\n        : { term: w.trim(), description: '', lang };\n    }\n    return { term: w.term || w.name || '', description: w.description || '', lang: w.lang || lang };\n  });\n} else if (raw) {\n  items = raw.split('\\n')\n    .map(l => l.replace(/^[*\\-]\\s*/, '').trim())\n    .filter(Boolean)\n    .map(l => {\n      const idx = l.indexOf(':');\n      return idx > -1\n        ? { term: l.slice(0, idx).trim(), description: l.slice(idx + 1).trim(), lang }\n        : { term: l.trim(), description: '', lang };\n    });\n}\nreturn items.filter(i => i.term).map(i => ({ json: i }));"
+      }
+    },
+    {
+      "id": "a2ea94ea-8c54-4cc4-b145-f5bec0907e0e",
+      "name": "Get Categories",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        224
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.DISCOURSE_URL || \"https://your-discourse-instance.com\" }}/categories.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "={{ $env.DISCOURSE_API_KEY }}"
+            },
+            {
+              "name": "Api-Username",
+              "value": "={{ $env.DISCOURSE_API_USERNAME || \"system\" }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "6fbeb104-dc55-42e6-8b5a-4b2d6e8b7aa9",
+      "name": "Extract Category ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        224
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const categories = $input.first().json.category_list?.categories || [];\nconst cat = categories.find(c => c.slug === 'glosario' || c.name?.toLowerCase() === 'glosario');\nif (!cat) throw new Error('Category #glosario not found. Check DISCOURSE_URL or category slug.');\nreturn [{ json: { categoryId: cat.id, categorySlug: cat.slug } }];"
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "ea6988bf-73e2-4348-8d12-ee09154c956e",
+      "name": "Process All Terms",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        224
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const categoryId = $('Extract Category ID').item.json.categoryId;\nconst discourseUrl = $env.DISCOURSE_URL || 'https://your-discourse-instance.com';\nconst discourseKey = $env.DISCOURSE_API_KEY;\nconst discourseUser = $env.DISCOURSE_API_USERNAME || 'system';\nconst openaiUrl = $env.OPENAI_BASE_URL || 'https://api.openai.com';\nconst openaiKey = $env.OPENAI_API_KEY;\nconst openaiModel = $env.OPENAI_MODEL || 'gpt-4o-mini';\n\nconst items = $input.all();\nconst results = [];\n\nfunction levenshtein(a, b) {\n  const m = a.length, n = b.length;\n  const d = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));\n  for (let i = 0; i <= m; i++) d[i][0] = i;\n  for (let j = 0; j <= n; j++) d[0][j] = j;\n  for (let i = 1; i <= m; i++)\n    for (let j = 1; j <= n; j++) {\n      const cost = a[i - 1] === b[j - 1] ? 0 : 1;\n      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);\n    }\n  return d[m][n];\n}\n\nasync function searchExisting(term) {\n  try {\n    const url = discourseUrl + '/search.json?q=' + encodeURIComponent(term) + '%20in%3Atitle%20%23glosario';\n    const resp = await fetch(url, { headers: { 'Api-Key': discourseKey, 'Api-Username': discourseUser } });\n    if (!resp.ok) return [];\n    const data = await resp.json();\n    const posts = data.posts || [];\n    const topics = data.grouped_search_result?.topics || [];\n    return [...posts.map(p => p.topic_title || p.title || ''), ...topics.map(t => t.title || '')].filter(Boolean);\n  } catch { return []; }\n}\n\nasync function generateDescription(term, lang) {\n  try {\n    const resp = await fetch(openaiUrl + '/chat/completions', {\n      method: 'POST',\n      headers: { 'Authorization': 'Bearer ' + openaiKey, 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        model: openaiModel,\n        messages: [\n          { role: 'system', content: 'Write a glossary entry for the given term. Rules: maximum 3 paragraphs. Simple, concise, and precise. Include the key elements a reader expects in a glossary definition. Output only the entry text, no preamble, no title, no formatting markers.' },\n          { role: 'user', content: 'Term: ' + term + '\\nLanguage: ' + lang }\n        ],\n        temperature: 0.3,\n        max_tokens: 600\n      })\n    });\n    if (!resp.ok) return '';\n    const data = await resp.json();\n    return data.choices?.[0]?.message?.content || '';\n  } catch { return ''; }\n}\n\nasync function createTopic(term, description, catId) {\n  try {\n    const resp = await fetch(discourseUrl + '/posts.json', {\n      method: 'POST',\n      headers: { 'Api-Key': discourseKey, 'Api-Username': discourseUser, 'Content-Type': 'application/json' },\n      body: JSON.stringify({\n        title: term,\n        raw: '## ' + term + '\\n\\n' + description + '\\n\\n---\\n*Auto-generated glossary entry*',\n        category: catId\n      })\n    });\n    if (!resp.ok) {\n      const err = await resp.text();\n      return { error: resp.status + ': ' + err };\n    }\n    const data = await resp.json();\n    return { postId: data.id, topicId: data.topic_id };\n  } catch (e) { return { error: e.message }; }\n}\n\nfor (const item of items) {\n  const { term, description, lang } = item.json;\n  if (!term) continue;\n\n  // 1. Check existence\n  const existingTitles = await searchExisting(term);\n  const termLower = term.toLowerCase().trim();\n  const isDuplicate = existingTitles.some(t => {\n    const tLower = t.toLowerCase().trim();\n    if (termLower === tLower) return true;\n    const maxLen = Math.max(termLower.length, tLower.length);\n    if (maxLen === 0) return false;\n    return (1 - levenshtein(termLower, tLower) / maxLen) >= 0.85;\n  });\n\n  if (isDuplicate) {\n    results.push({ json: { term, status: 'skipped', reason: 'duplicate or very similar topic exists' } });\n    continue;\n  }\n\n  // 2. Generate description if missing\n  let desc = description || '';\n  if (!desc.trim()) {\n    desc = await generateDescription(term, lang);\n  }\n\n  if (!desc.trim()) {\n    results.push({ json: { term, status: 'error', reason: 'could not generate description' } });\n    continue;\n  }\n\n  // 3. Create topic\n  const createResult = await createTopic(term, desc, categoryId);\n  if (createResult.error) {\n    results.push({ json: { term, status: 'error', reason: createResult.error } });\n  } else {\n    results.push({ json: { term, status: 'created', postId: createResult.postId, topicId: createResult.topicId } });\n  }\n}\n\nreturn results;"
+      },
+      "executeOnce": true
+    },
+    {
+      "id": "c62a4dfc-e720-4246-9f06-9554041f33aa",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        224
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ totalProcessed: $json.totalProcessed || $input.all().length, created: $input.all().filter(i => i.json.status === \"created\").length, skipped: $input.all().filter(i => i.json.status === \"skipped\").length, errors: $input.all().filter(i => i.json.status === \"error\").length, items: $input.all().map(i => i.json) }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "updatedAt": "2026-08-19T02:49:21.891Z",
+      "createdAt": "2026-08-19T02:49:21.891Z",
+      "role": "workflow:owner",
+      "workflowId": "lZwk1xZSnpOOnDRT",
+      "projectId": "HXLppsMA2lbH4F4C"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-08-19T02:49:21.891Z",
+  "versionId": "467da0a9-529e-4e3d-8330-f4a7784c54ac"
+}
