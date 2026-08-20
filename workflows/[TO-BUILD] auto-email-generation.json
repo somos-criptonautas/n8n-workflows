@@ -410,10 +410,10 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:08:18.307Z",
-      "createdAt": "2026-07-19T15:08:18.307Z",
-      "id": "EfRtHddGh10rItqC",
-      "name": "marketing"
+      "updatedAt": "2026-07-19T15:10:46.434Z",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas"
     },
     {
       "updatedAt": "2026-06-17T16:27:29.791Z",
@@ -422,10 +422,10 @@
       "name": "agent"
     },
     {
-      "updatedAt": "2026-07-19T15:10:46.434Z",
-      "createdAt": "2026-07-19T15:10:46.434Z",
-      "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas"
+      "updatedAt": "2026-07-19T15:08:18.307Z",
+      "createdAt": "2026-07-19T15:08:18.307Z",
+      "id": "EfRtHddGh10rItqC",
+      "name": "marketing"
     }
   ],
   "triggerCount": 0,
