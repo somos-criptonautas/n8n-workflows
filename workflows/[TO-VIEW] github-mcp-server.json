@@ -407,16 +407,16 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
-      "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
-    },
-    {
       "updatedAt": "2026-07-19T16:37:25.896Z",
       "createdAt": "2026-07-19T16:37:25.896Z",
       "id": "mmkDj7YMwTrxFurm",
       "name": "github"
+    },
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
     }
   ],
   "triggerCount": 0,
