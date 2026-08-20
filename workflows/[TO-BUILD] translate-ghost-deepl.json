@@ -125,16 +125,16 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:24:45.213Z",
-      "createdAt": "2026-07-19T15:24:45.213Z",
-      "id": "smrjaKewOr2jfDEk",
-      "name": "translations"
-    },
-    {
       "updatedAt": "2026-07-19T15:29:32.896Z",
       "createdAt": "2026-07-19T15:29:32.896Z",
       "id": "t971t28GAunyX7gw",
       "name": "ghost"
+    },
+    {
+      "updatedAt": "2026-07-19T15:24:45.213Z",
+      "createdAt": "2026-07-19T15:24:45.213Z",
+      "id": "smrjaKewOr2jfDEk",
+      "name": "translations"
     }
   ],
   "triggerCount": 0,
