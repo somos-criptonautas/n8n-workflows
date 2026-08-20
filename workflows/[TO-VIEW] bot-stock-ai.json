@@ -511,16 +511,16 @@
       "name": "nautas"
     },
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
-      "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
-    },
-    {
       "updatedAt": "2026-07-19T16:19:31.381Z",
       "createdAt": "2026-07-19T16:19:31.381Z",
       "id": "2r6hyOR1ejqoZmZO",
       "name": "bot"
+    },
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
     }
   ],
   "triggerCount": 0,
