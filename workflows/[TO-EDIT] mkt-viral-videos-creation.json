@@ -1011,12 +1011,6 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:08:18.307Z",
-      "createdAt": "2026-07-19T15:08:18.307Z",
-      "id": "EfRtHddGh10rItqC",
-      "name": "marketing"
-    },
-    {
       "updatedAt": "2026-07-19T15:22:25.866Z",
       "createdAt": "2026-07-19T15:22:25.866Z",
       "id": "WAjtvmzgeMpv8F2U",
@@ -1027,6 +1021,12 @@
       "createdAt": "2026-06-17T16:27:29.791Z",
       "id": "uKN64TK7JNFhZFiD",
       "name": "agent"
+    },
+    {
+      "updatedAt": "2026-07-19T15:08:18.307Z",
+      "createdAt": "2026-07-19T15:08:18.307Z",
+      "id": "EfRtHddGh10rItqC",
+      "name": "marketing"
     }
   ],
   "triggerCount": 0,
