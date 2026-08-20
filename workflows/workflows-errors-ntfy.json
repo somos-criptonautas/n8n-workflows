@@ -133,16 +133,16 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:10:46.434Z",
-      "createdAt": "2026-07-19T15:10:46.434Z",
-      "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas"
-    },
-    {
       "updatedAt": "2026-08-14T20:16:17.841Z",
       "createdAt": "2026-08-14T20:16:17.841Z",
       "id": "GJnnFcTPQ7zQJcdw",
       "name": "ntfy"
+    },
+    {
+      "updatedAt": "2026-07-19T15:10:46.434Z",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas"
     }
   ],
   "triggerCount": 0,
