@@ -1340,16 +1340,16 @@
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
-      "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
-    },
-    {
       "updatedAt": "2026-02-25T07:28:36.855Z",
       "createdAt": "2026-02-25T07:28:36.855Z",
       "id": "zteglN9EqJ3nhEv6",
       "name": "AI"
+    },
+    {
+      "updatedAt": "2026-06-17T16:27:29.791Z",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "id": "uKN64TK7JNFhZFiD",
+      "name": "agent"
     },
     {
       "updatedAt": "2026-07-19T16:19:31.381Z",
