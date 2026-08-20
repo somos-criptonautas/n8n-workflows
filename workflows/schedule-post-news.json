@@ -537,6 +537,12 @@
   "staticData": null,
   "tags": [
     {
+      "updatedAt": "2026-02-25T07:28:36.855Z",
+      "createdAt": "2026-02-25T07:28:36.855Z",
+      "id": "zteglN9EqJ3nhEv6",
+      "name": "AI"
+    },
+    {
       "updatedAt": "2023-12-16T00:20:30.575Z",
       "createdAt": "2023-12-16T00:20:30.575Z",
       "id": "BJZa2IMpZN7NG1SR",
@@ -547,12 +553,6 @@
       "createdAt": "2026-07-19T15:10:46.434Z",
       "id": "ymjfgEEEwMyXBYBl",
       "name": "nautas"
-    },
-    {
-      "updatedAt": "2026-02-25T07:28:36.855Z",
-      "createdAt": "2026-02-25T07:28:36.855Z",
-      "id": "zteglN9EqJ3nhEv6",
-      "name": "AI"
     }
   ],
   "triggerCount": 0,
