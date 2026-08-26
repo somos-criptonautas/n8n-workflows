@@ -1,8 +1,6 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-08-15T23:37:47.381Z",
-    "createdAt": "2026-08-15T23:37:47.381Z",
     "versionId": "c50fd023-516b-4605-8d26-4dbe18c464bd",
     "workflowId": "mTkb5uraGEs799ZD",
     "nodes": [
@@ -49,7 +47,9 @@
     "authors": "D C (via MCP)",
     "name": "Error handler for post scheduling workflow",
     "description": "Created with 2 nodes: Error Trigger, Log Error Details",
-    "autosaved": false
+    "autosaved": false,
+    "createdAt": "2026-08-15T23:37:47.381Z",
+    "updatedAt": "2026-08-15T23:37:47.381Z"
   },
   "activeVersionId": "c50fd023-516b-4605-8d26-4dbe18c464bd",
   "connections": {
@@ -108,11 +108,11 @@
   },
   "shared": [
     {
-      "updatedAt": "2026-08-15T23:37:47.381Z",
-      "createdAt": "2026-08-15T23:37:47.381Z",
       "role": "workflow:owner",
       "workflowId": "mTkb5uraGEs799ZD",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-08-15T23:37:47.381Z",
+      "updatedAt": "2026-08-15T23:37:47.381Z"
     }
   ],
   "staticData": null,
