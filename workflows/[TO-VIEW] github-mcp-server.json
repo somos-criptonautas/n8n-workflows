@@ -397,26 +397,26 @@
   },
   "shared": [
     {
-      "updatedAt": "2026-06-17T16:27:32.115Z",
-      "createdAt": "2026-06-17T16:27:32.115Z",
       "role": "workflow:owner",
       "workflowId": "cEDbNDu87yD3wGZf",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-06-17T16:27:32.115Z",
+      "updatedAt": "2026-06-17T16:27:32.115Z"
     }
   ],
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T16:37:25.896Z",
-      "createdAt": "2026-07-19T16:37:25.896Z",
       "id": "mmkDj7YMwTrxFurm",
-      "name": "github"
+      "name": "github",
+      "createdAt": "2026-07-19T16:37:25.896Z",
+      "updatedAt": "2026-07-19T16:37:25.896Z"
     },
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
       "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
+      "name": "agent",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "updatedAt": "2026-06-17T16:27:29.791Z"
     }
   ],
   "triggerCount": 0,
