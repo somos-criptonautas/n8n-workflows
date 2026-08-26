@@ -992,11 +992,11 @@
   },
   "shared": [
     {
-      "updatedAt": "2026-07-19T14:50:56.700Z",
-      "createdAt": "2026-07-19T14:50:56.700Z",
       "role": "workflow:owner",
       "workflowId": "SkW7FNjIAMvhKJNc",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-07-19T14:50:56.700Z",
+      "updatedAt": "2026-07-19T14:50:56.700Z"
     }
   ],
   "staticData": null,
