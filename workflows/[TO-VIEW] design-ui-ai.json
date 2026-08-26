@@ -702,26 +702,26 @@
   },
   "shared": [
     {
-      "updatedAt": "2026-02-25T07:26:29.341Z",
-      "createdAt": "2026-02-25T07:26:29.341Z",
       "role": "workflow:owner",
       "workflowId": "xD7kpsbN4MmOf8XS",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-02-25T07:26:29.341Z",
+      "updatedAt": "2026-02-25T07:26:29.341Z"
     }
   ],
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
       "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
+      "name": "agent",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "updatedAt": "2026-06-17T16:27:29.791Z"
     },
     {
-      "updatedAt": "2026-07-19T15:08:18.307Z",
-      "createdAt": "2026-07-19T15:08:18.307Z",
       "id": "EfRtHddGh10rItqC",
-      "name": "marketing"
+      "name": "marketing",
+      "createdAt": "2026-07-19T15:08:18.307Z",
+      "updatedAt": "2026-07-19T15:08:18.307Z"
     }
   ],
   "triggerCount": 0,
