@@ -495,32 +495,32 @@
   },
   "shared": [
     {
-      "updatedAt": "2026-02-25T07:35:48.369Z",
-      "createdAt": "2026-02-25T07:35:48.369Z",
       "role": "workflow:owner",
       "workflowId": "g6NPNidcDhT1sO3N",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-02-25T07:35:48.369Z",
+      "updatedAt": "2026-02-25T07:35:48.369Z"
     }
   ],
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:10:46.434Z",
-      "createdAt": "2026-07-19T15:10:46.434Z",
       "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas"
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
     },
     {
-      "updatedAt": "2026-07-19T16:19:31.381Z",
-      "createdAt": "2026-07-19T16:19:31.381Z",
       "id": "2r6hyOR1ejqoZmZO",
-      "name": "bot"
+      "name": "bot",
+      "createdAt": "2026-07-19T16:19:31.381Z",
+      "updatedAt": "2026-07-19T16:19:31.381Z"
     },
     {
-      "updatedAt": "2026-06-17T16:27:29.791Z",
-      "createdAt": "2026-06-17T16:27:29.791Z",
       "id": "uKN64TK7JNFhZFiD",
-      "name": "agent"
+      "name": "agent",
+      "createdAt": "2026-06-17T16:27:29.791Z",
+      "updatedAt": "2026-06-17T16:27:29.791Z"
     }
   ],
   "triggerCount": 0,
