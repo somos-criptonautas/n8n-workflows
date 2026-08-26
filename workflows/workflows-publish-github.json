@@ -1,8 +1,6 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-08-16T07:04:19.607Z",
-    "createdAt": "2026-07-19T15:28:00.932Z",
     "versionId": "550629e5-7d24-47f8-9f49-c96c57ee5807",
     "workflowId": "1lmEvob5q0TP8qoT",
     "nodes": [
@@ -445,7 +443,9 @@
     "authors": "D C",
     "name": "Version 550629e5",
     "description": "",
-    "autosaved": true
+    "autosaved": true,
+    "createdAt": "2026-07-19T15:28:00.932Z",
+    "updatedAt": "2026-08-16T07:04:19.607Z"
   },
   "activeVersionId": "550629e5-7d24-47f8-9f49-c96c57ee5807",
   "connections": {
@@ -897,26 +897,26 @@
   },
   "shared": [
     {
-      "updatedAt": "2023-12-16T00:19:31.490Z",
-      "createdAt": "2023-12-16T00:19:31.490Z",
       "role": "workflow:owner",
       "workflowId": "1lmEvob5q0TP8qoT",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2023-12-16T00:19:31.490Z",
+      "updatedAt": "2023-12-16T00:19:31.490Z"
     }
   ],
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-07-19T15:10:46.434Z",
-      "createdAt": "2026-07-19T15:10:46.434Z",
       "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas"
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
     },
     {
-      "updatedAt": "2026-07-19T15:28:14.456Z",
-      "createdAt": "2026-07-19T15:28:14.456Z",
       "id": "Dqd2TBDsggvbz4Ef",
-      "name": "backups"
+      "name": "backups",
+      "createdAt": "2026-07-19T15:28:14.456Z",
+      "updatedAt": "2026-07-19T15:28:14.456Z"
     }
   ],
   "triggerCount": 1,
