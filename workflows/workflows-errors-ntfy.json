@@ -1,8 +1,6 @@
 {
   "active": true,
   "activeVersion": {
-    "updatedAt": "2026-08-14T20:15:49.883Z",
-    "createdAt": "2026-08-14T20:15:42.333Z",
     "versionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
     "workflowId": "6YeRd2MBpoIleUlj",
     "nodes": [
@@ -57,7 +55,9 @@
     "authors": "D C",
     "name": "Version c6cf02a6",
     "description": "",
-    "autosaved": true
+    "autosaved": true,
+    "createdAt": "2026-08-14T20:15:42.333Z",
+    "updatedAt": "2026-08-14T20:15:49.883Z"
   },
   "activeVersionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
   "connections": {
@@ -123,26 +123,26 @@
   },
   "shared": [
     {
-      "updatedAt": "2023-12-16T00:18:04.421Z",
-      "createdAt": "2023-12-16T00:18:04.421Z",
       "role": "workflow:owner",
       "workflowId": "6YeRd2MBpoIleUlj",
-      "projectId": "HXLppsMA2lbH4F4C"
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2023-12-16T00:18:04.421Z",
+      "updatedAt": "2023-12-16T00:18:04.421Z"
     }
   ],
   "staticData": null,
   "tags": [
     {
-      "updatedAt": "2026-08-14T20:16:17.841Z",
-      "createdAt": "2026-08-14T20:16:17.841Z",
       "id": "GJnnFcTPQ7zQJcdw",
-      "name": "ntfy"
+      "name": "ntfy",
+      "createdAt": "2026-08-14T20:16:17.841Z",
+      "updatedAt": "2026-08-14T20:16:17.841Z"
     },
     {
-      "updatedAt": "2026-07-19T15:10:46.434Z",
-      "createdAt": "2026-07-19T15:10:46.434Z",
       "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas"
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
     }
   ],
   "triggerCount": 0,
