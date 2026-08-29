@@ -505,16 +505,16 @@
   "staticData": null,
   "tags": [
     {
-      "id": "2r6hyOR1ejqoZmZO",
-      "name": "bot",
-      "createdAt": "2026-07-19T16:19:31.381Z",
-      "updatedAt": "2026-07-19T16:19:31.381Z"
-    },
-    {
       "id": "ymjfgEEEwMyXBYBl",
       "name": "nautas",
       "createdAt": "2026-07-19T15:10:46.434Z",
       "updatedAt": "2026-07-19T15:10:46.434Z"
+    },
+    {
+      "id": "2r6hyOR1ejqoZmZO",
+      "name": "bot",
+      "createdAt": "2026-07-19T16:19:31.381Z",
+      "updatedAt": "2026-07-19T16:19:31.381Z"
     },
     {
       "id": "uKN64TK7JNFhZFiD",
