@@ -262,6 +262,12 @@
   "staticData": null,
   "tags": [
     {
+      "id": "ZdGYuOGWs6GCjFgc",
+      "name": "alerts",
+      "createdAt": "2026-07-19T15:21:36.085Z",
+      "updatedAt": "2026-07-19T15:21:36.085Z"
+    },
+    {
       "id": "ymjfgEEEwMyXBYBl",
       "name": "nautas",
       "createdAt": "2026-07-19T15:10:46.434Z",
@@ -272,12 +278,6 @@
       "name": "ntfy",
       "createdAt": "2026-08-14T20:16:17.841Z",
       "updatedAt": "2026-08-14T20:16:17.841Z"
-    },
-    {
-      "id": "ZdGYuOGWs6GCjFgc",
-      "name": "alerts",
-      "createdAt": "2026-07-19T15:21:36.085Z",
-      "updatedAt": "2026-07-19T15:21:36.085Z"
     },
     {
       "id": "zteglN9EqJ3nhEv6",
