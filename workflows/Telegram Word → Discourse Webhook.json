@@ -1,0 +1,176 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Clean Word",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Word": {
+      "main": [
+        [
+          {
+            "node": "Valid Word?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Word?": {
+      "main": [
+        [
+          {
+            "node": "POST to Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-09-08T03:00:22.020Z",
+  "id": "JuvjpYvDk2XhCT8j",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Telegram Word → Discourse Webhook",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "a300c9bc-3e66-4a82-964e-87bde3787eab",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "webhookId": "82ccfa56-8d8b-41c1-ba54-969802c38bcd"
+    },
+    {
+      "id": "366c7226-6c53-4551-8445-0799aade14f9",
+      "name": "Clean Word",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "word",
+              "name": "word",
+              "type": "string",
+              "value": "={{ $json.message.text.trim().toLowerCase() }}"
+            },
+            {
+              "id": "chat_id",
+              "name": "chat_id",
+              "type": "string",
+              "value": "={{ $json.message.chat.id }}"
+            },
+            {
+              "id": "from",
+              "name": "from",
+              "type": "string",
+              "value": "={{ $json.message.from.username }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "40181a19-9cc5-48c7-bbbd-33be818e6165",
+      "name": "Valid Word?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.word }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1f3d4735-a075-44c8-bc3f-b2203227e9f7",
+      "name": "POST to Discourse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.discourseWebhookUrl }}",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": {
+          "word": "={{ $json.word }}",
+          "chat_id": "={{ $json.chat_id }}",
+          "from": "={{ $json.from }}"
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "onError": "continueErrorOutput"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "JuvjpYvDk2XhCT8j",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-09-08T03:00:22.020Z",
+      "updatedAt": "2026-09-08T03:00:22.020Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-09-08T03:00:22.020Z",
+  "versionId": "e8e20c6a-463b-4cc8-84ab-fe9642600d89"
+}
