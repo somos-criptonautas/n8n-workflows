@@ -1,0 +1,220 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get TTS Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get TTS Articles": {
+      "main": [
+        [
+          {
+            "node": "Process Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Text": {
+      "main": [
+        [
+          {
+            "node": "Loop Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Chunks": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Qwen TTS via LiteLLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Articles": {
+      "main": [
+        [
+          {
+            "node": "Loop Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qwen TTS via LiteLLM": {
+      "main": [
+        [
+          {
+            "node": "Loop Chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-09-20T20:14:22.051Z",
+  "id": "28dZ5YNvQEjhb3vk",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Ghost → Qwen TTS Singapore",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "8227ddfe-76cb-4e77-bda3-0e6fee529267",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 2 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "27d892fe-aca5-43d0-939c-fe7a42b7ee12",
+      "name": "Get TTS Articles",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "parameters": {
+        "authentication": "adminApiKey",
+        "resource": "post",
+        "operation": "getAll",
+        "filters": {
+          "status": "published",
+          "filter": "tag:tts-enabled"
+        }
+      },
+      "credentials": {
+        "ghostContentApi": {
+          "id": "wuAic0o88j2CKdc2",
+          "name": "Ghost Content account"
+        }
+      }
+    },
+    {
+      "id": "e2a67582-3a07-46c9-9aec-283efb74bc95",
+      "name": "Process Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        450,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const articles = $input.all();\nconst processed = [];\n\nfor (const article of articles) {\n  const cleanText = article.json.html\n    .replace(/<script\\\\b[^<]*(?:(?!<\\\\/script>)<[^<]*)*<\\\\/script>/gi, '')\n    .replace(/<style\\\\b[^<]*(?:(?!<\\\\/style>)<[^<]*)*<\\\\/style>/gi, '')\n    .replace(/<[^>]*>/g, ' ')\n    .replace(/&nbsp;/g, ' ')\n    .replace(/&amp;/g, '&')\n    .replace(/&lt;/g, '<')\n    .replace(/&gt;/g, '>')\n    .replace(/\\\\s+/g, ' ')\n    .trim();\n  \n  const chunks = smartChunk(cleanText, 2000);\n  \n  processed.push({\n    json: {\n      id: article.json.id,\n      title: article.json.title,\n      slug: article.json.slug,\n      url: article.json.url,\n      chunks: chunks,\n      totalChunks: chunks.length,\n      publishedAt: article.json.published_at\n    }\n  });\n}\n\nfunction smartChunk(text, maxLength) {\n  const sentences = text.match(/[^.!?]+[.!?]+[\"']?\\s*/g) || [text];\n  const chunks = [];\n  let currentChunk = '';\n  \n  for (const sentence of sentences) {\n    if ((currentChunk + sentence).length > maxLength && currentChunk.length > 0) {\n      chunks.push(currentChunk.trim());\n      currentChunk = sentence;\n    } else {\n      currentChunk += sentence;\n    }\n  }\n  \n  if (currentChunk.trim()) {\n    chunks.push(currentChunk.trim());\n  }\n  \n  return chunks;\n}\n\nreturn processed;"
+      }
+    },
+    {
+      "id": "83183e13-282a-4668-8dda-f55d209caa14",
+      "name": "Loop Chunks",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        850,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "b972b124-2c86-4169-9aa5-d095ac5626b9",
+      "name": "Loop Articles",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "05e4490e-f5e8-4294-899c-983eb1111bc7",
+      "name": "Qwen TTS via LiteLLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1050,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "<__PLACEHOLDER_VALUE__{{ $env.LITELLM_PROXY_URL }}/audio/speech__>",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.LITELLM_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "bodyParametersJson": "={{ JSON.stringify({ model: \"qwen-tts-singapore\", input: $json.currentChunk, voice: $env.QWEN_VOICE_ID, response_format: \"mp3\" }) }}"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "28dZ5YNvQEjhb3vk",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-09-20T20:14:22.051Z",
+      "updatedAt": "2026-09-20T20:14:22.051Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-09-20T20:14:22.051Z",
+  "versionId": "def05621-aab7-4e29-9e4c-bff5e6c30ea1"
+}
