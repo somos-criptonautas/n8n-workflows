@@ -1011,12 +1011,6 @@
   "staticData": null,
   "tags": [
     {
-      "id": "EfRtHddGh10rItqC",
-      "name": "marketing",
-      "createdAt": "2026-07-19T15:08:18.307Z",
-      "updatedAt": "2026-07-19T15:08:18.307Z"
-    },
-    {
       "id": "uKN64TK7JNFhZFiD",
       "name": "agent",
       "createdAt": "2026-06-17T16:27:29.791Z",
@@ -1027,6 +1021,12 @@
       "name": "social-media",
       "createdAt": "2026-07-19T15:22:25.866Z",
       "updatedAt": "2026-07-19T15:22:25.866Z"
+    },
+    {
+      "id": "EfRtHddGh10rItqC",
+      "name": "marketing",
+      "createdAt": "2026-07-19T15:08:18.307Z",
+      "updatedAt": "2026-07-19T15:08:18.307Z"
     }
   ],
   "triggerCount": 0,
