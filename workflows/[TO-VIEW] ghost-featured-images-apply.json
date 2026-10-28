@@ -1,0 +1,241 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "manual-apply": {
+      "main": [
+        [
+          {
+            "node": "get-approved-rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-approved-rows": {
+      "main": [
+        [
+          {
+            "node": "ghost-get-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ghost-get-post": {
+      "main": [
+        [
+          {
+            "node": "update-featured-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-featured-image": {
+      "main": [
+        [
+          {
+            "node": "mark-applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-16T00:55:11.940Z",
+  "id": "XX9RTQQfg9whw614",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "[TO-VIEW] ghost-featured-images-apply",
+  "nodeGroups": [
+    {
+      "id": "4f979150-7885-428c-ab2f-9b35b95ea940",
+      "name": "apply",
+      "nodeIds": [
+        "2ac1f58f-2840-4793-bc62-f81d57d9c2c6",
+        "555da371-e106-49b9-88a5-f2ebd7131ebf",
+        "943de172-35e6-48c3-81ef-3763e0e46f25"
+      ],
+      "description": "Reads the post, swaps the featured image for the approved variant and marks the row applied"
+    }
+  ],
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7e271143-f6df-4069-857a-42f096843aeb",
+      "name": "manual-apply",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "isTrue",
+              "keyName": "approved"
+            },
+            {
+              "condition": "isFalse",
+              "keyName": "applied"
+            }
+          ]
+        },
+        "matchType": "allConditions",
+        "operation": "get",
+        "resource": "row",
+        "returnAll": true
+      },
+      "id": "82314555-0523-406a-a181-a9058c6fa105",
+      "name": "get-approved-rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "adminApi",
+        "identifier": "={{ $json.post_id }}",
+        "options": {
+          "fields": "id,updated_at,url"
+        }
+      },
+      "id": "2ac1f58f-2840-4793-bc62-f81d57d9c2c6",
+      "name": "ghost-get-post",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        496,
+        128
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ feature_image: $(\"get-approved-rows\").item.json.new_url, updated_at: $json.updated_at }] }) }}",
+        "method": "PUT",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "url": "={{ $json.url.split('/').slice(0, 3).join('/') }}/ghost/api/admin/posts/{{ $json.id }}/"
+      },
+      "id": "555da371-e106-49b9-88a5-f2ebd7131ebf",
+      "name": "update-featured-image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        128
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "applied",
+              "id": "applied",
+              "required": false,
+              "type": "boolean"
+            }
+          ],
+          "value": {
+            "applied": true
+          }
+        },
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "id",
+              "keyValue": "={{ $(\"get-approved-rows\").item.json.id }}"
+            }
+          ]
+        },
+        "matchType": "allConditions",
+        "operation": "update",
+        "resource": "row"
+      },
+      "id": "943de172-35e6-48c3-81ef-3763e0e46f25",
+      "name": "mark-applied",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        128
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "XX9RTQQfg9whw614",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-16T00:55:11.940Z",
+      "updatedAt": "2026-10-16T00:55:11.940Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "updatedAt": "2026-07-19T15:29:32.896Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-22T17:32:00.446Z",
+  "versionId": "f668e47b-f5e7-4cfd-b72f-c5354b16ff81"
+}
