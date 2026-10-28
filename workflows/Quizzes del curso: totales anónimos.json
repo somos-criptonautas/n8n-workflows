@@ -1,0 +1,254 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Cada hora": {
+      "main": [
+        [
+          {
+            "node": "Leer quizzes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer quizzes": {
+      "main": [
+        [
+          {
+            "node": "Leer respuestas privadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer respuestas privadas": {
+      "main": [
+        [
+          {
+            "node": "Sumar respuestas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sumar respuestas": {
+      "main": [
+        [
+          {
+            "node": "Publicar totales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-14T19:33:56.358Z",
+  "id": "xJdyJOG76bdL9cpI",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Quizzes del curso: totales anónimos",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "4d3d505d-3c8f-462a-b3b3-aca420db247b",
+      "name": "Cada hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "634c1830-dfc2-4845-b0d1-87d14d03812e",
+      "name": "Leer quizzes",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KRhHJZNrkrPewGVG",
+          "cachedResultName": "curso_artifacts"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "kind",
+              "condition": "eq",
+              "keyValue": "quiz"
+            }
+          ]
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "5a676cb5-0911-43c1-aa16-7286f279c6f8",
+      "name": "Leer respuestas privadas",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/{{ $json.artifact_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "r"
+            },
+            {
+              "name": "all_users",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.has_more === false }}",
+              "limitPagesFetched": true,
+              "maxRequests": 50
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "d829cac9-d8c9-4015-8332-91ecc8dfacb5",
+      "name": "Sumar respuestas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Con menos de 5 respuestas no se publica nada: los totales podrían delatar a alguien\nconst MIN_N = 5;\nconst quizzes = $('Leer quizzes').all().map((i) => i.json);\nconst rows = quizzes.map(() => []);\nfor (const item of $input.all()) {\n  const p = Array.isArray(item.pairedItem) ? item.pairedItem[0] : item.pairedItem;\n  const idx = p && typeof p.item === 'number' ? p.item : -1;\n  if (!rows[idx]) throw new Error('Página de respuestas sin quiz de origen (pairedItem)');\n  for (const kv of item.json.key_values || []) if (kv.key === 'r') rows[idx].push(kv.value);\n}\nconst out = [];\nquizzes.forEach((quiz, idx) => {\n  const shape = JSON.parse(quiz.shape || '[]');\n  const q = shape.map((n) => Array(n).fill(0));\n  let n = 0;\n  for (const raw of rows[idx]) {\n    let a;\n    try { a = JSON.parse(raw).a; } catch (e) { continue; }\n    // Respuestas de una versión vieja del quiz o adulteradas no cuentan\n    if (!Array.isArray(a) || a.length !== q.length || !a.every((v, i) => Number.isInteger(v) && v >= 0 && v < q[i].length)) continue;\n    a.forEach((v, i) => q[i][v]++);\n    n++;\n  }\n  if (n >= MIN_N) out.push({ json: { artifact_id: quiz.artifact_id, key: quiz.key, n, value: JSON.stringify({ n, q }) }, pairedItem: { item: idx } });\n});\nreturn out;"
+      }
+    },
+    {
+      "id": "e85af704-ce62-4b54-992f-49da350f8427",
+      "name": "Publicar totales",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/{{ $json.artifact_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ key: \"stats\", value: $json.value, public: true }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "f52a25bb-e867-4ec9-b6d2-ca9a3a1a9557",
+      "name": "Sticky Note 1ec4608e",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -96
+      ],
+      "parameters": {
+        "content": "## Totales anónimos de los quizzes\nCada hora lee las respuestas privadas de cada quiz (Data Table curso_artifacts), suma solo conteos por opción y publica la clave pública \"stats\" como el usuario de la credencial \"Discourse account\", que debe ser system: la app solo confía en totales de system. Con menos de 5 respuestas no publica nada.",
+        "color": 4,
+        "width": 608,
+        "height": 224
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "xJdyJOG76bdL9cpI",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-14T19:33:56.358Z",
+      "updatedAt": "2026-10-14T19:33:56.358Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-14T23:49:57.713Z",
+  "versionId": "8124142e-31a7-421e-99a9-df9b9ad5abe5"
+}
