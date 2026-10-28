@@ -1,0 +1,360 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Feedback Webhook": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Validate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate": {
+      "main": [
+        [
+          {
+            "node": "Create Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Contact": {
+      "main": [
+        [
+          {
+            "node": "Create Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Conversation": {
+      "main": [
+        [
+          {
+            "node": "Prepare Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Message": {
+      "main": [
+        [
+          {
+            "node": "Screenshot?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Screenshot?": {
+      "main": [
+        [
+          {
+            "node": "Message With Screenshot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-14T08:36:47.602Z",
+  "id": "etjN3UCBdPXyFGT1",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "[ON-HOLD] blog-send-feedback-chatwoot",
+  "nodeGroups": [
+    {
+      "id": "db9f0e61-3726-4327-b144-eb4406012ac7",
+      "name": "Validate",
+      "nodeIds": [
+        "5e4f27a8-5de3-4750-9d1f-c5ed89bd84d4",
+        "1f180b34-bc8c-4943-a8fd-1c2e1c5ee391"
+      ],
+      "description": "Drops bots, bad input and bursts; turns the screenshot into a file."
+    },
+    {
+      "id": "a1a2f0e1-b790-46da-9839-31c17966a353",
+      "name": "Chatwoot",
+      "nodeIds": [
+        "74ad5f5f-28b9-4866-9a63-d516a7d24077",
+        "77ee8e94-bd3a-4aca-ac7e-d8291cce0cd3",
+        "e08dde18-27ac-41c8-b3e3-4045ffe00774"
+      ],
+      "description": "Creates the contact and conversation in the API inbox, then builds the message call."
+    }
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "blog-feedback",
+        "options": {
+          "allowedOrigins": "https://criptonautas.co"
+        }
+      },
+      "id": "53b3914c-a903-4a01-8c0f-e8c0e30692e0",
+      "name": "Feedback Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "e88bd59a-bc84-4e70-b181-c76bc2163ac5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c-url",
+              "name": "chatwootUrl",
+              "value": "https://soporte.criptonautas.co",
+              "type": "string"
+            },
+            {
+              "id": "c-inbox",
+              "name": "inboxIdentifier",
+              "value": "pBUsTSBeiyWSqLqhX7HZG1nG",
+              "type": "string"
+            },
+            {
+              "id": "c-rate",
+              "name": "perMinute",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "c-shot",
+              "name": "maxShotBytes",
+              "value": 3000000,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5e4f27a8-5de3-4750-9d1f-c5ed89bd84d4",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Settings').first().json;\nconst b = $('Feedback Webhook').first().json.body || {};\n\n// Honeypot: a field hidden from people that only bots fill in\nif (b.website) return [];\nconst labels = { idea: 'idea', error: 'error', soporte: 'soporte' };\nconst type = labels[b.type];\nif (!type) return [];\nconst message = String(b.message || '').trim();\nif (message.length < 3 || message.length > 3000) return [];\nconst email = String(b.email || '').trim().slice(0, 200);\nif (email && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return [];\n\nlet page = '';\ntry {\n  const u = new URL(String(b.page || ''));\n  if (u.hostname === 'criptonautas.co' || u.hostname.endsWith('.criptonautas.co')) page = u.href.slice(0, 500);\n} catch (e) {}\n\n// Global cap per minute; static data only persists in production runs\nconst state = $getWorkflowStaticData('global');\nconst minute = Math.floor(Date.now() / 60000);\nif (state.minute !== minute) { state.minute = minute; state.count = 0; }\nstate.count += 1;\nif (state.count > cfg.perMinute) return [];\n\nconst item = {\n  json: {\n    content: '[' + type + '] ' + message + (page ? '\\n\\npágina: ' + page : ''),\n    contact: email ? { name: email.split('@')[0], email } : { name: 'lector anónimo' },\n    hasShot: false\n  }\n};\n\nconst m = /^data:image\\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(String(b.screenshot || ''));\nif (m && m[2].length * 0.75 <= cfg.maxShotBytes) {\n  const ext = m[1] === 'jpeg' ? 'jpg' : m[1];\n  item.binary = { screenshot: { data: m[2], mimeType: 'image/' + m[1], fileName: 'captura.' + ext } };\n  item.json.hasShot = true;\n}\nreturn [item];\n"
+      },
+      "id": "1f180b34-bc8c-4943-a8fd-1c2e1c5ee391",
+      "name": "Validate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').first().json.chatwootUrl }}/public/api/v1/inboxes/{{ $('Settings').first().json.inboxIdentifier }}/contacts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.contact }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "74ad5f5f-28b9-4866-9a63-d516a7d24077",
+      "name": "Create Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').first().json.chatwootUrl }}/public/api/v1/inboxes/{{ $('Settings').first().json.inboxIdentifier }}/contacts/{{ $json.source_id }}/conversations",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "77ee8e94-bd3a-4aca-ac7e-d8291cce0cd3",
+      "name": "Create Conversation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const v = $('Validate').first();\nconst cfg = $('Settings').first().json;\nconst base = cfg.chatwootUrl + '/public/api/v1/inboxes/' + cfg.inboxIdentifier + '/contacts/' + $('Create Contact').first().json.source_id + '/conversations/' + $input.first().json.id + '/messages';\n// The screenshot travels on from Validate; the HTTP calls in between replaced the item\nreturn [{ json: { url: base, content: v.json.content, hasShot: v.json.hasShot }, binary: v.binary }];\n"
+      },
+      "id": "e08dde18-27ac-41c8-b3e3-4045ffe00774",
+      "name": "Prepare Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "shot",
+              "leftValue": "={{ $json.hasShot }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b453e8c7-a4f9-4a60-a9c3-4103e52253ce",
+      "name": "Screenshot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "content",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "attachments[]",
+              "inputDataFieldName": "screenshot"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "fc033909-4740-4d53-930b-5df345ee3c02",
+      "name": "Message With Screenshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { content: $json.content } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "caa4f43c-3e1c-41ff-be0f-88b0e58e4a18",
+      "name": "Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        192
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "etjN3UCBdPXyFGT1",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-14T08:36:47.602Z",
+      "updatedAt": "2026-10-14T08:36:47.602Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "h6oCG7LeS6rFMjyc",
+      "name": "support",
+      "createdAt": "2026-07-19T16:30:26.950Z",
+      "updatedAt": "2026-07-19T16:30:26.950Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-20T17:14:20.233Z",
+  "versionId": "627930e3-2712-4a06-a2b8-7edce029937e"
+}
