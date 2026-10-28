@@ -1,0 +1,727 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "76e01ef0-5fb8-45ef-ba52-9f89f0f7e76e",
+    "workflowId": "hhXrhnvESeqwkOlJ",
+    "nodes": [
+      {
+        "id": "813da09c-6e0d-4a85-822b-dd1e5555ef3c",
+        "name": "Daily 12:05 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "5 12 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "7c984ddc-b019-45a6-9c5c-e583610076a1",
+        "name": "read-all-pages",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendQuery": true,
+          "specifyQuery": "keypair",
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "all_users",
+                "value": "true"
+              },
+              {
+                "name": "per_page",
+                "value": "100"
+              }
+            ]
+          },
+          "options": {
+            "pagination": {
+              "pagination": {
+                "paginationMode": "updateAParameterInEachRequest",
+                "parameters": {
+                  "parameters": [
+                    {
+                      "type": "qs",
+                      "name": "page",
+                      "value": "={{ $pageCount + 1 }}"
+                    }
+                  ]
+                },
+                "paginationCompleteWhen": "other",
+                "completeExpression": "={{ $response.body.has_more === false }}",
+                "limitPagesFetched": true,
+                "maxRequests": 50
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      {
+        "id": "73711f30-88eb-4185-8092-e8a9499216fc",
+        "name": "merge-pages",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// attach user.username to every key-value (user_id -> users[] of ALL pages); abort on any partial fetch\nconst pages = $input.all().map((i) => i.json);\nif (!pages.length) throw new Error('no pages fetched, aborting');\nif (pages.some((p) => !Array.isArray(p.key_values))) throw new Error('page without key_values, aborting');\nif (pages[pages.length - 1].has_more !== false) throw new Error('has_more still true after page cap (partial fetch), aborting');\nconst names = {};\nfor (const p of pages) for (const u of (p.users || [])) names[u.id] = u.username;\nconst key_values = [];\nfor (const p of pages) for (const kv of p.key_values) key_values.push(kv.user_id === -1 ? kv : Object.assign({}, kv, { user: { username: names[kv.user_id] } }));\nreturn [{ json: { key_values } }];\n"
+        },
+        "notes": "Why Code: joins all fetched pages, maps user_id to username through every page's users[] and aborts on any partial fetch."
+      },
+      {
+        "id": "7077b040-4cf7-4950-be84-f6c685e50ff5",
+        "name": "summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// src/replay.js — pure engine shared by the artifact and the n8n Code nodes. No DOM, no fetch.\nconst ASSETS = [\"btc\", \"eth\", \"paxg\", \"xmr\", \"xno\", \"trx\"];\nconst GROUPS = { a: [\"btc\", \"eth\", \"paxg\"], b: [\"xmr\", \"xno\", \"trx\"] };\nconst CANDLE = 4 * 3600;\nconst START_USD = 1000, MIN_USD = 10, LIQ_PCT = 0.45, SYSTEM_ID = -1;\nconst MODIFIED = \"orden modificada después de enviarla\";\nconst KEYS_FULL = \"llegamos al límite de claves guardadas: reiniciamos para seguir operando.\";\n\nfunction weekStart(sec) {\n  const d = new Date(sec * 1000);\n  const dow = (d.getUTCDay() + 6) % 7; // Monday = 0\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow) / 1000;\n}\nfunction weekKey(sec, group) {\n  const thu = new Date((weekStart(sec) + 3 * 86400) * 1000); // ISO year is the Thursday's year\n  const y = thu.getUTCFullYear();\n  const week = Math.floor((weekStart(sec) - weekStart(Date.UTC(y, 0, 4) / 1000)) / (7 * 86400)) + 1;\n  return \"candles-\" + y + \"-W\" + String(week).padStart(2, \"0\") + \"-\" + group;\n}\nfunction mergeCandles(res) {\n  const out = Object.fromEntries(ASSETS.map((a) => [a, []]));\n  for (const kv of (res && res.key_values) || []) {\n    if (kv.user_id !== SYSTEM_ID || !/^candles-/.test(kv.key)) continue;\n    let v; try { v = JSON.parse(kv.value); } catch (e) { continue; }\n    if (!v || !Number.isFinite(v.t0)) continue;\n    for (const a of ASSETS) {\n      (v[a] || []).forEach((x, i) => {\n        if (Array.isArray(x) && (x.length === 3 || x.length === 4) && x.every(Number.isFinite)) out[a].push({ t: v.t0 + i * CANDLE, h: x[0], l: x[1], c: x[2], v: x[3] || 0 });\n      });\n    }\n  }\n  for (const a of ASSETS) out[a].sort((p, q) => p.t - q.t);\n  return out;\n}\nfunction candleAt(list, sec) {\n  return list.findIndex((k) => sec >= k.t && sec < k.t + CANDLE);\n}\n\n// Seasons are UTC calendar blocks starting Jan 1, May 1 and Sep 1\nfunction seasonStart(sec) {\n  const d = new Date(sec * 1000);\n  return Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 4) * 4, 1) / 1000;\n}\nfunction seasonEnd(sec) {\n  const d = new Date(seasonStart(sec) * 1000);\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 4, 1) / 1000;\n}\n\nfunction parseOrder(kv) {\n  const created = Math.floor(Date.parse(kv.created_at) / 1000);\n  if (!Number.isFinite(created)) return null;\n  if (/^reset-\\d+$/.test(kv.key)) return { id: kv.key, created, reset: true };\n  if (!/^o-\\d+$/.test(kv.key)) return null;\n  // Discourse keeps created_at on overwrite and bumps updated_at; an unparseable updated_at counts as modified\n  const modified = kv.updated_at != null && Date.parse(kv.updated_at) !== Date.parse(kv.created_at);\n  let v; try { v = JSON.parse(kv.value); } catch (e) { return null; }\n  if (!v || typeof v !== \"object\") return null;\n  const num = (x) => (x === undefined || x === null ? undefined : Number.isFinite(x) && x > 0 ? x : NaN);\n  if (v.side === \"sell\") return typeof v.of === \"string\" ? { id: kv.key, created, side: \"sell\", of: v.of, modified } : null;\n  if (v.side !== \"buy\" || !ASSETS.includes(v.asset)) return null;\n  const usd = num(v.usd), lev = v.lev === undefined ? 1 : v.lev, tp = num(v.tp), sl = num(v.sl);\n  if (!(usd >= MIN_USD) || (lev !== 1 && lev !== 2) || Number.isNaN(tp) || Number.isNaN(sl)) return null;\n  return { id: kv.key, created, side: \"buy\", asset: v.asset, usd, lev, tp, sl, modified };\n}\n\n// Replays every order against the candles. Fills (liq, sl, tp) happen inside a candle; orders fill at its close.\nfunction replay(keyValues, candles, now) {\n  const sStart = seasonStart(now); // the season start is an implicit reset: older keys are ignored entirely\n  const all = keyValues.map(parseOrder).filter((o) => o && o.created >= sStart).sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));\n  const resets = all.filter((o) => o.reset);\n  const last = resets[resets.length - 1];\n  const orders = all.filter((o) => !o.reset && (!last || o.created > last.created));\n  const st = { balance: START_USD, equity: START_USD, perf: 0, resets: resets.length, season: { start: sStart, end: seasonEnd(now) }, positions: [], pending: [], history: [] };\n  if (last) st.history.push({ t: last.created, kind: \"reset\", id: last.id });\n  const closed = (k) => k.t + CANDLE <= now;\n  const closePos = (p, kind, price, t) => {\n    const pnl = p.qty * (price - p.entry);\n    const back = kind === \"liq\" ? 0 : Math.max(0, p.usd + pnl);\n    st.balance += back;\n    st.positions.splice(st.positions.indexOf(p), 1);\n    st.history.push({ t, kind, asset: p.asset, price, usd: back, pnl: kind === \"liq\" ? -p.usd : pnl, id: p.id });\n  };\n  const times = [...new Set(ASSETS.flatMap((a) => candles[a].map((k) => k.t)))].sort((a, b) => a - b);\n  const at = Object.fromEntries(ASSETS.map((a) => { const m = new Map(); for (const k of candles[a]) if (!m.has(k.t)) m.set(k.t, k); return [a, m]; })); // first candle per time, as find() did\n  let qi = 0;\n  for (const t of times) {\n    const byAsset = Object.fromEntries(ASSETS.map((a) => [a, at[a].get(t)]));\n    if (!closed({ t })) break;\n    for (const p of [...st.positions]) {\n      const k = byAsset[p.asset];\n      if (!k || k.t <= p.openedAt) continue;\n      // Falling price reaches the higher level first: an SL above the liquidation price wins\n      if (p.sl && k.l <= p.sl && !(p.liq && p.sl < p.liq && k.l <= p.liq)) closePos(p, \"sl\", Math.min(p.sl, k.h), t);\n      else if (p.liq && k.l <= p.liq) closePos(p, \"liq\", Math.min(p.liq, k.h), t);\n      else if (p.tp && k.h >= p.tp) closePos(p, \"tp\", Math.max(p.tp, k.l), t);\n    }\n    // Orders created inside this candle fill at its close\n    for (; qi < orders.length && orders[qi].created < t + CANDLE; qi++) {\n      const o = orders[qi];\n      const tc = t + CANDLE;\n      if (o.created < t) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n      if (o.modified) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n      if (o.side === \"sell\") {\n        const p = st.positions.find((x) => x.id === o.of);\n        if (!p) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"La posición ya estaba cerrada\" }); continue; }\n        if (!byAsset[p.asset]) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + p.asset.toUpperCase() }); continue; }\n        closePos(p, \"sell\", byAsset[p.asset].c, tc);\n        continue;\n      }\n      const k = byAsset[o.asset];\n      if (!k) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + o.asset.toUpperCase() }); continue; }\n      if (o.usd > st.balance + 1e-9) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Saldo insuficiente\" }); continue; }\n      if ((o.sl && o.sl >= k.c) || (o.tp && o.tp <= k.c)) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"SL o TP del lado equivocado del precio de entrada\" }); continue; }\n      st.balance -= o.usd;\n      const entry = k.c, qty = (o.usd * o.lev) / entry;\n      st.positions.push({ id: o.id, asset: o.asset, lev: o.lev, usd: o.usd, qty, entry, tp: o.tp, sl: o.sl, liq: o.lev === 2 ? entry * (1 - LIQ_PCT) : undefined, openedAt: t, value: o.usd, pnl: 0 });\n      st.history.push({ t: tc, kind: \"buy\", asset: o.asset, price: entry, usd: o.usd, id: o.id });\n    }\n  }\n  for (; qi < orders.length; qi++) {\n    const o = orders[qi];\n    const lastT = times.length ? times[times.length - 1] : null;\n    if (lastT === null || o.created < lastT) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n    if (o.modified) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n    st.pending.push({ ...o, fillAt: Math.floor(o.created / CANDLE) * CANDLE + CANDLE });\n  }\n  for (const p of st.positions) {\n    const list = candles[p.asset].filter(closed);\n    const c = list.length ? list[list.length - 1].c : p.entry;\n    p.pnl = p.qty * (c - p.entry);\n    p.value = Math.max(0, p.usd + p.pnl);\n  }\n  st.equity = st.balance + st.positions.reduce((a, p) => a + p.value, 0);\n  st.perf = Math.round(((st.equity / START_USD) - 1) * 10000) / 100;\n  return st;\n}\n\n// Validates a buy before writing it. Messages are what the form shows; equality with ref is rejected.\nfunction checkOrder(o, ref, balance, keyCount) {\n  if (keyCount >= 95) return KEYS_FULL; // the last 5 of the 100 keys stay free for closing positions\n  if (!Number.isFinite(ref) || ref <= 0) return \"sin precio de referencia todavía.\";\n  if (!(o.usd >= MIN_USD)) return \"el monto mínimo es 10 USD.\";\n  if (o.usd > balance) return \"el monto supera el saldo disponible.\";\n  if (o.tp !== undefined && !(o.tp > ref)) return \"el take-profit va por encima del precio actual.\";\n  if (o.sl !== undefined && !(o.sl < ref)) return \"el stop-loss va por debajo del precio actual.\";\n  if (o.lev === 2 && o.sl !== undefined && o.sl <= ref * (1 - LIQ_PCT)) return \"con 2x el stop-loss va por encima del precio de liquidación.\";\n  return \"\";\n}\n\nconst api = { checkOrder, KEYS_FULL, ASSETS, GROUPS, CANDLE, START_USD, MIN_USD, LIQ_PCT, SYSTEM_ID, weekStart, weekKey, seasonStart, seasonEnd, mergeCandles, candleAt, parseOrder, replay };\nif (typeof module !== \"undefined\") module.exports = api; else if (typeof window !== \"undefined\") window.Replay = api;\n\n// n8n/daily.js — Code node of paper-trading-daily. Paste dist/n8n-daily.js into the node.\nconst MIN_TRADERS = 3;\n\nfunction dailySummary(keyValues, candles, now) {\n  const byUser = new Map();\n  for (const kv of keyValues) { if (!byUser.has(kv.user_id)) byUser.set(kv.user_id, []); byUser.get(kv.user_id).push(kv); }\n  const n = { buy: 0, sell: 0, tp: 0, sl: 0, liq: 0 }, users = new Set();\n  for (const [uid, kvs] of byUser) {\n    for (const h of replay(kvs, candles, now).history) {\n      if (h.t <= now - 86400 || h.t > now || !(h.kind in n)) continue;\n      n[h.kind]++; users.add(uid);\n    }\n  }\n  // With one or two traders an anonymous count would still point at people\n  if (users.size < MIN_TRADERS) return \"\";\n  const part = (k, one, many) => (n[k] ? n[k] + \" \" + (n[k] === 1 ? one : many) : \"\");\n  const items = [part(\"buy\", \"compra\", \"compras\"), part(\"sell\", \"cierre manual\", \"cierres manuales\"), part(\"tp\", \"take-profit\", \"take-profits\"), part(\"sl\", \"stop-loss\", \"stop-loss\"), part(\"liq\", \"liquidación\", \"liquidaciones\")].filter(Boolean);\n  return \"**paper trading, últimas 24h:** \" + items.join(\", \") + \". operaron \" + users.size + (users.size === 1 ? \" participante\" : \" participantes\") + \". sin nombres: cada quien ve lo suyo en el artifact.\";\n}\nif (typeof module !== \"undefined\") module.exports = { dailySummary };\n\nconst all = $('merge-pages').first().json.key_values;\nconst txt = dailySummary(all.filter((k) => k.user_id !== -1), mergeCandles({ key_values: all }), Math.floor(Date.now() / 1000));\nreturn txt ? [{ json: { raw: txt } }] : [];\n"
+        },
+        "notes": "Why Code: runs the shared replay engine (dailySummary) over every user's history; returns no item when nothing happened so nothing is posted."
+      },
+      {
+        "id": "12501f21-09fa-45b7-9388-16a782fa63a7",
+        "name": "post-summary",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          -100
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/posts.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ topic_id: $json.topicId, raw: $json.raw }) }}"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      {
+        "id": "e663a83f-7adc-4e71-bf95-33853da3fdca",
+        "name": "Sticky Note 7d9efe0a",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          0,
+          -260
+        ],
+        "parameters": {
+          "content": "## paper-trading-daily\nDaily 12:05 UTC: builds the anonymous 24h summary (needs at least 3 traders; otherwise no item and nothing is posted). The first time there is a summary, `create-pm` sends a private message to the Discourse group `paper-trading` as system and `save-topic` stores its topic id in workflow static data. Later runs reply in that same message through `post-summary`. Static data only persists for production runs; to start a new thread clear it or delete `topicId`. Paste dist/n8n-daily.js on top of `summary`."
+        }
+      },
+      {
+        "id": "a17e730d-d4cc-4467-892e-733bcbd9e573",
+        "name": "daily-topic",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const topicId = $getWorkflowStaticData('global').topicId;\nreturn [{ json: { raw: $input.first().json.raw, topicId } }];\n"
+        },
+        "notes": "Why Code: reads workflow static data (topicId of the group message), which no native node can access."
+      },
+      {
+        "id": "d822e3cd-5808-4ed8-957f-734093a0fffa",
+        "name": "has-topic?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1344,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "has-topic-id",
+                "leftValue": "={{ typeof $json.topicId === 'number' }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "99e10883-b28f-4d9f-bff0-a57713ed9e84",
+        "name": "create-pm",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          200
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/posts.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ archetype: 'private_message', target_recipients: 'paper-trading', title: 'paper trading: resumen diario', raw: $json.raw }) }}"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      {
+        "id": "2cc63af2-affb-4c45-a7ae-3297871ee8b0",
+        "name": "save-topic",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          200
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "$getWorkflowStaticData('global').topicId = $input.first().json.topic_id;\nreturn [$input.first()];\n"
+        },
+        "notes": "Why Code: writes workflow static data (topicId of the group message), which no native node can do."
+      }
+    ],
+    "connections": {
+      "read-all-pages": {
+        "main": [
+          [
+            {
+              "node": "merge-pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "merge-pages": {
+        "main": [
+          [
+            {
+              "node": "summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Daily 12:05 UTC": {
+        "main": [
+          [
+            {
+              "node": "read-all-pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "summary": {
+        "main": [
+          [
+            {
+              "node": "daily-topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "daily-topic": {
+        "main": [
+          [
+            {
+              "node": "has-topic?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "has-topic?": {
+        "main": [
+          [
+            {
+              "node": "post-summary",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "create-pm",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create-pm": {
+        "main": [
+          [
+            {
+              "node": "save-topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Seasons in summary engine",
+    "description": "Updated nodes: summary",
+    "autosaved": false,
+    "createdAt": "2026-10-28T16:02:06.915Z",
+    "updatedAt": "2026-10-28T16:02:06.915Z"
+  },
+  "activeVersionId": "76e01ef0-5fb8-45ef-ba52-9f89f0f7e76e",
+  "connections": {
+    "read-all-pages": {
+      "main": [
+        [
+          {
+            "node": "merge-pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge-pages": {
+      "main": [
+        [
+          {
+            "node": "summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily 12:05 UTC": {
+      "main": [
+        [
+          {
+            "node": "read-all-pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "summary": {
+      "main": [
+        [
+          {
+            "node": "daily-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "daily-topic": {
+      "main": [
+        [
+          {
+            "node": "has-topic?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "has-topic?": {
+      "main": [
+        [
+          {
+            "node": "post-summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create-pm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create-pm": {
+      "main": [
+        [
+          {
+            "node": "save-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T05:39:11.348Z",
+  "id": "hhXrhnvESeqwkOlJ",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "paper-trading-daily",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "813da09c-6e0d-4a85-822b-dd1e5555ef3c",
+      "name": "Daily 12:05 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "5 12 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7c984ddc-b019-45a6-9c5c-e583610076a1",
+      "name": "read-all-pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "all_users",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.has_more === false }}",
+              "limitPagesFetched": true,
+              "maxRequests": 50
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "73711f30-88eb-4185-8092-e8a9499216fc",
+      "name": "merge-pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// attach user.username to every key-value (user_id -> users[] of ALL pages); abort on any partial fetch\nconst pages = $input.all().map((i) => i.json);\nif (!pages.length) throw new Error('no pages fetched, aborting');\nif (pages.some((p) => !Array.isArray(p.key_values))) throw new Error('page without key_values, aborting');\nif (pages[pages.length - 1].has_more !== false) throw new Error('has_more still true after page cap (partial fetch), aborting');\nconst names = {};\nfor (const p of pages) for (const u of (p.users || [])) names[u.id] = u.username;\nconst key_values = [];\nfor (const p of pages) for (const kv of p.key_values) key_values.push(kv.user_id === -1 ? kv : Object.assign({}, kv, { user: { username: names[kv.user_id] } }));\nreturn [{ json: { key_values } }];\n"
+      },
+      "notes": "Why Code: joins all fetched pages, maps user_id to username through every page's users[] and aborts on any partial fetch."
+    },
+    {
+      "id": "7077b040-4cf7-4950-be84-f6c685e50ff5",
+      "name": "summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// src/replay.js — pure engine shared by the artifact and the n8n Code nodes. No DOM, no fetch.\nconst ASSETS = [\"btc\", \"eth\", \"paxg\", \"xmr\", \"xno\", \"trx\"];\nconst GROUPS = { a: [\"btc\", \"eth\", \"paxg\"], b: [\"xmr\", \"xno\", \"trx\"] };\nconst CANDLE = 4 * 3600;\nconst START_USD = 1000, MIN_USD = 10, LIQ_PCT = 0.45, SYSTEM_ID = -1;\nconst MODIFIED = \"orden modificada después de enviarla\";\nconst KEYS_FULL = \"llegamos al límite de claves guardadas: reiniciamos para seguir operando.\";\n\nfunction weekStart(sec) {\n  const d = new Date(sec * 1000);\n  const dow = (d.getUTCDay() + 6) % 7; // Monday = 0\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow) / 1000;\n}\nfunction weekKey(sec, group) {\n  const thu = new Date((weekStart(sec) + 3 * 86400) * 1000); // ISO year is the Thursday's year\n  const y = thu.getUTCFullYear();\n  const week = Math.floor((weekStart(sec) - weekStart(Date.UTC(y, 0, 4) / 1000)) / (7 * 86400)) + 1;\n  return \"candles-\" + y + \"-W\" + String(week).padStart(2, \"0\") + \"-\" + group;\n}\nfunction mergeCandles(res) {\n  const out = Object.fromEntries(ASSETS.map((a) => [a, []]));\n  for (const kv of (res && res.key_values) || []) {\n    if (kv.user_id !== SYSTEM_ID || !/^candles-/.test(kv.key)) continue;\n    let v; try { v = JSON.parse(kv.value); } catch (e) { continue; }\n    if (!v || !Number.isFinite(v.t0)) continue;\n    for (const a of ASSETS) {\n      (v[a] || []).forEach((x, i) => {\n        if (Array.isArray(x) && (x.length === 3 || x.length === 4) && x.every(Number.isFinite)) out[a].push({ t: v.t0 + i * CANDLE, h: x[0], l: x[1], c: x[2], v: x[3] || 0 });\n      });\n    }\n  }\n  for (const a of ASSETS) out[a].sort((p, q) => p.t - q.t);\n  return out;\n}\nfunction candleAt(list, sec) {\n  return list.findIndex((k) => sec >= k.t && sec < k.t + CANDLE);\n}\n\n// Seasons are UTC calendar blocks starting Jan 1, May 1 and Sep 1\nfunction seasonStart(sec) {\n  const d = new Date(sec * 1000);\n  return Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 4) * 4, 1) / 1000;\n}\nfunction seasonEnd(sec) {\n  const d = new Date(seasonStart(sec) * 1000);\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 4, 1) / 1000;\n}\n\nfunction parseOrder(kv) {\n  const created = Math.floor(Date.parse(kv.created_at) / 1000);\n  if (!Number.isFinite(created)) return null;\n  if (/^reset-\\d+$/.test(kv.key)) return { id: kv.key, created, reset: true };\n  if (!/^o-\\d+$/.test(kv.key)) return null;\n  // Discourse keeps created_at on overwrite and bumps updated_at; an unparseable updated_at counts as modified\n  const modified = kv.updated_at != null && Date.parse(kv.updated_at) !== Date.parse(kv.created_at);\n  let v; try { v = JSON.parse(kv.value); } catch (e) { return null; }\n  if (!v || typeof v !== \"object\") return null;\n  const num = (x) => (x === undefined || x === null ? undefined : Number.isFinite(x) && x > 0 ? x : NaN);\n  if (v.side === \"sell\") return typeof v.of === \"string\" ? { id: kv.key, created, side: \"sell\", of: v.of, modified } : null;\n  if (v.side !== \"buy\" || !ASSETS.includes(v.asset)) return null;\n  const usd = num(v.usd), lev = v.lev === undefined ? 1 : v.lev, tp = num(v.tp), sl = num(v.sl);\n  if (!(usd >= MIN_USD) || (lev !== 1 && lev !== 2) || Number.isNaN(tp) || Number.isNaN(sl)) return null;\n  return { id: kv.key, created, side: \"buy\", asset: v.asset, usd, lev, tp, sl, modified };\n}\n\n// Replays every order against the candles. Fills (liq, sl, tp) happen inside a candle; orders fill at its close.\nfunction replay(keyValues, candles, now) {\n  const sStart = seasonStart(now); // the season start is an implicit reset: older keys are ignored entirely\n  const all = keyValues.map(parseOrder).filter((o) => o && o.created >= sStart).sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));\n  const resets = all.filter((o) => o.reset);\n  const last = resets[resets.length - 1];\n  const orders = all.filter((o) => !o.reset && (!last || o.created > last.created));\n  const st = { balance: START_USD, equity: START_USD, perf: 0, resets: resets.length, season: { start: sStart, end: seasonEnd(now) }, positions: [], pending: [], history: [] };\n  if (last) st.history.push({ t: last.created, kind: \"reset\", id: last.id });\n  const closed = (k) => k.t + CANDLE <= now;\n  const closePos = (p, kind, price, t) => {\n    const pnl = p.qty * (price - p.entry);\n    const back = kind === \"liq\" ? 0 : Math.max(0, p.usd + pnl);\n    st.balance += back;\n    st.positions.splice(st.positions.indexOf(p), 1);\n    st.history.push({ t, kind, asset: p.asset, price, usd: back, pnl: kind === \"liq\" ? -p.usd : pnl, id: p.id });\n  };\n  const times = [...new Set(ASSETS.flatMap((a) => candles[a].map((k) => k.t)))].sort((a, b) => a - b);\n  const at = Object.fromEntries(ASSETS.map((a) => { const m = new Map(); for (const k of candles[a]) if (!m.has(k.t)) m.set(k.t, k); return [a, m]; })); // first candle per time, as find() did\n  let qi = 0;\n  for (const t of times) {\n    const byAsset = Object.fromEntries(ASSETS.map((a) => [a, at[a].get(t)]));\n    if (!closed({ t })) break;\n    for (const p of [...st.positions]) {\n      const k = byAsset[p.asset];\n      if (!k || k.t <= p.openedAt) continue;\n      // Falling price reaches the higher level first: an SL above the liquidation price wins\n      if (p.sl && k.l <= p.sl && !(p.liq && p.sl < p.liq && k.l <= p.liq)) closePos(p, \"sl\", Math.min(p.sl, k.h), t);\n      else if (p.liq && k.l <= p.liq) closePos(p, \"liq\", Math.min(p.liq, k.h), t);\n      else if (p.tp && k.h >= p.tp) closePos(p, \"tp\", Math.max(p.tp, k.l), t);\n    }\n    // Orders created inside this candle fill at its close\n    for (; qi < orders.length && orders[qi].created < t + CANDLE; qi++) {\n      const o = orders[qi];\n      const tc = t + CANDLE;\n      if (o.created < t) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n      if (o.modified) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n      if (o.side === \"sell\") {\n        const p = st.positions.find((x) => x.id === o.of);\n        if (!p) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"La posición ya estaba cerrada\" }); continue; }\n        if (!byAsset[p.asset]) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + p.asset.toUpperCase() }); continue; }\n        closePos(p, \"sell\", byAsset[p.asset].c, tc);\n        continue;\n      }\n      const k = byAsset[o.asset];\n      if (!k) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + o.asset.toUpperCase() }); continue; }\n      if (o.usd > st.balance + 1e-9) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Saldo insuficiente\" }); continue; }\n      if ((o.sl && o.sl >= k.c) || (o.tp && o.tp <= k.c)) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"SL o TP del lado equivocado del precio de entrada\" }); continue; }\n      st.balance -= o.usd;\n      const entry = k.c, qty = (o.usd * o.lev) / entry;\n      st.positions.push({ id: o.id, asset: o.asset, lev: o.lev, usd: o.usd, qty, entry, tp: o.tp, sl: o.sl, liq: o.lev === 2 ? entry * (1 - LIQ_PCT) : undefined, openedAt: t, value: o.usd, pnl: 0 });\n      st.history.push({ t: tc, kind: \"buy\", asset: o.asset, price: entry, usd: o.usd, id: o.id });\n    }\n  }\n  for (; qi < orders.length; qi++) {\n    const o = orders[qi];\n    const lastT = times.length ? times[times.length - 1] : null;\n    if (lastT === null || o.created < lastT) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n    if (o.modified) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n    st.pending.push({ ...o, fillAt: Math.floor(o.created / CANDLE) * CANDLE + CANDLE });\n  }\n  for (const p of st.positions) {\n    const list = candles[p.asset].filter(closed);\n    const c = list.length ? list[list.length - 1].c : p.entry;\n    p.pnl = p.qty * (c - p.entry);\n    p.value = Math.max(0, p.usd + p.pnl);\n  }\n  st.equity = st.balance + st.positions.reduce((a, p) => a + p.value, 0);\n  st.perf = Math.round(((st.equity / START_USD) - 1) * 10000) / 100;\n  return st;\n}\n\n// Validates a buy before writing it. Messages are what the form shows; equality with ref is rejected.\nfunction checkOrder(o, ref, balance, keyCount) {\n  if (keyCount >= 95) return KEYS_FULL; // the last 5 of the 100 keys stay free for closing positions\n  if (!Number.isFinite(ref) || ref <= 0) return \"sin precio de referencia todavía.\";\n  if (!(o.usd >= MIN_USD)) return \"el monto mínimo es 10 USD.\";\n  if (o.usd > balance) return \"el monto supera el saldo disponible.\";\n  if (o.tp !== undefined && !(o.tp > ref)) return \"el take-profit va por encima del precio actual.\";\n  if (o.sl !== undefined && !(o.sl < ref)) return \"el stop-loss va por debajo del precio actual.\";\n  if (o.lev === 2 && o.sl !== undefined && o.sl <= ref * (1 - LIQ_PCT)) return \"con 2x el stop-loss va por encima del precio de liquidación.\";\n  return \"\";\n}\n\nconst api = { checkOrder, KEYS_FULL, ASSETS, GROUPS, CANDLE, START_USD, MIN_USD, LIQ_PCT, SYSTEM_ID, weekStart, weekKey, seasonStart, seasonEnd, mergeCandles, candleAt, parseOrder, replay };\nif (typeof module !== \"undefined\") module.exports = api; else if (typeof window !== \"undefined\") window.Replay = api;\n\n// n8n/daily.js — Code node of paper-trading-daily. Paste dist/n8n-daily.js into the node.\nconst MIN_TRADERS = 3;\n\nfunction dailySummary(keyValues, candles, now) {\n  const byUser = new Map();\n  for (const kv of keyValues) { if (!byUser.has(kv.user_id)) byUser.set(kv.user_id, []); byUser.get(kv.user_id).push(kv); }\n  const n = { buy: 0, sell: 0, tp: 0, sl: 0, liq: 0 }, users = new Set();\n  for (const [uid, kvs] of byUser) {\n    for (const h of replay(kvs, candles, now).history) {\n      if (h.t <= now - 86400 || h.t > now || !(h.kind in n)) continue;\n      n[h.kind]++; users.add(uid);\n    }\n  }\n  // With one or two traders an anonymous count would still point at people\n  if (users.size < MIN_TRADERS) return \"\";\n  const part = (k, one, many) => (n[k] ? n[k] + \" \" + (n[k] === 1 ? one : many) : \"\");\n  const items = [part(\"buy\", \"compra\", \"compras\"), part(\"sell\", \"cierre manual\", \"cierres manuales\"), part(\"tp\", \"take-profit\", \"take-profits\"), part(\"sl\", \"stop-loss\", \"stop-loss\"), part(\"liq\", \"liquidación\", \"liquidaciones\")].filter(Boolean);\n  return \"**paper trading, últimas 24h:** \" + items.join(\", \") + \". operaron \" + users.size + (users.size === 1 ? \" participante\" : \" participantes\") + \". sin nombres: cada quien ve lo suyo en el artifact.\";\n}\nif (typeof module !== \"undefined\") module.exports = { dailySummary };\n\nconst all = $('merge-pages').first().json.key_values;\nconst txt = dailySummary(all.filter((k) => k.user_id !== -1), mergeCandles({ key_values: all }), Math.floor(Date.now() / 1000));\nreturn txt ? [{ json: { raw: txt } }] : [];\n"
+      },
+      "notes": "Why Code: runs the shared replay engine (dailySummary) over every user's history; returns no item when nothing happened so nothing is posted."
+    },
+    {
+      "id": "12501f21-09fa-45b7-9388-16a782fa63a7",
+      "name": "post-summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        -100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/posts.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ topic_id: $json.topicId, raw: $json.raw }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "e663a83f-7adc-4e71-bf95-33853da3fdca",
+      "name": "Sticky Note 7d9efe0a",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "content": "## paper-trading-daily\nDaily 12:05 UTC: builds the anonymous 24h summary (needs at least 3 traders; otherwise no item and nothing is posted). The first time there is a summary, `create-pm` sends a private message to the Discourse group `paper-trading` as system and `save-topic` stores its topic id in workflow static data. Later runs reply in that same message through `post-summary`. Static data only persists for production runs; to start a new thread clear it or delete `topicId`. Paste dist/n8n-daily.js on top of `summary`."
+      }
+    },
+    {
+      "id": "a17e730d-d4cc-4467-892e-733bcbd9e573",
+      "name": "daily-topic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const topicId = $getWorkflowStaticData('global').topicId;\nreturn [{ json: { raw: $input.first().json.raw, topicId } }];\n"
+      },
+      "notes": "Why Code: reads workflow static data (topicId of the group message), which no native node can access."
+    },
+    {
+      "id": "d822e3cd-5808-4ed8-957f-734093a0fffa",
+      "name": "has-topic?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-topic-id",
+              "leftValue": "={{ typeof $json.topicId === 'number' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "99e10883-b28f-4d9f-bff0-a57713ed9e84",
+      "name": "create-pm",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/posts.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ archetype: 'private_message', target_recipients: 'paper-trading', title: 'paper trading: resumen diario', raw: $json.raw }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "2cc63af2-affb-4c45-a7ae-3297871ee8b0",
+      "name": "save-topic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "$getWorkflowStaticData('global').topicId = $input.first().json.topic_id;\nreturn [$input.first()];\n"
+      },
+      "notes": "Why Code: writes workflow static data (topicId of the group message), which no native node can do."
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "timezone": "UTC"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "hhXrhnvESeqwkOlJ",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T05:39:11.348Z",
+      "updatedAt": "2026-10-28T05:39:11.348Z"
+    }
+  ],
+  "staticData": {
+    "node:Daily 12:05 UTC": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "tags": [
+    {
+      "id": "BJZa2IMpZN7NG1SR",
+      "name": "discourse",
+      "createdAt": "2023-12-16T00:20:30.575Z",
+      "updatedAt": "2023-12-16T00:20:30.575Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-28T16:02:06.912Z",
+  "versionId": "76e01ef0-5fb8-45ef-ba52-9f89f0f7e76e"
+}
