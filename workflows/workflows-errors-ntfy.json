@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
+    "versionId": "a9bd0d78-fbba-45f4-918b-fd842b53d065",
     "workflowId": "6YeRd2MBpoIleUlj",
     "nodes": [
       {
@@ -18,7 +18,7 @@
       {
         "parameters": {
           "topic": "n8n",
-          "title": "discourse-alerts",
+          "title": "n8n-alerts",
           "tags": {},
           "additionalOptions": {}
         },
@@ -53,13 +53,13 @@
     },
     "nodeGroups": [],
     "authors": "D C",
-    "name": "Version c6cf02a6",
+    "name": "Version a9bd0d78",
     "description": "",
     "autosaved": true,
-    "createdAt": "2026-08-14T20:15:42.333Z",
-    "updatedAt": "2026-08-14T20:15:49.883Z"
+    "createdAt": "2026-10-23T18:25:18.268Z",
+    "updatedAt": "2026-10-23T18:25:36.543Z"
   },
-  "activeVersionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6",
+  "activeVersionId": "a9bd0d78-fbba-45f4-918b-fd842b53d065",
   "connections": {
     "Error Trigger": {
       "main": [
@@ -96,7 +96,7 @@
     {
       "parameters": {
         "topic": "n8n",
-        "title": "discourse-alerts",
+        "title": "n8n-alerts",
         "tags": {},
         "additionalOptions": {}
       },
@@ -119,7 +119,10 @@
   "pinData": {},
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   },
   "shared": [
     {
@@ -146,6 +149,6 @@
     }
   ],
   "triggerCount": 0,
-  "updatedAt": "2026-08-14T20:23:26.379Z",
-  "versionId": "c6cf02a6-f07f-42fe-a4c0-4b7b774d09c6"
+  "updatedAt": "2026-10-23T18:25:50.415Z",
+  "versionId": "a9bd0d78-fbba-45f4-918b-fd842b53d065"
 }
