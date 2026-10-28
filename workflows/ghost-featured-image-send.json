@@ -1,0 +1,1817 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0",
+    "workflowId": "8Ad7YALJ8uw43dGj",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ghost-featured-image-FuTT6U8wHovAaH9csHBmPN0X",
+          "options": {}
+        },
+        "id": "3eed361d-47b2-4797-b850-089b64d42bea",
+        "name": "ghost-post-changed",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          -32,
+          -160
+        ],
+        "webhookId": "297802d0-e9d6-4597-9066-a1ddda10f550"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "post_id",
+                "type": "string",
+                "value": "={{ $json.body?.post?.current?.id ?? \"\" }}"
+              },
+              {
+                "id": "a2",
+                "name": "slug",
+                "type": "string",
+                "value": "={{ $json.body?.post?.current?.slug ?? \"\" }}"
+              },
+              {
+                "id": "a3",
+                "name": "updated_at",
+                "type": "string",
+                "value": "={{ $json.body?.post?.current?.updated_at ?? \"\" }}"
+              },
+              {
+                "id": "a4",
+                "name": "feature_image",
+                "type": "string",
+                "value": "={{ $json.body?.post?.current?.feature_image ?? \"\" }}"
+              },
+              {
+                "id": "a5",
+                "name": "has_tag",
+                "type": "boolean",
+                "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
+              },
+              {
+                "id": "a6",
+                "name": "ghost_url",
+                "type": "string",
+                "value": "={{ ($json.body?.post?.current?.url ?? \"\").split('/').slice(0, 3).join('/') }}"
+              },
+              {
+                "id": "a7",
+                "name": "filter_url",
+                "type": "string",
+                "value": "http://criptonautas-featured-ghost-filter:8000"
+              },
+              {
+                "id": "a8",
+                "name": "draft_mode",
+                "type": "boolean",
+                "value": false
+              },
+              {
+                "id": "a9",
+                "name": "mode",
+                "type": "string",
+                "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "mode": "manual"
+        },
+        "id": "1e1a6bf1-88fa-4f07-b0f4-6f5b598499dc",
+        "name": "extract-post-fields",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          320,
+          -160
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.has_tag }}",
+                "operator": {
+                  "operation": "true",
+                  "type": "boolean",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              },
+              {
+                "leftValue": "={{ $json.feature_image }}",
+                "operator": {
+                  "operation": "notEmpty",
+                  "type": "string",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              },
+              {
+                "leftValue": "={{ $json.slug }}",
+                "operator": {
+                  "operation": "notEmpty",
+                  "type": "string",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ],
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            }
+          }
+        },
+        "id": "edc69827-8853-424f-be47-5b4b8569e05d",
+        "name": "filter-tagged-with-image",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          752,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "dataTableId": {
+            "__rl": true,
+            "cachedResultName": "featured_image_variants",
+            "mode": "id",
+            "value": "XVh116Q47FaSznH4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "original_url",
+                "keyValue": "={{ $json.feature_image }}"
+              },
+              {
+                "keyName": "new_url",
+                "keyValue": "={{ $json.feature_image }}"
+              }
+            ]
+          },
+          "matchType": "anyCondition",
+          "operation": "rowNotExists",
+          "resource": "row"
+        },
+        "id": "a184a8f9-cfa0-4d1e-ad82-685835ef7656",
+        "name": "skip-processed",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          976,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $(\"skip-processed\").item.json.feature_image }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "id": "cca64867-e66a-456e-b9ef-8695ceaeafcb",
+        "name": "download-original-image",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1056,
+          16
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "contentType": "binaryData",
+          "inputDataFieldName": "data",
+          "method": "POST",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "outputPropertyName": "data",
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 120000
+          },
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "seed",
+                "value": "={{ $(\"skip-processed\").item.json.slug }}"
+              },
+              {
+                "name": "mode",
+                "value": "={{ $(\"skip-processed\").item.json.mode }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "sendQuery": true,
+          "specifyQuery": "keypair",
+          "url": "={{ $(\"skip-processed\").item.json.filter_url }}/filter"
+        },
+        "id": "5503c91e-6a13-4685-b9ca-3cd7a86ef488",
+        "name": "apply-brand-filter",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1280,
+          16
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "authentication": "predefinedCredentialType",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "inputDataFieldName": "data",
+                "name": "file",
+                "parameterType": "formBinaryData"
+              },
+              {
+                "name": "ref",
+                "parameterType": "formData",
+                "value": "={{ $(\"skip-processed\").item.json.slug }}-brand.png"
+              }
+            ]
+          },
+          "contentType": "multipart-form-data",
+          "method": "POST",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/images/upload/"
+        },
+        "id": "9f29b5f9-bbf9-4447-aac7-16d708ec71c6",
+        "name": "upload-image-ghost",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1504,
+          16
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $(\"skip-processed\").item.json.draft_mode }}",
+                "operator": {
+                  "operation": "true",
+                  "type": "boolean",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ],
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            }
+          }
+        },
+        "id": "6d8c586d-a856-4165-a825-c042bf3a5e24",
+        "name": "if-draft-mode",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1280,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "columns": {
+            "mappingMode": "defineBelow",
+            "schema": [
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "new_url",
+                "id": "new_url",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "variant",
+                "id": "variant",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "applied",
+                "id": "applied",
+                "required": false,
+                "type": "boolean"
+              }
+            ],
+            "value": {
+              "applied": false,
+              "new_url": "={{ $(\"upload-image-ghost\").item.json.images[0].url }}",
+              "variant": "={{ $(\"apply-brand-filter\").item.json.headers[\"x-variant\"] }}"
+            }
+          },
+          "dataTableId": {
+            "__rl": true,
+            "cachedResultName": "featured_image_variants",
+            "mode": "id",
+            "value": "XVh116Q47FaSznH4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "condition": "eq",
+                "keyName": "post_id",
+                "keyValue": "={{ $(\"skip-processed\").item.json.post_id }}"
+              },
+              {
+                "condition": "eq",
+                "keyName": "original_url",
+                "keyValue": "={{ $(\"skip-processed\").item.json.feature_image }}"
+              }
+            ]
+          },
+          "matchType": "allConditions",
+          "operation": "update",
+          "resource": "row"
+        },
+        "id": "d91695c4-18da-42e9-a155-acaf1a403c40",
+        "name": "log-draft",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1504,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "authentication": "predefinedCredentialType",
+          "contentType": "json",
+          "jsonBody": "={{ JSON.stringify({ posts: [{ feature_image: $(\"upload-image-ghost\").item.json.images[0].url, updated_at: $(\"read-current-post\").item.json.posts[0].updated_at }] }) }}",
+          "method": "PUT",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/posts/{{ $(\"skip-processed\").item.json.post_id }}/"
+        },
+        "id": "2122f956-de50-4692-be65-6eb5301b47b2",
+        "name": "update-featured-image",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1504,
+          192
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "columns": {
+            "mappingMode": "defineBelow",
+            "schema": [
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "new_url",
+                "id": "new_url",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "variant",
+                "id": "variant",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "applied",
+                "id": "applied",
+                "required": false,
+                "type": "boolean"
+              }
+            ],
+            "value": {
+              "applied": true,
+              "new_url": "={{ $(\"upload-image-ghost\").item.json.images[0].url }}",
+              "variant": "={{ $(\"apply-brand-filter\").item.json.headers[\"x-variant\"] }}"
+            }
+          },
+          "dataTableId": {
+            "__rl": true,
+            "cachedResultName": "featured_image_variants",
+            "mode": "id",
+            "value": "XVh116Q47FaSznH4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "condition": "eq",
+                "keyName": "post_id",
+                "keyValue": "={{ $(\"skip-processed\").item.json.post_id }}"
+              },
+              {
+                "condition": "eq",
+                "keyName": "original_url",
+                "keyValue": "={{ $(\"skip-processed\").item.json.feature_image }}"
+              }
+            ]
+          },
+          "matchType": "allConditions",
+          "operation": "update",
+          "resource": "row"
+        },
+        "id": "3ba1ce04-8062-4662-8020-063412f3f08f",
+        "name": "log-applied",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1728,
+          192
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "8ed2c9e2-6658-4944-9520-dcad63556498",
+        "name": "manual-backfill",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -16,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "source": "adminApi",
+          "operation": "getAll",
+          "returnAll": true,
+          "options": {}
+        },
+        "id": "97253d59-a86e-4423-be14-d0fc72392d5b",
+        "name": "ghost-get-all-posts",
+        "type": "n8n-nodes-base.ghost",
+        "typeVersion": 1,
+        "position": [
+          320,
+          208
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b1",
+                "name": "post_id",
+                "type": "string",
+                "value": "={{ $json.id }}"
+              },
+              {
+                "id": "b2",
+                "name": "slug",
+                "type": "string",
+                "value": "={{ $json.slug ?? \"\" }}"
+              },
+              {
+                "id": "b3",
+                "name": "updated_at",
+                "type": "string",
+                "value": "={{ $json.updated_at ?? \"\" }}"
+              },
+              {
+                "id": "b4",
+                "name": "feature_image",
+                "type": "string",
+                "value": "={{ $json.feature_image ?? \"\" }}"
+              },
+              {
+                "id": "b5",
+                "name": "has_tag",
+                "type": "boolean",
+                "value": "={{ $json.status === \"published\" && ($json.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
+              },
+              {
+                "id": "b6",
+                "name": "ghost_url",
+                "type": "string",
+                "value": "https://criptonautas.co"
+              },
+              {
+                "id": "b7",
+                "name": "filter_url",
+                "type": "string",
+                "value": "http://criptonautas-featured-ghost-filter:8000"
+              },
+              {
+                "id": "b8",
+                "name": "draft_mode",
+                "type": "boolean",
+                "value": true
+              },
+              {
+                "id": "b9",
+                "name": "mode",
+                "type": "string",
+                "value": "={{ ($json.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
+              }
+            ]
+          },
+          "includeOtherFields": false,
+          "mode": "manual"
+        },
+        "id": "61ee366e-3aaa-4780-828a-5a41caf987a3",
+        "name": "extract-backfill-fields",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          480,
+          208
+        ]
+      },
+      {
+        "id": "32e56dde-3d58-4790-b4bc-56b6bb7b6eef",
+        "name": "claim-post",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1056,
+          -112
+        ],
+        "parameters": {
+          "columns": {
+            "mappingMode": "defineBelow",
+            "schema": [
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "post_id",
+                "id": "post_id",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "slug",
+                "id": "slug",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "original_url",
+                "id": "original_url",
+                "required": false,
+                "type": "string"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "applied",
+                "id": "applied",
+                "required": false,
+                "type": "boolean"
+              }
+            ],
+            "value": {
+              "applied": false,
+              "original_url": "={{ $json.feature_image }}",
+              "post_id": "={{ $json.post_id }}",
+              "slug": "={{ $json.slug }}"
+            }
+          },
+          "dataTableId": {
+            "__rl": true,
+            "cachedResultName": "featured_image_variants",
+            "mode": "id",
+            "value": "XVh116Q47FaSznH4"
+          },
+          "operation": "insert",
+          "resource": "row"
+        }
+      },
+      {
+        "id": "d7c161f7-34af-4ee3-9b76-4026a359b234",
+        "name": "read-current-post",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1504,
+          320
+        ],
+        "parameters": {
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {},
+          "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/posts/{{ $(\"skip-processed\").item.json.post_id }}/?fields=id,updated_at"
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
+      }
+    ],
+    "connections": {
+      "extract-post-fields": {
+        "main": [
+          [
+            {
+              "node": "filter-tagged-with-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "manual-backfill": {
+        "main": [
+          [
+            {
+              "node": "ghost-get-all-posts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "ghost-get-all-posts": {
+        "main": [
+          [
+            {
+              "node": "extract-backfill-fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "extract-backfill-fields": {
+        "main": [
+          [
+            {
+              "node": "filter-tagged-with-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "download-original-image": {
+        "main": [
+          [
+            {
+              "node": "apply-brand-filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "apply-brand-filter": {
+        "main": [
+          [
+            {
+              "node": "upload-image-ghost",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload-image-ghost": {
+        "main": [
+          [
+            {
+              "node": "if-draft-mode",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "if-draft-mode": {
+        "main": [
+          [
+            {
+              "node": "log-draft",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "read-current-post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update-featured-image": {
+        "main": [
+          [
+            {
+              "node": "log-applied",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "ghost-post-changed": {
+        "main": [
+          [
+            {
+              "node": "extract-post-fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "filter-tagged-with-image": {
+        "main": [
+          [
+            {
+              "node": "skip-processed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "skip-processed": {
+        "main": [
+          [
+            {
+              "node": "claim-post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "claim-post": {
+        "main": [
+          [
+            {
+              "node": "download-original-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-current-post": {
+        "main": [
+          [
+            {
+              "node": "update-featured-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [
+      {
+        "id": "55553400-dd40-4bb4-8e16-60fffe07a6f0",
+        "name": "backfill",
+        "nodeIds": [
+          "97253d59-a86e-4423-be14-d0fc72392d5b",
+          "61ee366e-3aaa-4780-828a-5a41caf987a3"
+        ],
+        "description": "Fetches published posts so the #cover-filter / #graph-filter ones go through the filter (always draft)"
+      },
+      {
+        "id": "b47face9-d7f9-4dac-8c5c-d926787b09a8",
+        "name": "filter-and-upload",
+        "nodeIds": [
+          "edc69827-8853-424f-be47-5b4b8569e05d",
+          "a184a8f9-cfa0-4d1e-ad82-685835ef7656",
+          "32e56dde-3d58-4790-b4bc-56b6bb7b6eef",
+          "cca64867-e66a-456e-b9ef-8695ceaeafcb",
+          "5503c91e-6a13-4685-b9ca-3cd7a86ef488",
+          "9f29b5f9-bbf9-4447-aac7-16d708ec71c6"
+        ],
+        "description": "Tagged posts whose current image is neither an original nor a filtered one in the table: claim a row, filter, upload"
+      },
+      {
+        "id": "1d5c10fa-1e85-43ca-b572-b8a973a55b21",
+        "name": "apply-or-log",
+        "nodeIds": [
+          "6d8c586d-a856-4165-a825-c042bf3a5e24",
+          "d91695c4-18da-42e9-a155-acaf1a403c40",
+          "d7c161f7-34af-4ee3-9b76-4026a359b234",
+          "2122f956-de50-4692-be65-6eb5301b47b2",
+          "3ba1ce04-8062-4662-8020-063412f3f08f"
+        ],
+        "description": "Draft: only fills the row. Otherwise swaps the featured image with a fresh updated_at and marks the row applied"
+      }
+    ],
+    "authors": "D C (via MCP)",
+    "name": "Process drafts on edit, claim rows, retries",
+    "description": "Runs on post.published and post.edited. Skips by image URL (original or filtered) instead of post id, claims a row before processing so repeated saves do not process twice, reads updated_at right before the update, retries network steps.",
+    "autosaved": false,
+    "createdAt": "2026-10-23T17:34:32.324Z",
+    "updatedAt": "2026-10-23T17:34:32.324Z"
+  },
+  "activeVersionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0",
+  "connections": {
+    "extract-post-fields": {
+      "main": [
+        [
+          {
+            "node": "filter-tagged-with-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manual-backfill": {
+      "main": [
+        [
+          {
+            "node": "ghost-get-all-posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ghost-get-all-posts": {
+      "main": [
+        [
+          {
+            "node": "extract-backfill-fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract-backfill-fields": {
+      "main": [
+        [
+          {
+            "node": "filter-tagged-with-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "download-original-image": {
+      "main": [
+        [
+          {
+            "node": "apply-brand-filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "apply-brand-filter": {
+      "main": [
+        [
+          {
+            "node": "upload-image-ghost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload-image-ghost": {
+      "main": [
+        [
+          {
+            "node": "if-draft-mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if-draft-mode": {
+      "main": [
+        [
+          {
+            "node": "log-draft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "read-current-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update-featured-image": {
+      "main": [
+        [
+          {
+            "node": "log-applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ghost-post-changed": {
+      "main": [
+        [
+          {
+            "node": "extract-post-fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter-tagged-with-image": {
+      "main": [
+        [
+          {
+            "node": "skip-processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "skip-processed": {
+      "main": [
+        [
+          {
+            "node": "claim-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "claim-post": {
+      "main": [
+        [
+          {
+            "node": "download-original-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-current-post": {
+      "main": [
+        [
+          {
+            "node": "update-featured-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-15T21:14:02.697Z",
+  "id": "8Ad7YALJ8uw43dGj",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-featured-image-send",
+  "nodeGroups": [
+    {
+      "id": "55553400-dd40-4bb4-8e16-60fffe07a6f0",
+      "name": "backfill",
+      "nodeIds": [
+        "97253d59-a86e-4423-be14-d0fc72392d5b",
+        "61ee366e-3aaa-4780-828a-5a41caf987a3"
+      ],
+      "description": "Fetches published posts so the #cover-filter / #graph-filter ones go through the filter (always draft)"
+    },
+    {
+      "id": "b47face9-d7f9-4dac-8c5c-d926787b09a8",
+      "name": "filter-and-upload",
+      "nodeIds": [
+        "edc69827-8853-424f-be47-5b4b8569e05d",
+        "a184a8f9-cfa0-4d1e-ad82-685835ef7656",
+        "32e56dde-3d58-4790-b4bc-56b6bb7b6eef",
+        "cca64867-e66a-456e-b9ef-8695ceaeafcb",
+        "5503c91e-6a13-4685-b9ca-3cd7a86ef488",
+        "9f29b5f9-bbf9-4447-aac7-16d708ec71c6"
+      ],
+      "description": "Tagged posts whose current image is neither an original nor a filtered one in the table: claim a row, filter, upload"
+    },
+    {
+      "id": "1d5c10fa-1e85-43ca-b572-b8a973a55b21",
+      "name": "apply-or-log",
+      "nodeIds": [
+        "6d8c586d-a856-4165-a825-c042bf3a5e24",
+        "d91695c4-18da-42e9-a155-acaf1a403c40",
+        "d7c161f7-34af-4ee3-9b76-4026a359b234",
+        "2122f956-de50-4692-be65-6eb5301b47b2",
+        "3ba1ce04-8062-4662-8020-063412f3f08f"
+      ],
+      "description": "Draft: only fills the row. Otherwise swaps the featured image with a fresh updated_at and marks the row applied"
+    }
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-featured-image-FuTT6U8wHovAaH9csHBmPN0X",
+        "options": {}
+      },
+      "id": "3eed361d-47b2-4797-b850-089b64d42bea",
+      "name": "ghost-post-changed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -32,
+        -160
+      ],
+      "webhookId": "297802d0-e9d6-4597-9066-a1ddda10f550"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "post_id",
+              "type": "string",
+              "value": "={{ $json.body?.post?.current?.id ?? \"\" }}"
+            },
+            {
+              "id": "a2",
+              "name": "slug",
+              "type": "string",
+              "value": "={{ $json.body?.post?.current?.slug ?? \"\" }}"
+            },
+            {
+              "id": "a3",
+              "name": "updated_at",
+              "type": "string",
+              "value": "={{ $json.body?.post?.current?.updated_at ?? \"\" }}"
+            },
+            {
+              "id": "a4",
+              "name": "feature_image",
+              "type": "string",
+              "value": "={{ $json.body?.post?.current?.feature_image ?? \"\" }}"
+            },
+            {
+              "id": "a5",
+              "name": "has_tag",
+              "type": "boolean",
+              "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
+            },
+            {
+              "id": "a6",
+              "name": "ghost_url",
+              "type": "string",
+              "value": "={{ ($json.body?.post?.current?.url ?? \"\").split('/').slice(0, 3).join('/') }}"
+            },
+            {
+              "id": "a7",
+              "name": "filter_url",
+              "type": "string",
+              "value": "http://criptonautas-featured-ghost-filter:8000"
+            },
+            {
+              "id": "a8",
+              "name": "draft_mode",
+              "type": "boolean",
+              "value": false
+            },
+            {
+              "id": "a9",
+              "name": "mode",
+              "type": "string",
+              "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "mode": "manual"
+      },
+      "id": "1e1a6bf1-88fa-4f07-b0f4-6f5b598499dc",
+      "name": "extract-post-fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        320,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.has_tag }}",
+              "operator": {
+                "operation": "true",
+                "type": "boolean",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "leftValue": "={{ $json.feature_image }}",
+              "operator": {
+                "operation": "notEmpty",
+                "type": "string",
+                "singleValue": true
+              },
+              "rightValue": ""
+            },
+            {
+              "leftValue": "={{ $json.slug }}",
+              "operator": {
+                "operation": "notEmpty",
+                "type": "string",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          }
+        }
+      },
+      "id": "edc69827-8853-424f-be47-5b4b8569e05d",
+      "name": "filter-tagged-with-image",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "original_url",
+              "keyValue": "={{ $json.feature_image }}"
+            },
+            {
+              "keyName": "new_url",
+              "keyValue": "={{ $json.feature_image }}"
+            }
+          ]
+        },
+        "matchType": "anyCondition",
+        "operation": "rowNotExists",
+        "resource": "row"
+      },
+      "id": "a184a8f9-cfa0-4d1e-ad82-685835ef7656",
+      "name": "skip-processed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        976,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $(\"skip-processed\").item.json.feature_image }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "cca64867-e66a-456e-b9ef-8695ceaeafcb",
+      "name": "download-original-image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1056,
+        16
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "method": "POST",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "outputPropertyName": "data",
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 120000
+        },
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "seed",
+              "value": "={{ $(\"skip-processed\").item.json.slug }}"
+            },
+            {
+              "name": "mode",
+              "value": "={{ $(\"skip-processed\").item.json.mode }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "url": "={{ $(\"skip-processed\").item.json.filter_url }}/filter"
+      },
+      "id": "5503c91e-6a13-4685-b9ca-3cd7a86ef488",
+      "name": "apply-brand-filter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1280,
+        16
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "inputDataFieldName": "data",
+              "name": "file",
+              "parameterType": "formBinaryData"
+            },
+            {
+              "name": "ref",
+              "parameterType": "formData",
+              "value": "={{ $(\"skip-processed\").item.json.slug }}-brand.png"
+            }
+          ]
+        },
+        "contentType": "multipart-form-data",
+        "method": "POST",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/images/upload/"
+      },
+      "id": "9f29b5f9-bbf9-4447-aac7-16d708ec71c6",
+      "name": "upload-image-ghost",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        16
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"skip-processed\").item.json.draft_mode }}",
+              "operator": {
+                "operation": "true",
+                "type": "boolean",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          }
+        }
+      },
+      "id": "6d8c586d-a856-4165-a825-c042bf3a5e24",
+      "name": "if-draft-mode",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1280,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "new_url",
+              "id": "new_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "variant",
+              "id": "variant",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "applied",
+              "id": "applied",
+              "required": false,
+              "type": "boolean"
+            }
+          ],
+          "value": {
+            "applied": false,
+            "new_url": "={{ $(\"upload-image-ghost\").item.json.images[0].url }}",
+            "variant": "={{ $(\"apply-brand-filter\").item.json.headers[\"x-variant\"] }}"
+          }
+        },
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "post_id",
+              "keyValue": "={{ $(\"skip-processed\").item.json.post_id }}"
+            },
+            {
+              "condition": "eq",
+              "keyName": "original_url",
+              "keyValue": "={{ $(\"skip-processed\").item.json.feature_image }}"
+            }
+          ]
+        },
+        "matchType": "allConditions",
+        "operation": "update",
+        "resource": "row"
+      },
+      "id": "d91695c4-18da-42e9-a155-acaf1a403c40",
+      "name": "log-draft",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1504,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ feature_image: $(\"upload-image-ghost\").item.json.images[0].url, updated_at: $(\"read-current-post\").item.json.posts[0].updated_at }] }) }}",
+        "method": "PUT",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/posts/{{ $(\"skip-processed\").item.json.post_id }}/"
+      },
+      "id": "2122f956-de50-4692-be65-6eb5301b47b2",
+      "name": "update-featured-image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        192
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "new_url",
+              "id": "new_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "variant",
+              "id": "variant",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "applied",
+              "id": "applied",
+              "required": false,
+              "type": "boolean"
+            }
+          ],
+          "value": {
+            "applied": true,
+            "new_url": "={{ $(\"upload-image-ghost\").item.json.images[0].url }}",
+            "variant": "={{ $(\"apply-brand-filter\").item.json.headers[\"x-variant\"] }}"
+          }
+        },
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "post_id",
+              "keyValue": "={{ $(\"skip-processed\").item.json.post_id }}"
+            },
+            {
+              "condition": "eq",
+              "keyName": "original_url",
+              "keyValue": "={{ $(\"skip-processed\").item.json.feature_image }}"
+            }
+          ]
+        },
+        "matchType": "allConditions",
+        "operation": "update",
+        "resource": "row"
+      },
+      "id": "3ba1ce04-8062-4662-8020-063412f3f08f",
+      "name": "log-applied",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        192
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "8ed2c9e2-6658-4944-9520-dcad63556498",
+      "name": "manual-backfill",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "source": "adminApi",
+        "operation": "getAll",
+        "returnAll": true,
+        "options": {}
+      },
+      "id": "97253d59-a86e-4423-be14-d0fc72392d5b",
+      "name": "ghost-get-all-posts",
+      "type": "n8n-nodes-base.ghost",
+      "typeVersion": 1,
+      "position": [
+        320,
+        208
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "post_id",
+              "type": "string",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "id": "b2",
+              "name": "slug",
+              "type": "string",
+              "value": "={{ $json.slug ?? \"\" }}"
+            },
+            {
+              "id": "b3",
+              "name": "updated_at",
+              "type": "string",
+              "value": "={{ $json.updated_at ?? \"\" }}"
+            },
+            {
+              "id": "b4",
+              "name": "feature_image",
+              "type": "string",
+              "value": "={{ $json.feature_image ?? \"\" }}"
+            },
+            {
+              "id": "b5",
+              "name": "has_tag",
+              "type": "boolean",
+              "value": "={{ $json.status === \"published\" && ($json.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
+            },
+            {
+              "id": "b6",
+              "name": "ghost_url",
+              "type": "string",
+              "value": "https://criptonautas.co"
+            },
+            {
+              "id": "b7",
+              "name": "filter_url",
+              "type": "string",
+              "value": "http://criptonautas-featured-ghost-filter:8000"
+            },
+            {
+              "id": "b8",
+              "name": "draft_mode",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "b9",
+              "name": "mode",
+              "type": "string",
+              "value": "={{ ($json.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "mode": "manual"
+      },
+      "id": "61ee366e-3aaa-4780-828a-5a41caf987a3",
+      "name": "extract-backfill-fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        480,
+        208
+      ]
+    },
+    {
+      "id": "32e56dde-3d58-4790-b4bc-56b6bb7b6eef",
+      "name": "claim-post",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        -112
+      ],
+      "parameters": {
+        "columns": {
+          "mappingMode": "defineBelow",
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "post_id",
+              "id": "post_id",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "slug",
+              "id": "slug",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "original_url",
+              "id": "original_url",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "applied",
+              "id": "applied",
+              "required": false,
+              "type": "boolean"
+            }
+          ],
+          "value": {
+            "applied": false,
+            "original_url": "={{ $json.feature_image }}",
+            "post_id": "={{ $json.post_id }}",
+            "slug": "={{ $json.slug }}"
+          }
+        },
+        "dataTableId": {
+          "__rl": true,
+          "cachedResultName": "featured_image_variants",
+          "mode": "id",
+          "value": "XVh116Q47FaSznH4"
+        },
+        "operation": "insert",
+        "resource": "row"
+      }
+    },
+    {
+      "id": "d7c161f7-34af-4ee3-9b76-4026a359b234",
+      "name": "read-current-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1504,
+        320
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {},
+        "url": "={{ $(\"skip-processed\").item.json.ghost_url }}/ghost/api/admin/posts/{{ $(\"skip-processed\").item.json.post_id }}/?fields=id,updated_at"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "8Ad7YALJ8uw43dGj",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-15T21:14:02.697Z",
+      "updatedAt": "2026-10-15T21:14:02.697Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "updatedAt": "2026-07-19T15:29:32.896Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-23T17:34:32.316Z",
+  "versionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0"
+}
