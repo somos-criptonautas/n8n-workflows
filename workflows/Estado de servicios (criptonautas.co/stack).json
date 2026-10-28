@@ -1,0 +1,246 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "Servicios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Servicios": {
+      "main": [
+        [
+          {
+            "node": "Consultar servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar servicio": {
+      "main": [
+        [
+          {
+            "node": "Guardar estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estado (GET)": {
+      "main": [
+        [
+          {
+            "node": "Leer estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer estado": {
+      "main": [
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-15T21:18:20.396Z",
+  "id": "iP5BYTYhU9ZjwoaK",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "Estado de servicios (criptonautas.co/stack)",
+  "nodeGroups": [
+    {
+      "id": "c69f1f32-a7c9-48eb-9a02-cf82e1993126",
+      "name": "Chequeo",
+      "nodeIds": [
+        "fe7489f7-80f3-469e-b095-06cf6ec0d05b",
+        "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+        "f44b3657-ac57-44c6-acbd-841542637782"
+      ],
+      "description": "Consulta cada servicio y guarda el último resultado en los datos del workflow"
+    },
+    {
+      "id": "64cb31a7-a818-4553-8b80-76ef3b127c4f",
+      "name": "Respuesta",
+      "nodeIds": [
+        "2727bd7c-3691-484a-b1a4-c2934d538a32",
+        "382dadfb-d6c5-4b27-8780-f0ca5b316454"
+      ],
+      "description": "Devuelve el último chequeo en JSON, solo para criptonautas.co"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "2080b9f6-131c-4f89-b784-641d33c5169a",
+      "name": "Cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fe7489f7-80f3-469e-b095-06cf6ec0d05b",
+      "name": "Servicios",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Lo que ve un miembro: la página de estado en /stack los muestra en este orden.\nreturn [\n  { name: 'Blog', url: 'https://criptonautas.co/' },\n  { name: 'Comunidad', url: 'https://comunidad.criptonautas.co/srv/status' },\n  { name: 'Videos', url: 'https://videos.criptonautas.co/api/v1/config' },\n  { name: 'Soporte', url: 'https://soporte.criptonautas.co/' },\n  { name: 'Formularios', url: 'https://forms.criptonautas.co/' },\n  { name: 'Reuniones', url: 'https://meet.criptonautas.co/' },\n  { name: 'BTCPay · abonos y donaciones', url: 'https://pay.criptonautas.co/api/v1/health' }\n].map(function (s) { return { json: s }; });"
+      }
+    },
+    {
+      "id": "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+      "name": "Consultar servicio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        128
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "f44b3657-ac57-44c6-acbd-841542637782",
+      "name": "Guardar estado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Una respuesta por servicio, en el mismo orden. Arriba = respondió con un código menor a 500;\n// un error de red o de tiempo deja el código en 0. Se guarda solo el último chequeo.\nconst services = $('Servicios').all().map(function (i) { return i.json; });\nconst results = $input.all().map(function (item, i) {\n  const j = item.json || {};\n  const code = Number(j.statusCode || (j.error && (j.error.httpCode || j.error.status)) || 0) || 0;\n  const s = services[i] || {};\n  return { name: s.name, url: s.url, ok: code > 0 && code < 500, code: code };\n});\nconst data = $getWorkflowStaticData('global');\ndata.last = { checkedAt: new Date().toISOString(), services: results };\nreturn [{ json: data.last }];"
+      }
+    },
+    {
+      "id": "02afbce9-0105-421a-8fec-5219cadc8010",
+      "name": "Estado (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        224
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "estado",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://criptonautas.co"
+        }
+      },
+      "webhookId": "0ca74b64-95a7-4671-8fc7-c79b18c8fe5b"
+    },
+    {
+      "id": "2727bd7c-3691-484a-b1a4-c2934d538a32",
+      "name": "Leer estado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        352
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// El último chequeo guardado; vacío hasta la primera corrida programada.\nconst last = $getWorkflowStaticData('global').last;\nreturn [{ json: last || { checkedAt: null, services: [] } }];"
+      }
+    },
+    {
+      "id": "382dadfb-d6c5-4b27-8780-f0ca5b316454",
+      "name": "Responder JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        496,
+        352
+      ],
+      "parameters": {
+        "respondWith": "firstIncomingItem",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "public, max-age=60"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "iP5BYTYhU9ZjwoaK",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-15T21:18:20.396Z",
+      "updatedAt": "2026-10-15T21:18:20.396Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-15T21:21:57.753Z",
+  "versionId": "145d8573-1a86-443b-9257-af439b239fa7"
+}
