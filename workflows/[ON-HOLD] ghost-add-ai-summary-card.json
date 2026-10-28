@@ -1,0 +1,443 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Ghost Webhook": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Get Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Post": {
+      "main": [
+        [
+          {
+            "node": "Plan Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Summary": {
+      "main": [
+        [
+          {
+            "node": "LLM Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Summary": {
+      "main": [
+        [
+          {
+            "node": "Get Latest Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Latest Post": {
+      "main": [
+        [
+          {
+            "node": "Write Summary Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Summary Card": {
+      "main": [
+        [
+          {
+            "node": "Update Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Test": {
+      "main": [
+        [
+          {
+            "node": "Test Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Post": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-14T08:19:57.021Z",
+  "id": "Y0vIWoadXjyfnfTt",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "[ON-HOLD] ghost-add-ai-summary-card",
+  "nodeGroups": [
+    {
+      "id": "a5be4236-1249-4015-ac1a-202a56b867a0",
+      "name": "Read and plan",
+      "nodeIds": [
+        "5fbb6c61-b6c7-455b-af7e-de1dec1cc4c6",
+        "be9e9508-a919-4213-8abf-7f3ce94bac8e",
+        "ccbec5f7-9de0-40ac-ae0d-0a2c53dd7ae1"
+      ],
+      "description": "Loads the post, checks #resumen and whether a summary card already exists, extracts the article text."
+    },
+    {
+      "id": "25c3b22d-fa56-4591-91c0-92de187a4e11",
+      "name": "Summarize and write",
+      "nodeIds": [
+        "2907f211-142e-42fd-9f43-f75c59dd4745",
+        "b96b0cb5-924c-4a6d-9594-a10410afe48d",
+        "d82bc9d4-9e23-4d8d-a00e-07fd1912787a",
+        "3abe947f-5730-4bc9-920a-85a0695b25b9"
+      ],
+      "description": "Asks the model for 3-4 sentences, re-reads the post, inserts or replaces the summary toggle and saves."
+    }
+  ],
+  "nodes": [
+    {
+      "id": "654d3605-a617-428c-9ca5-49fb2e7618f1",
+      "name": "Ghost Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        192
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-resumen",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "5d56673b-1ca0-4f97-8e18-4fa563dd9353"
+    },
+    {
+      "id": "5fbb6c61-b6c7-455b-af7e-de1dec1cc4c6",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        224
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s-slug",
+              "name": "slug",
+              "value": "={{ $json.body?.post?.current?.slug ?? $json.slug }}",
+              "type": "string"
+            },
+            {
+              "id": "s-event",
+              "name": "event",
+              "value": "={{ $json.query?.event ?? $json.event ?? 'edited' }}",
+              "type": "string"
+            },
+            {
+              "id": "s-ghost",
+              "name": "ghostUrl",
+              "value": "https://criptonautas.co",
+              "type": "string"
+            },
+            {
+              "id": "s-llm",
+              "name": "llmUrl",
+              "value": "https://YOUR-LITELLM/v1/chat/completions",
+              "type": "string"
+            },
+            {
+              "id": "s-model",
+              "name": "model",
+              "value": "YOUR-MODEL",
+              "type": "string"
+            },
+            {
+              "id": "s-hes",
+              "name": "headingEs",
+              "value": "resumen",
+              "type": "string"
+            },
+            {
+              "id": "s-hen",
+              "name": "headingEn",
+              "value": "summary",
+              "type": "string"
+            },
+            {
+              "id": "s-max",
+              "name": "maxChars",
+              "value": 24000,
+              "type": "number"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "be9e9508-a919-4213-8abf-7f3ce94bac8e",
+      "name": "Get Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        224
+      ],
+      "parameters": {
+        "url": "={{ $('Settings').first().json.ghostUrl }}/ghost/api/admin/posts/slug/{{ $('Settings').first().json.slug }}/?formats=lexical&include=tags",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "ccbec5f7-9de0-40ac-ae0d-0a2c53dd7ae1",
+      "name": "Plan Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        224
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Settings').first().json;\nconst post = $input.first().json.posts[0];\nconst tags = post.tags.map(t => t.slug);\nif (!tags.includes('hash-resumen')) return [];\nif (post.status !== 'published' && cfg.event !== 'manual') return [];\nconst refresh = tags.includes('hash-resumen-refresh');\n\n// The summary card is the toggle whose heading is exactly one of the two labels\nconst plain = h => String(h || '').replace(/<[^>]+>/g, '').trim();\nconst isSummary = n => n.type === 'toggle' && [cfg.headingEs, cfg.headingEn].includes(plain(n.heading));\nconst lexical = JSON.parse(post.lexical);\nif (lexical.root.children.some(isSummary) && !refresh) return [];\n\n// Article text only: the summary card itself and the audio card are left out\nconst textOf = n => isSummary(n) || n.type === 'audio' ? '' : typeof n.text === 'string' ? n.text : (n.children || []).map(textOf).join(['root', 'list'].includes(n.type) ? '\\n' : '');\nconst text = (post.title + '.\\n' + textOf(lexical.root)).replace(/[ \\t]+/g, ' ').replace(/\\s*\\n\\s*/g, '\\n').trim().slice(0, cfg.maxChars);\nreturn [{ json: { text } }];\n"
+      }
+    },
+    {
+      "id": "2907f211-142e-42fd-9f43-f75c59dd4745",
+      "name": "LLM Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        224
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Settings').first().json.llmUrl }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $('Settings').first().json.model, temperature: 0.3, messages: [ { role: 'system', content: 'Resumí el artículo que te pasan en 3 o 4 oraciones, en el mismo idioma del artículo. Solo lo que dice el artículo: sin opiniones, sin adornos, sin repetir el título, sin mencionar comentarios ni lectores. Respondé solo con JSON: {\"lang\":\"es\" o \"en\",\"summary\":\"...\"}' }, { role: 'user', content: $json.text } ] } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "o8pN7jD1z9bsiFOh",
+          "name": "OpenAi account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b96b0cb5-924c-4a6d-9594-a10410afe48d",
+      "name": "Get Latest Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1248,
+        224
+      ],
+      "parameters": {
+        "url": "={{ $('Settings').first().json.ghostUrl }}/ghost/api/admin/posts/slug/{{ $('Settings').first().json.slug }}/?formats=lexical&include=tags",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "d82bc9d4-9e23-4d8d-a00e-07fd1912787a",
+      "name": "Write Summary Card",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        224
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Settings').first().json;\nconst raw = $('LLM Summary').first().json.choices[0].message.content;\nconst out = JSON.parse(String(raw).replace(/^\\s*```(?:json)?\\s*|\\s*```\\s*$/g, ''));\nif (!out.summary || !String(out.summary).trim()) throw new Error('The model returned no summary');\n\nconst esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst plain = h => String(h || '').replace(/<[^>]+>/g, '').trim();\nconst isSummary = n => n.type === 'toggle' && [cfg.headingEs, cfg.headingEn].includes(plain(n.heading));\n\nconst post = $input.first().json.posts[0];\nconst lexical = JSON.parse(post.lexical);\nconst root = lexical.root.children;\nconst heading = out.lang === 'en' ? cfg.headingEn : cfg.headingEs;\nconst card = { type: 'toggle', version: 1, heading: '<span>' + esc(heading) + '</span>', content: '<p>' + esc(String(out.summary).trim()) + '</p>' };\nconst at = root.findIndex(isSummary);\nif (at < 0) root.unshift(card); else root[at] = card;\n\n// updated_at comes from a fresh read, so edits made while the model ran are kept, not overwritten\nconst update = { lexical: JSON.stringify(lexical), updated_at: post.updated_at };\nif (post.tags.some(t => t.slug === 'hash-resumen-refresh')) update.tags = post.tags.filter(t => t.slug !== 'hash-resumen-refresh').map(t => ({ id: t.id }));\nreturn [{ json: { id: post.id, body: { posts: [update] } } }];\n"
+      }
+    },
+    {
+      "id": "3abe947f-5730-4bc9-920a-85a0695b25b9",
+      "name": "Update Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1696,
+        224
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('Settings').first().json.ghostUrl }}/ghost/api/admin/posts/{{ $json.id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.body }}",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "a67fddb7-864e-4cdd-bdf5-b1b7a8931040",
+      "name": "Manual Test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f1f9449d-22f9-4c8e-a723-cbe40be02653",
+      "name": "Test Post",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t-slug",
+              "name": "slug",
+              "value": "your-post-slug",
+              "type": "string"
+            },
+            {
+              "id": "t-event",
+              "name": "event",
+              "value": "manual",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f7b8b6a8-1c01-441c-854d-30a7d60c8b09",
+      "name": "Sticky Note a7a86e2f",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        784,
+        224
+      ],
+      "parameters": {
+        "content": "## Setup\n1. **Settings**: `llmUrl` = your LiteLLM `/v1/chat/completions` URL, `model` = the model to try. The OpenAI credential supplies the key.\n2. Ghost Admin → Integrations → custom integration → two webhooks to the production URL of **Ghost Webhook**:\n   - *Post published* → `...?event=published`\n   - *Published post updated* → `...?event=edited`\n3. Tags: `#resumen` opts a post in. `#resumen-refresh` regenerates (removed automatically).\n\nThe summary is a closed toggle card at the top of the post, headed \"resumen\" (or \"summary\" for English posts). Edit it in Ghost freely; it is only rewritten on refresh.",
+        "color": 4
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Y0vIWoadXjyfnfTt",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-14T08:19:57.021Z",
+      "updatedAt": "2026-10-14T08:19:57.021Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "updatedAt": "2026-07-19T15:29:32.896Z"
+    },
+    {
+      "id": "zteglN9EqJ3nhEv6",
+      "name": "AI",
+      "createdAt": "2026-02-25T07:28:36.855Z",
+      "updatedAt": "2026-02-25T07:28:36.855Z"
+    }
+  ],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-20T17:13:47.661Z",
+  "versionId": "547d9279-69e4-483d-bbf8-bcadc983141d"
+}
