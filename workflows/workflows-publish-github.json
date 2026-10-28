@@ -449,17 +449,6 @@
   },
   "activeVersionId": "550629e5-7d24-47f8-9f49-c96c57ee5807",
   "connections": {
-    "n8n": {
-      "main": [
-        [
-          {
-            "node": "OneAtATime",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "new": {
       "main": [
         [
@@ -553,22 +542,56 @@
         ]
       ]
     },
-    "isDiffOrNew": {
+    "GitHub Create": {
       "main": [
         [
           {
-            "node": "github_status",
+            "node": "OneAtATime",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "GitHub Create": {
+    "On clicking 'execute'": {
       "main": [
         [
           {
+            "node": "Globals",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n": {
+      "main": [
+        [
+          {
+            "node": "SoloPublicables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SoloPublicables": {
+      "main": [
+        null,
+        [
+          {
             "node": "OneAtATime",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isDiffOrNew": {
+      "main": [
+        [
+          {
+            "node": "github_status",
             "type": "main",
             "index": 0
           }
@@ -610,23 +633,15 @@
           }
         ]
       ]
-    },
-    "On clicking 'execute'": {
-      "main": [
-        [
-          {
-            "node": "Globals",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "createdAt": "2023-12-16T00:19:31.490Z",
   "id": "1lmEvob5q0TP8qoT",
   "isArchived": false,
-  "meta": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
   "name": "workflows-publish-github",
   "nodeGroups": [],
   "nodes": [
@@ -668,35 +683,6 @@
         }
       },
       "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "dataType": "string",
-        "value1": "={{$json[\"github_status\"]}}",
-        "rules": {
-          "rules": [
-            {
-              "value2": "same"
-            },
-            {
-              "value2": "different",
-              "output": 1
-            },
-            {
-              "value2": "new",
-              "output": 2
-            }
-          ]
-        }
-      },
-      "id": "2dacb402-720c-462a-a190-866247b8717a",
-      "name": "github_status",
-      "type": "n8n-nodes-base.switch",
-      "position": [
-        512,
-        784
-      ],
-      "typeVersion": 1
     },
     {
       "parameters": {},
@@ -827,26 +813,6 @@
     },
     {
       "parameters": {
-        "triggerTimes": {
-          "item": [
-            {
-              "mode": "everyX",
-              "value": 12
-            }
-          ]
-        }
-      },
-      "id": "c286353b-92c5-4e6b-9ff9-8ec6ca118e1c",
-      "name": "Every 12 hours",
-      "type": "n8n-nodes-base.cron",
-      "position": [
-        -992,
-        944
-      ],
-      "typeVersion": 1
-    },
-    {
-      "parameters": {
         "filters": {},
         "requestOptions": {}
       },
@@ -888,12 +854,161 @@
         784
       ],
       "typeVersion": 2
+    },
+    {
+      "id": "31ecf47e-7bd3-4487-9cfe-2a85b58ff76a",
+      "name": "SoloPublicables",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -488,
+        680
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.name }}",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith",
+                "value": "["
+              },
+              "rightValue": "["
+            },
+            {
+              "leftValue": "={{ $json.active }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "or"
+        }
+      }
+    },
+    {
+      "id": "44dce449-ecca-4fbb-8148-deea85470e37",
+      "name": "github_status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        512,
+        784
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.github_status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "value": "same"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "same"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.github_status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "value": "different"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "different"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.github_status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "value": "new"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "new"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6b11b3a8-e969-423e-80cf-8c66b56eeed3",
+      "name": "Every 12 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -992,
+        944
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 12
+            }
+          ]
+        }
+      }
     }
   ],
   "pinData": {},
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
   },
   "shared": [
     {
@@ -907,19 +1022,19 @@
   "staticData": null,
   "tags": [
     {
-      "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas",
-      "createdAt": "2026-07-19T15:10:46.434Z",
-      "updatedAt": "2026-07-19T15:10:46.434Z"
-    },
-    {
       "id": "Dqd2TBDsggvbz4Ef",
       "name": "backups",
       "createdAt": "2026-07-19T15:28:14.456Z",
       "updatedAt": "2026-07-19T15:28:14.456Z"
+    },
+    {
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-08-14T20:22:51.994Z",
-  "versionId": "550629e5-7d24-47f8-9f49-c96c57ee5807"
+  "updatedAt": "2026-10-20T18:32:44.039Z",
+  "versionId": "8688cbe4-838e-4b9b-a5a3-a598ef3b5ff0"
 }
