@@ -1,0 +1,802 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "884369e5-1280-43db-97d2-8b9ae8ecd57d",
+    "workflowId": "coXHx90mK5yEMe8r",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "curso-artifacts",
+          "authentication": "headerAuth",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "24c3351c-a94a-4d87-9935-68f06bb1c296",
+        "name": "Recibir artifact",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          144
+        ],
+        "webhookId": "b9c2af0d-fb34-4887-911d-f5fe571da66e",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "lYhTKDSTayb0tyu4",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "KRhHJZNrkrPewGVG",
+            "cachedResultName": "curso_artifacts"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "key",
+                "keyValue": "={{ $json.body.key }}"
+              }
+            ]
+          },
+          "limit": 1
+        },
+        "id": "48d425d6-8eba-450c-b699-5de67a6a6af8",
+        "name": "Buscar artifact existente",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          224,
+          144
+        ],
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.artifact_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "12a03601-801b-4cb4-8c92-a907d888a1d6",
+        "name": "¿Ya existe?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          448,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://comunidad.criptonautas.co/admin/plugins/discourse-ai/ai-artifacts/{{ $json.artifact_id }}.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ai_artifact: Object.assign({}, $(\"Recibir artifact\").item.json.body.artifact, { metadata: { public: true } }) }) }}",
+          "options": {}
+        },
+        "id": "0ac4dc61-e08a-4041-a394-a21309712ade",
+        "name": "Actualizar en Discourse",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          672,
+          0
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "upsert",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "KRhHJZNrkrPewGVG",
+            "cachedResultName": "curso_artifacts"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "key",
+                "keyValue": "={{ $(\"Recibir artifact\").item.json.body.key }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "key": "={{ $(\"Recibir artifact\").item.json.body.key }}",
+              "artifact_id": "={{ $json.ai_artifact ? $json.ai_artifact.id : $json.id }}",
+              "kind": "={{ $(\"Recibir artifact\").item.json.body.kind }}",
+              "title": "={{ $(\"Recibir artifact\").item.json.body.title }}",
+              "shape": "={{ $(\"Recibir artifact\").item.json.body.shape || \"\" }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "key",
+                "displayName": "key",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "artifact_id",
+                "displayName": "artifact_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "kind",
+                "displayName": "kind",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "title",
+                "displayName": "title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "shape",
+                "displayName": "shape",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f31f25e9-9196-44a9-984e-3ed8369b793e",
+        "name": "Guardar id",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ key: $json.key, artifact_id: $json.artifact_id }) }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "id": "d7083bb1-6c97-461c-9ccd-56ddd3e4ff44",
+        "name": "Responder id",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1120,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/admin/plugins/discourse-ai/ai-artifacts.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ ai_artifact: Object.assign({}, $(\"Recibir artifact\").item.json.body.artifact, { user_id: -1, post_id: $(\"Recibir artifact\").item.json.body.post_id, metadata: { public: true } }) }) }}",
+          "options": {}
+        },
+        "id": "41fd8c96-16c9-40cc-926f-a1f0884a23d9",
+        "name": "Crear en Discourse",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          672,
+          288
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ error: $json.error ? ($json.error.message || $json.error) : \"Discourse rechazó la solicitud\" }) }}",
+          "options": {
+            "responseCode": 502
+          }
+        },
+        "id": "cdf149e3-b09a-43da-9cf2-73a9c9865b5b",
+        "name": "Responder error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          896,
+          240
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Publicar artifact del curso\nRecibe un artifact (quiz o flashcards) desde quizctl.py, lo crea o actualiza en Discourse con la credencial \"Discourse account\" y guarda su id en la Data Table curso_artifacts. El webhook pide el header secreto de la credencial \"Webhook artifacts del curso\".",
+          "height": 224,
+          "width": 608,
+          "color": 4
+        },
+        "id": "84bc8960-2859-461d-a59d-4024ebee6eaf",
+        "name": "Sticky Note 9883c31e",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -48,
+          -112
+        ]
+      }
+    ],
+    "connections": {
+      "Recibir artifact": {
+        "main": [
+          [
+            {
+              "node": "Buscar artifact existente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar artifact existente": {
+        "main": [
+          [
+            {
+              "node": "¿Ya existe?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "¿Ya existe?": {
+        "main": [
+          [
+            {
+              "node": "Actualizar en Discourse",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Crear en Discourse",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Actualizar en Discourse": {
+        "main": [
+          [
+            {
+              "node": "Guardar id",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responder error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Guardar id": {
+        "main": [
+          [
+            {
+              "node": "Responder id",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Crear en Discourse": {
+        "main": [
+          [
+            {
+              "node": "Guardar id",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Responder error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Crear artifact como system (user_id -1)",
+    "description": "Discourse exige user_id al crear un artifact; sin él responde 500.",
+    "autosaved": false,
+    "createdAt": "2026-10-14T23:18:31.406Z",
+    "updatedAt": "2026-10-14T23:18:31.406Z"
+  },
+  "activeVersionId": "884369e5-1280-43db-97d2-8b9ae8ecd57d",
+  "connections": {
+    "Recibir artifact": {
+      "main": [
+        [
+          {
+            "node": "Buscar artifact existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar artifact existente": {
+      "main": [
+        [
+          {
+            "node": "¿Ya existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ya existe?": {
+      "main": [
+        [
+          {
+            "node": "Actualizar en Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Crear en Discourse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar en Discourse": {
+      "main": [
+        [
+          {
+            "node": "Guardar id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar id": {
+      "main": [
+        [
+          {
+            "node": "Responder id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear en Discourse": {
+      "main": [
+        [
+          {
+            "node": "Guardar id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-14T19:32:57.917Z",
+  "id": "coXHx90mK5yEMe8r",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp",
+    "templateCredsSetupCompleted": true
+  },
+  "name": "curso-publish-artifact",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "curso-artifacts",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "24c3351c-a94a-4d87-9935-68f06bb1c296",
+      "name": "Recibir artifact",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        144
+      ],
+      "webhookId": "b9c2af0d-fb34-4887-911d-f5fe571da66e",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "lYhTKDSTayb0tyu4",
+          "name": "discourse-artifacts"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KRhHJZNrkrPewGVG",
+          "cachedResultName": "curso_artifacts"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "={{ $json.body.key }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "48d425d6-8eba-450c-b699-5de67a6a6af8",
+      "name": "Buscar artifact existente",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        144
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.artifact_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "12a03601-801b-4cb4-8c92-a907d888a1d6",
+      "name": "¿Ya existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://comunidad.criptonautas.co/admin/plugins/discourse-ai/ai-artifacts/{{ $json.artifact_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ai_artifact: Object.assign({}, $(\"Recibir artifact\").item.json.body.artifact, { metadata: { public: true } }) }) }}",
+        "options": {}
+      },
+      "id": "0ac4dc61-e08a-4041-a394-a21309712ade",
+      "name": "Actualizar en Discourse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KRhHJZNrkrPewGVG",
+          "cachedResultName": "curso_artifacts"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "={{ $(\"Recibir artifact\").item.json.body.key }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "key": "={{ $(\"Recibir artifact\").item.json.body.key }}",
+            "artifact_id": "={{ $json.ai_artifact ? $json.ai_artifact.id : $json.id }}",
+            "kind": "={{ $(\"Recibir artifact\").item.json.body.kind }}",
+            "title": "={{ $(\"Recibir artifact\").item.json.body.title }}",
+            "shape": "={{ $(\"Recibir artifact\").item.json.body.shape || \"\" }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "artifact_id",
+              "displayName": "artifact_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kind",
+              "displayName": "kind",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "shape",
+              "displayName": "shape",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f31f25e9-9196-44a9-984e-3ed8369b793e",
+      "name": "Guardar id",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ key: $json.key, artifact_id: $json.artifact_id }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "d7083bb1-6c97-461c-9ccd-56ddd3e4ff44",
+      "name": "Responder id",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/admin/plugins/discourse-ai/ai-artifacts.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ai_artifact: Object.assign({}, $(\"Recibir artifact\").item.json.body.artifact, { user_id: -1, post_id: $(\"Recibir artifact\").item.json.body.post_id, metadata: { public: true } }) }) }}",
+        "options": {}
+      },
+      "id": "41fd8c96-16c9-40cc-926f-a1f0884a23d9",
+      "name": "Crear en Discourse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        288
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: $json.error ? ($json.error.message || $json.error) : \"Discourse rechazó la solicitud\" }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      },
+      "id": "cdf149e3-b09a-43da-9cf2-73a9c9865b5b",
+      "name": "Responder error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Publicar artifact del curso\nRecibe un artifact (quiz o flashcards) desde quizctl.py, lo crea o actualiza en Discourse con la credencial \"Discourse account\" y guarda su id en la Data Table curso_artifacts. El webhook pide el header secreto de la credencial \"Webhook artifacts del curso\".",
+        "height": 224,
+        "width": 608,
+        "color": 4
+      },
+      "id": "84bc8960-2859-461d-a59d-4024ebee6eaf",
+      "name": "Sticky Note 9883c31e",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -112
+      ]
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "coXHx90mK5yEMe8r",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-14T19:32:57.917Z",
+      "updatedAt": "2026-10-14T19:32:57.917Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "BJZa2IMpZN7NG1SR",
+      "name": "discourse",
+      "createdAt": "2023-12-16T00:20:30.575Z",
+      "updatedAt": "2023-12-16T00:20:30.575Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-28T15:00:22.905Z",
+  "versionId": "09381afd-247c-4b50-8a42-83bfb0c9048c"
+}
