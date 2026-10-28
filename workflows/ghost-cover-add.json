@@ -1,0 +1,614 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "c5111adb-9e3f-41b6-99e5-527ae2d16c0d",
+    "workflowId": "mbIpe7751DqGVraW",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "f3a9c1d7-cover-5b2e",
+          "options": {
+            "noResponseBody": true
+          }
+        },
+        "id": "8cc67aad-6dbd-4fea-9938-658a60c39ba6",
+        "name": "ghost-post-published",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "925d4a6b-ea5f-4183-8d74-e58c60ea96e8"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ghost-url",
+                "name": "ghostUrl",
+                "value": "https://criptonautas.co",
+                "type": "string"
+              },
+              {
+                "id": "post-id",
+                "name": "id",
+                "value": "={{ String($json.body?.post?.current?.id ?? \"\").replace(/[^a-f0-9]/g, \"\") }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "51678c38-efe0-4123-b4d7-974de7677397",
+        "name": "post-id",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          224,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.ghostUrl }}/ghost/api/admin/posts/{{ $json.id }}/?include=tags&fields=id,title,feature_image,updated_at",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {}
+        },
+        "id": "712dc811-68e7-4ee7-b813-c50b67a89c35",
+        "name": "read-ghost-post",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          448,
+          0
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.posts[0].feature_image ?? \"\" }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "abdd75c4-dcd0-4fd5-9dac-5a71f358e345",
+        "name": "only-without-featured-image",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          672,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://criptonautas-featured-ghost-cover:8000/cover",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ category: ($json.posts[0].tags ?? []).find(t => t.visibility === 'public')?.name ?? \"Criptonautas\", title: $json.posts[0].title, format: \"webp\" }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "cover"
+              }
+            }
+          }
+        },
+        "id": "5d2a8183-90b2-4a30-8968-e088493932ab",
+        "name": "generate-cover",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          944,
+          128
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "NTR6mUfvwoRHSq0g",
+            "name": "ghost-portadas"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('post-id').item.json.ghostUrl }}/ghost/api/admin/images/upload/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "cover"
+              },
+              {
+                "name": "purpose",
+                "value": "image"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "cfaf45cc-e711-45bf-95ce-a3d5e35e174e",
+        "name": "upload-cover-to-ghost",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1168,
+          128
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "={{ $('post-id').item.json.ghostUrl }}/ghost/api/admin/posts/{{ $('post-id').item.json.id }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ posts: [{ feature_image: $json.images[0].url, updated_at: $('read-ghost-post').item.json.posts[0].updated_at }] }) }}",
+          "options": {}
+        },
+        "id": "aa32e32c-e719-419a-b35b-436e94528df8",
+        "name": "set-featured-image",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1424,
+          0
+        ],
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "ghost-post-published": {
+        "main": [
+          [
+            {
+              "node": "post-id",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "post-id": {
+        "main": [
+          [
+            {
+              "node": "read-ghost-post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-ghost-post": {
+        "main": [
+          [
+            {
+              "node": "only-without-featured-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "only-without-featured-image": {
+        "main": [
+          [
+            {
+              "node": "generate-cover",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "generate-cover": {
+        "main": [
+          [
+            {
+              "node": "upload-cover-to-ghost",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload-cover-to-ghost": {
+        "main": [
+          [
+            {
+              "node": "set-featured-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [
+      {
+        "id": "605d28e1-847e-437a-ba30-68ed872e0930",
+        "name": "cover",
+        "nodeIds": [
+          "5d2a8183-90b2-4a30-8968-e088493932ab",
+          "cfaf45cc-e711-45bf-95ce-a3d5e35e174e"
+        ],
+        "description": "Draws the 1200x630 cover and uploads it to Ghost"
+      }
+    ],
+    "authors": "D C (via MCP)",
+    "name": "Point expressions at the renamed nodes",
+    "description": "Updated nodes: upload-cover-to-ghost, set-featured-image",
+    "autosaved": false,
+    "createdAt": "2026-10-16T04:06:11.552Z",
+    "updatedAt": "2026-10-16T04:06:11.552Z"
+  },
+  "activeVersionId": "c5111adb-9e3f-41b6-99e5-527ae2d16c0d",
+  "connections": {
+    "ghost-post-published": {
+      "main": [
+        [
+          {
+            "node": "post-id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "post-id": {
+      "main": [
+        [
+          {
+            "node": "read-ghost-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-ghost-post": {
+      "main": [
+        [
+          {
+            "node": "only-without-featured-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "only-without-featured-image": {
+      "main": [
+        [
+          {
+            "node": "generate-cover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-cover": {
+      "main": [
+        [
+          {
+            "node": "upload-cover-to-ghost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload-cover-to-ghost": {
+      "main": [
+        [
+          {
+            "node": "set-featured-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-15T21:49:22.300Z",
+  "id": "mbIpe7751DqGVraW",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-cover-add",
+  "nodeGroups": [
+    {
+      "id": "605d28e1-847e-437a-ba30-68ed872e0930",
+      "name": "cover",
+      "nodeIds": [
+        "5d2a8183-90b2-4a30-8968-e088493932ab",
+        "cfaf45cc-e711-45bf-95ce-a3d5e35e174e"
+      ],
+      "description": "Draws the 1200x630 cover and uploads it to Ghost"
+    }
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "f3a9c1d7-cover-5b2e",
+        "options": {
+          "noResponseBody": true
+        }
+      },
+      "id": "8cc67aad-6dbd-4fea-9938-658a60c39ba6",
+      "name": "ghost-post-published",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "925d4a6b-ea5f-4183-8d74-e58c60ea96e8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ghost-url",
+              "name": "ghostUrl",
+              "value": "https://criptonautas.co",
+              "type": "string"
+            },
+            {
+              "id": "post-id",
+              "name": "id",
+              "value": "={{ String($json.body?.post?.current?.id ?? \"\").replace(/[^a-f0-9]/g, \"\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51678c38-efe0-4123-b4d7-974de7677397",
+      "name": "post-id",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.ghostUrl }}/ghost/api/admin/posts/{{ $json.id }}/?include=tags&fields=id,title,feature_image,updated_at",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "id": "712dc811-68e7-4ee7-b813-c50b67a89c35",
+      "name": "read-ghost-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.posts[0].feature_image ?? \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "abdd75c4-dcd0-4fd5-9dac-5a71f358e345",
+      "name": "only-without-featured-image",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://criptonautas-featured-cover:8000/cover",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ category: ($json.posts[0].tags ?? []).find(t => t.visibility === 'public')?.name ?? \"Criptonautas\", title: $json.posts[0].title, format: \"webp\" }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "cover"
+            }
+          }
+        }
+      },
+      "id": "5d2a8183-90b2-4a30-8968-e088493932ab",
+      "name": "generate-cover",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        944,
+        128
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NTR6mUfvwoRHSq0g",
+          "name": "criptonautas-featured-ghost-cover-token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('post-id').item.json.ghostUrl }}/ghost/api/admin/images/upload/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "cover"
+            },
+            {
+              "name": "purpose",
+              "value": "image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cfaf45cc-e711-45bf-95ce-a3d5e35e174e",
+      "name": "upload-cover-to-ghost",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1168,
+        128
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ $('post-id').item.json.ghostUrl }}/ghost/api/admin/posts/{{ $('post-id').item.json.id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ feature_image: $json.images[0].url, updated_at: $('read-ghost-post').item.json.posts[0].updated_at }] }) }}",
+        "options": {}
+      },
+      "id": "aa32e32c-e719-419a-b35b-436e94528df8",
+      "name": "set-featured-image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1424,
+        0
+      ],
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "callerPolicy": "workflowsFromSameOwner",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "mbIpe7751DqGVraW",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-15T21:49:22.300Z",
+      "updatedAt": "2026-10-15T21:49:22.300Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "updatedAt": "2026-07-19T15:29:32.896Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-28T16:01:00.439Z",
+  "versionId": "453bf0fb-e52e-40a2-aba8-d0faef8475df"
+}
