@@ -1,0 +1,1209 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224",
+    "workflowId": "fzvv7c56koRWUzpK",
+    "nodes": [
+      {
+        "id": "9b3eceea-892b-4a3d-9f91-0ee095c133ba",
+        "name": "Hourly at :07",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          192
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 1,
+                "triggerAtMinute": 7
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "6d41ae6f-2a74-4dab-a91d-999328816b07",
+        "name": "topic",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          192
+        ],
+        "parameters": {
+          "mode": "manual",
+          "includeOtherFields": false,
+          "assignments": {
+            "assignments": [
+              {
+                "id": "topic-id",
+                "name": "topic_id",
+                "value": 7161,
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "notes": "CHANGE HERE: destination topic id (test topic 7161). Swap for the group message id."
+      },
+      {
+        "id": "066fbd8a-167c-430a-9a8c-24d6ed51671b",
+        "name": "read-all-pages",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          448,
+          192
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendQuery": true,
+          "specifyQuery": "keypair",
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "all_users",
+                "value": "true"
+              },
+              {
+                "name": "per_page",
+                "value": "100"
+              }
+            ]
+          },
+          "options": {
+            "pagination": {
+              "pagination": {
+                "paginationMode": "updateAParameterInEachRequest",
+                "parameters": {
+                  "parameters": [
+                    {
+                      "type": "qs",
+                      "name": "page",
+                      "value": "={{ $pageCount + 1 }}"
+                    }
+                  ]
+                },
+                "paginationCompleteWhen": "other",
+                "completeExpression": "={{ $response.body.has_more === false }}",
+                "limitPagesFetched": true,
+                "maxRequests": 50
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      {
+        "id": "a584b17b-591e-451b-a3e6-39a83870d3d3",
+        "name": "merge-pages",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          192
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// attach user.username to every key-value (user_id -> users[] of ALL pages); abort on any partial fetch\nconst pages = $input.all().map((i) => i.json);\nif (!pages.length) throw new Error('no pages fetched, aborting');\nif (pages.some((p) => !Array.isArray(p.key_values))) throw new Error('page without key_values, aborting');\nif (pages[pages.length - 1].has_more !== false) throw new Error('has_more still true after page cap (partial fetch), aborting');\nconst names = {};\nfor (const p of pages) for (const u of (p.users || [])) names[u.id] = u.username;\nconst key_values = [];\nfor (const p of pages) for (const kv of p.key_values) key_values.push(kv.user_id === -1 ? kv : Object.assign({}, kv, { user: { username: names[kv.user_id] } }));\nreturn [{ json: { key_values } }];\n"
+        },
+        "notes": "Why Code: joins all fetched pages, maps user_id to username through every page's users[] and aborts on any partial fetch."
+      },
+      {
+        "id": "d39d7b92-b4e9-4766-8aca-63e1d854bc60",
+        "name": "read-seen",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          192
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "cB0hW6kfXmqhErN2",
+            "cachedResultName": "paper_trading_keys"
+          },
+          "returnAll": true
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "id": "bc6d541e-607b-4593-bb6d-b9f800190c71",
+        "name": "rank",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          192
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// src/replay.js — pure engine shared by the artifact and the n8n Code nodes. No DOM, no fetch.\nconst ASSETS = [\"btc\", \"eth\", \"paxg\", \"xmr\", \"xno\", \"trx\"];\nconst GROUPS = { a: [\"btc\", \"eth\", \"paxg\"], b: [\"xmr\", \"xno\", \"trx\"] };\nconst CANDLE = 4 * 3600;\nconst START_USD = 1000, MIN_USD = 10, LIQ_PCT = 0.45, SYSTEM_ID = -1;\nconst MODIFIED = \"orden modificada después de enviarla\";\nconst KEYS_FULL = \"llegamos al límite de claves guardadas: reiniciamos para seguir operando.\";\n\nfunction weekStart(sec) {\n  const d = new Date(sec * 1000);\n  const dow = (d.getUTCDay() + 6) % 7; // Monday = 0\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow) / 1000;\n}\nfunction weekKey(sec, group) {\n  const thu = new Date((weekStart(sec) + 3 * 86400) * 1000); // ISO year is the Thursday's year\n  const y = thu.getUTCFullYear();\n  const week = Math.floor((weekStart(sec) - weekStart(Date.UTC(y, 0, 4) / 1000)) / (7 * 86400)) + 1;\n  return \"candles-\" + y + \"-W\" + String(week).padStart(2, \"0\") + \"-\" + group;\n}\nfunction mergeCandles(res) {\n  const out = Object.fromEntries(ASSETS.map((a) => [a, []]));\n  for (const kv of (res && res.key_values) || []) {\n    if (kv.user_id !== SYSTEM_ID || !/^candles-/.test(kv.key)) continue;\n    let v; try { v = JSON.parse(kv.value); } catch (e) { continue; }\n    if (!v || !Number.isFinite(v.t0)) continue;\n    for (const a of ASSETS) {\n      (v[a] || []).forEach((x, i) => {\n        if (Array.isArray(x) && (x.length === 3 || x.length === 4) && x.every(Number.isFinite)) out[a].push({ t: v.t0 + i * CANDLE, h: x[0], l: x[1], c: x[2], v: x[3] || 0 });\n      });\n    }\n  }\n  for (const a of ASSETS) out[a].sort((p, q) => p.t - q.t);\n  return out;\n}\nfunction candleAt(list, sec) {\n  return list.findIndex((k) => sec >= k.t && sec < k.t + CANDLE);\n}\n\n// Seasons are UTC calendar blocks starting Jan 1, May 1 and Sep 1\nfunction seasonStart(sec) {\n  const d = new Date(sec * 1000);\n  return Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 4) * 4, 1) / 1000;\n}\nfunction seasonEnd(sec) {\n  const d = new Date(seasonStart(sec) * 1000);\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 4, 1) / 1000;\n}\n\nfunction parseOrder(kv) {\n  const created = Math.floor(Date.parse(kv.created_at) / 1000);\n  if (!Number.isFinite(created)) return null;\n  if (/^reset-\\d+$/.test(kv.key)) return { id: kv.key, created, reset: true };\n  if (!/^o-\\d+$/.test(kv.key)) return null;\n  // Discourse keeps created_at on overwrite and bumps updated_at; an unparseable updated_at counts as modified\n  const modified = kv.updated_at != null && Date.parse(kv.updated_at) !== Date.parse(kv.created_at);\n  let v; try { v = JSON.parse(kv.value); } catch (e) { return null; }\n  if (!v || typeof v !== \"object\") return null;\n  const num = (x) => (x === undefined || x === null ? undefined : Number.isFinite(x) && x > 0 ? x : NaN);\n  if (v.side === \"sell\") return typeof v.of === \"string\" ? { id: kv.key, created, side: \"sell\", of: v.of, modified } : null;\n  if (v.side !== \"buy\" || !ASSETS.includes(v.asset)) return null;\n  const usd = num(v.usd), lev = v.lev === undefined ? 1 : v.lev, tp = num(v.tp), sl = num(v.sl);\n  if (!(usd >= MIN_USD) || (lev !== 1 && lev !== 2) || Number.isNaN(tp) || Number.isNaN(sl)) return null;\n  return { id: kv.key, created, side: \"buy\", asset: v.asset, usd, lev, tp, sl, modified };\n}\n\n// Replays every order against the candles. Fills (liq, sl, tp) happen inside a candle; orders fill at its close.\nfunction replay(keyValues, candles, now) {\n  const sStart = seasonStart(now); // the season start is an implicit reset: older keys are ignored entirely\n  const all = keyValues.map(parseOrder).filter((o) => o && o.created >= sStart).sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));\n  const resets = all.filter((o) => o.reset);\n  const last = resets[resets.length - 1];\n  const orders = all.filter((o) => !o.reset && (!last || o.created > last.created));\n  const st = { balance: START_USD, equity: START_USD, perf: 0, resets: resets.length, season: { start: sStart, end: seasonEnd(now) }, positions: [], pending: [], history: [] };\n  if (last) st.history.push({ t: last.created, kind: \"reset\", id: last.id });\n  const closed = (k) => k.t + CANDLE <= now;\n  const closePos = (p, kind, price, t) => {\n    const pnl = p.qty * (price - p.entry);\n    const back = kind === \"liq\" ? 0 : Math.max(0, p.usd + pnl);\n    st.balance += back;\n    st.positions.splice(st.positions.indexOf(p), 1);\n    st.history.push({ t, kind, asset: p.asset, price, usd: back, pnl: kind === \"liq\" ? -p.usd : pnl, id: p.id });\n  };\n  const times = [...new Set(ASSETS.flatMap((a) => candles[a].map((k) => k.t)))].sort((a, b) => a - b);\n  const at = Object.fromEntries(ASSETS.map((a) => { const m = new Map(); for (const k of candles[a]) if (!m.has(k.t)) m.set(k.t, k); return [a, m]; })); // first candle per time, as find() did\n  let qi = 0;\n  for (const t of times) {\n    const byAsset = Object.fromEntries(ASSETS.map((a) => [a, at[a].get(t)]));\n    if (!closed({ t })) break;\n    for (const p of [...st.positions]) {\n      const k = byAsset[p.asset];\n      if (!k || k.t <= p.openedAt) continue;\n      // Falling price reaches the higher level first: an SL above the liquidation price wins\n      if (p.sl && k.l <= p.sl && !(p.liq && p.sl < p.liq && k.l <= p.liq)) closePos(p, \"sl\", Math.min(p.sl, k.h), t);\n      else if (p.liq && k.l <= p.liq) closePos(p, \"liq\", Math.min(p.liq, k.h), t);\n      else if (p.tp && k.h >= p.tp) closePos(p, \"tp\", Math.max(p.tp, k.l), t);\n    }\n    // Orders created inside this candle fill at its close\n    for (; qi < orders.length && orders[qi].created < t + CANDLE; qi++) {\n      const o = orders[qi];\n      const tc = t + CANDLE;\n      if (o.created < t) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n      if (o.modified) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n      if (o.side === \"sell\") {\n        const p = st.positions.find((x) => x.id === o.of);\n        if (!p) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"La posición ya estaba cerrada\" }); continue; }\n        if (!byAsset[p.asset]) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + p.asset.toUpperCase() }); continue; }\n        closePos(p, \"sell\", byAsset[p.asset].c, tc);\n        continue;\n      }\n      const k = byAsset[o.asset];\n      if (!k) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + o.asset.toUpperCase() }); continue; }\n      if (o.usd > st.balance + 1e-9) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Saldo insuficiente\" }); continue; }\n      if ((o.sl && o.sl >= k.c) || (o.tp && o.tp <= k.c)) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"SL o TP del lado equivocado del precio de entrada\" }); continue; }\n      st.balance -= o.usd;\n      const entry = k.c, qty = (o.usd * o.lev) / entry;\n      st.positions.push({ id: o.id, asset: o.asset, lev: o.lev, usd: o.usd, qty, entry, tp: o.tp, sl: o.sl, liq: o.lev === 2 ? entry * (1 - LIQ_PCT) : undefined, openedAt: t, value: o.usd, pnl: 0 });\n      st.history.push({ t: tc, kind: \"buy\", asset: o.asset, price: entry, usd: o.usd, id: o.id });\n    }\n  }\n  for (; qi < orders.length; qi++) {\n    const o = orders[qi];\n    const lastT = times.length ? times[times.length - 1] : null;\n    if (lastT === null || o.created < lastT) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n    if (o.modified) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n    st.pending.push({ ...o, fillAt: Math.floor(o.created / CANDLE) * CANDLE + CANDLE });\n  }\n  for (const p of st.positions) {\n    const list = candles[p.asset].filter(closed);\n    const c = list.length ? list[list.length - 1].c : p.entry;\n    p.pnl = p.qty * (c - p.entry);\n    p.value = Math.max(0, p.usd + p.pnl);\n  }\n  st.equity = st.balance + st.positions.reduce((a, p) => a + p.value, 0);\n  st.perf = Math.round(((st.equity / START_USD) - 1) * 10000) / 100;\n  return st;\n}\n\n// Validates a buy before writing it. Messages are what the form shows; equality with ref is rejected.\nfunction checkOrder(o, ref, balance, keyCount) {\n  if (keyCount >= 95) return KEYS_FULL; // the last 5 of the 100 keys stay free for closing positions\n  if (!Number.isFinite(ref) || ref <= 0) return \"sin precio de referencia todavía.\";\n  if (!(o.usd >= MIN_USD)) return \"el monto mínimo es 10 USD.\";\n  if (o.usd > balance) return \"el monto supera el saldo disponible.\";\n  if (o.tp !== undefined && !(o.tp > ref)) return \"el take-profit va por encima del precio actual.\";\n  if (o.sl !== undefined && !(o.sl < ref)) return \"el stop-loss va por debajo del precio actual.\";\n  if (o.lev === 2 && o.sl !== undefined && o.sl <= ref * (1 - LIQ_PCT)) return \"con 2x el stop-loss va por encima del precio de liquidación.\";\n  return \"\";\n}\n\nconst api = { checkOrder, KEYS_FULL, ASSETS, GROUPS, CANDLE, START_USD, MIN_USD, LIQ_PCT, SYSTEM_ID, weekStart, weekKey, seasonStart, seasonEnd, mergeCandles, candleAt, parseOrder, replay };\nif (typeof module !== \"undefined\") module.exports = api; else if (typeof window !== \"undefined\") window.Replay = api;\n\n// n8n/ranking.js — Code node of paper-trading-ranking. Paste dist/n8n-ranking.js into the node.\n// epoch ms from an ISO string, a Date, or a number (seconds if < 1e12, else ms); NaN if unparseable\nfunction ts(x) {\n  if (x instanceof Date) return x.getTime();\n  if (typeof x === \"number\") return x < 1e12 ? x * 1000 : x;\n  return typeof x === \"string\" ? Date.parse(x) : NaN;\n}\nfunction rankAll(keyValues, candles, now, seen) {\n  const byUser = new Map();\n  for (const kv of keyValues) { if (!byUser.has(kv.user_id)) byUser.set(kv.user_id, { name: kv.user && kv.user.username, kvs: [] }); byUser.get(kv.user_id).kvs.push(kv); }\n  const flagged = [];\n  const seasonMs = seasonStart(now) * 1000; // keys from past seasons may vanish or change freely\n  const cutoff = (kvs) => Math.max(seasonMs, ...kvs.filter((k) => /^reset-/.test(k.key)).map((k) => ts(k.created_at)).filter((t) => !isNaN(t)));\n  for (const row of seen) {\n    const u = byUser.get(row.user_id);\n    const present = u && u.kvs.some((k) => k.key === row.key && ts(k.created_at) === ts(row.created_at));\n    if (present) continue;\n    const lastReset = cutoff(u ? u.kvs : []);\n    const rt = ts(row.created_at); // unparseable → flag (fail closed)\n    if ((isNaN(rt) || rt > lastReset) && !flagged.includes(row.user_id)) flagged.push(row.user_id);\n  }\n  // Discourse keeps created_at when a key is overwritten: a moved (or unparseable) updated_at after the last reset is an edited order\n  for (const [uid, u] of byUser) {\n    const lastReset = cutoff(u.kvs);\n    const edited = u.kvs.some((k) => /^(o|reset)-\\d+$/.test(k.key) && k.updated_at != null && ts(k.created_at) > lastReset && ts(k.updated_at) !== ts(k.created_at));\n    if (edited && !flagged.includes(uid)) flagged.push(uid);\n  }\n  const rows = [];\n  for (const [uid, u] of byUser) {\n    if (flagged.includes(uid) || !u.name) continue;\n    const st = replay(u.kvs, candles, now);\n    if (!st.history.some((h) => h.kind === \"buy\")) continue;\n    rows.push({ u: u.name, r: st.perf, resets: st.resets });\n  }\n  rows.sort((a, b) => b.r - a.r || a.u.localeCompare(b.u));\n  const seenNow = keyValues.filter((k) => /^(o|reset)-\\d+$/.test(k.key)).map((k) => ({ user_id: k.user_id, key: k.key, created_at: k.created_at }));\n  return { ranking: { t: now, season: { start: seasonStart(now), end: seasonEnd(now) }, rows }, seenNow, flagged };\n}\nif (typeof module !== \"undefined\") module.exports = { rankAll, ts };\n\nconst now = Math.floor(Date.now() / 1000);\nconst all = $('merge-pages').first().json.key_values;\nconst candles = mergeCandles({ key_values: all });\nconst users = all.filter((k) => k.user_id !== -1);\nconst seen = $('read-seen').all().map((i) => i.json).filter((r) => r.user_id !== undefined && r.key);\nconst r = rankAll(users, candles, now, seen);\nconst newSeen = r.seenNow.filter((s) => !seen.some((x) => x.user_id === s.user_id && x.key === s.key));\nreturn [{ json: { ranking: JSON.stringify(r.ranking), newSeen, flagged: r.flagged } }];\n"
+        },
+        "notes": "Why Code: runs the shared replay/ranking engine (rankAll) over every user's orders; too much logic for native nodes."
+      },
+      {
+        "id": "f8bd8f75-a491-43d9-a609-9648e6028e4b",
+        "name": "write-ranking",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1344,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ key: 'ranking', value: $json.ranking, public: true }) }}"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3
+      },
+      {
+        "id": "cd8ddbd1-5264-4f03-9491-7dfedfba4bad",
+        "name": "split-new-seen",
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          192
+        ],
+        "parameters": {
+          "fieldToSplitOut": "newSeen",
+          "options": {}
+        }
+      },
+      {
+        "id": "92e3a7de-d40c-4350-b06b-a20bf3b98bb0",
+        "name": "insert-seen",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1568,
+          192
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "insert",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "cB0hW6kfXmqhErN2",
+            "cachedResultName": "paper_trading_keys"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "user_id": "={{ $json.user_id }}",
+              "key": "={{ $json.key }}",
+              "created_at": "={{ $json.created_at }}"
+            },
+            "schema": [
+              {
+                "id": "user_id",
+                "displayName": "user_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "key",
+                "displayName": "key",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "created_at",
+                "displayName": "created_at",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "57b1380f-fe60-41e1-b33f-8872f52b3043",
+        "name": "any flagged?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1344,
+          384
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.flagged.length }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                },
+                "rightValue": 0
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "38d1d4c4-ce5a-4a41-991a-e6a4e4a7cf1f",
+        "name": "notify-flag",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          384
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/posts.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ topic_id: $('topic').first().json.topic_id, raw: 'Usuarios fuera del ranking por borrar operaciones (user_id): ' + $json.flagged.join(', ') }) }}"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "disabled": true
+      },
+      {
+        "id": "f26a449d-bf59-49d2-91d2-b16533a23a47",
+        "name": "Sticky Note c91979ae",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          720,
+          384
+        ],
+        "parameters": {
+          "content": "## paper-trading-ranking\nHourly: reads every key (all pages), replays orders, publishes public key `ranking`, remembers seen order keys in Data Table paper_trading_keys, flags users who deleted or overwrote orders. `notify-flag` is disabled until staff notices get a private destination (node `topic`). Ranked traders not yet in group paper-trading are added (members -> any-new? -> add-members, only adds). Paste dist/n8n-ranking.js on top of `rank`."
+        }
+      },
+      {
+        "id": "1e705361-9e8b-457d-8b36-ddc6f5bf169c",
+        "name": "group",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1344,
+          576
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://comunidad.criptonautas.co/groups/paper-trading.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        }
+      },
+      {
+        "id": "37a748f4-f685-44c9-8dca-820078bb896c",
+        "name": "any-new?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1792,
+          576
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ JSON.parse($('rank').first().json.ranking).rows.map((r) => r.u).filter((u) => !($('members').first().json.members || []).some((m) => m.username === u)).length }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                },
+                "rightValue": 0
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "8f40f737-0e84-4633-8669-7cc73bf77fc2",
+        "name": "add-members",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          2016,
+          576
+        ],
+        "parameters": {
+          "method": "PUT",
+          "url": "={{ 'https://comunidad.criptonautas.co/groups/' + $('group').first().json.group.id + '/members.json' }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ usernames: JSON.parse($('rank').first().json.ranking).rows.map((r) => r.u).filter((u) => !($('members').first().json.members || []).some((m) => m.username === u)).join(',') }) }}"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "notes": "Only adds members; never removes.",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "50a62214-72df-4bbf-929c-2ce3eefddfde",
+        "name": "members",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          576
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://comunidad.criptonautas.co/groups/paper-trading/members.json?limit=1000",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi"
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "notes": "Current members, so add-members only sends new usernames.",
+        "retryOnFail": true,
+        "maxTries": 3
+      }
+    ],
+    "connections": {
+      "Hourly at :07": {
+        "main": [
+          [
+            {
+              "node": "topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "topic": {
+        "main": [
+          [
+            {
+              "node": "read-all-pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-all-pages": {
+        "main": [
+          [
+            {
+              "node": "merge-pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "merge-pages": {
+        "main": [
+          [
+            {
+              "node": "read-seen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-seen": {
+        "main": [
+          [
+            {
+              "node": "rank",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "rank": {
+        "main": [
+          [
+            {
+              "node": "write-ranking",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "split-new-seen",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "any flagged?",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "group",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "split-new-seen": {
+        "main": [
+          [
+            {
+              "node": "insert-seen",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "any flagged?": {
+        "main": [
+          [
+            {
+              "node": "notify-flag",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "group": {
+        "main": [
+          [
+            {
+              "node": "members",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "members": {
+        "main": [
+          [
+            {
+              "node": "any-new?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "any-new?": {
+        "main": [
+          [
+            {
+              "node": "add-members",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Seasons in rank engine",
+    "description": "Updated nodes: rank",
+    "autosaved": false,
+    "createdAt": "2026-10-28T16:00:16.050Z",
+    "updatedAt": "2026-10-28T16:00:16.050Z"
+  },
+  "activeVersionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224",
+  "connections": {
+    "Hourly at :07": {
+      "main": [
+        [
+          {
+            "node": "topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic": {
+      "main": [
+        [
+          {
+            "node": "read-all-pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-all-pages": {
+      "main": [
+        [
+          {
+            "node": "merge-pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge-pages": {
+      "main": [
+        [
+          {
+            "node": "read-seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-seen": {
+      "main": [
+        [
+          {
+            "node": "rank",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "rank": {
+      "main": [
+        [
+          {
+            "node": "write-ranking",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "split-new-seen",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "any flagged?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-new-seen": {
+      "main": [
+        [
+          {
+            "node": "insert-seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "any flagged?": {
+      "main": [
+        [
+          {
+            "node": "notify-flag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "group": {
+      "main": [
+        [
+          {
+            "node": "members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "members": {
+      "main": [
+        [
+          {
+            "node": "any-new?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "any-new?": {
+      "main": [
+        [
+          {
+            "node": "add-members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T05:38:25.207Z",
+  "id": "fzvv7c56koRWUzpK",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "paper-trading-ranking",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "9b3eceea-892b-4a3d-9f91-0ee095c133ba",
+      "name": "Hourly at :07",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        192
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 7
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6d41ae6f-2a74-4dab-a91d-999328816b07",
+      "name": "topic",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        192
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "topic-id",
+              "name": "topic_id",
+              "value": 7161,
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "notes": "CHANGE HERE: destination topic id (test topic 7161). Swap for the group message id."
+    },
+    {
+      "id": "066fbd8a-167c-430a-9a8c-24d6ed51671b",
+      "name": "read-all-pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        192
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendQuery": true,
+        "specifyQuery": "keypair",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "all_users",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.has_more === false }}",
+              "limitPagesFetched": true,
+              "maxRequests": 50
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "a584b17b-591e-451b-a3e6-39a83870d3d3",
+      "name": "merge-pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// attach user.username to every key-value (user_id -> users[] of ALL pages); abort on any partial fetch\nconst pages = $input.all().map((i) => i.json);\nif (!pages.length) throw new Error('no pages fetched, aborting');\nif (pages.some((p) => !Array.isArray(p.key_values))) throw new Error('page without key_values, aborting');\nif (pages[pages.length - 1].has_more !== false) throw new Error('has_more still true after page cap (partial fetch), aborting');\nconst names = {};\nfor (const p of pages) for (const u of (p.users || [])) names[u.id] = u.username;\nconst key_values = [];\nfor (const p of pages) for (const kv of p.key_values) key_values.push(kv.user_id === -1 ? kv : Object.assign({}, kv, { user: { username: names[kv.user_id] } }));\nreturn [{ json: { key_values } }];\n"
+      },
+      "notes": "Why Code: joins all fetched pages, maps user_id to username through every page's users[] and aborts on any partial fetch."
+    },
+    {
+      "id": "d39d7b92-b4e9-4766-8aca-63e1d854bc60",
+      "name": "read-seen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        192
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cB0hW6kfXmqhErN2",
+          "cachedResultName": "paper_trading_keys"
+        },
+        "returnAll": true
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "bc6d541e-607b-4593-bb6d-b9f800190c71",
+      "name": "rank",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        192
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// src/replay.js — pure engine shared by the artifact and the n8n Code nodes. No DOM, no fetch.\nconst ASSETS = [\"btc\", \"eth\", \"paxg\", \"xmr\", \"xno\", \"trx\"];\nconst GROUPS = { a: [\"btc\", \"eth\", \"paxg\"], b: [\"xmr\", \"xno\", \"trx\"] };\nconst CANDLE = 4 * 3600;\nconst START_USD = 1000, MIN_USD = 10, LIQ_PCT = 0.45, SYSTEM_ID = -1;\nconst MODIFIED = \"orden modificada después de enviarla\";\nconst KEYS_FULL = \"llegamos al límite de claves guardadas: reiniciamos para seguir operando.\";\n\nfunction weekStart(sec) {\n  const d = new Date(sec * 1000);\n  const dow = (d.getUTCDay() + 6) % 7; // Monday = 0\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow) / 1000;\n}\nfunction weekKey(sec, group) {\n  const thu = new Date((weekStart(sec) + 3 * 86400) * 1000); // ISO year is the Thursday's year\n  const y = thu.getUTCFullYear();\n  const week = Math.floor((weekStart(sec) - weekStart(Date.UTC(y, 0, 4) / 1000)) / (7 * 86400)) + 1;\n  return \"candles-\" + y + \"-W\" + String(week).padStart(2, \"0\") + \"-\" + group;\n}\nfunction mergeCandles(res) {\n  const out = Object.fromEntries(ASSETS.map((a) => [a, []]));\n  for (const kv of (res && res.key_values) || []) {\n    if (kv.user_id !== SYSTEM_ID || !/^candles-/.test(kv.key)) continue;\n    let v; try { v = JSON.parse(kv.value); } catch (e) { continue; }\n    if (!v || !Number.isFinite(v.t0)) continue;\n    for (const a of ASSETS) {\n      (v[a] || []).forEach((x, i) => {\n        if (Array.isArray(x) && (x.length === 3 || x.length === 4) && x.every(Number.isFinite)) out[a].push({ t: v.t0 + i * CANDLE, h: x[0], l: x[1], c: x[2], v: x[3] || 0 });\n      });\n    }\n  }\n  for (const a of ASSETS) out[a].sort((p, q) => p.t - q.t);\n  return out;\n}\nfunction candleAt(list, sec) {\n  return list.findIndex((k) => sec >= k.t && sec < k.t + CANDLE);\n}\n\n// Seasons are UTC calendar blocks starting Jan 1, May 1 and Sep 1\nfunction seasonStart(sec) {\n  const d = new Date(sec * 1000);\n  return Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 4) * 4, 1) / 1000;\n}\nfunction seasonEnd(sec) {\n  const d = new Date(seasonStart(sec) * 1000);\n  return Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 4, 1) / 1000;\n}\n\nfunction parseOrder(kv) {\n  const created = Math.floor(Date.parse(kv.created_at) / 1000);\n  if (!Number.isFinite(created)) return null;\n  if (/^reset-\\d+$/.test(kv.key)) return { id: kv.key, created, reset: true };\n  if (!/^o-\\d+$/.test(kv.key)) return null;\n  // Discourse keeps created_at on overwrite and bumps updated_at; an unparseable updated_at counts as modified\n  const modified = kv.updated_at != null && Date.parse(kv.updated_at) !== Date.parse(kv.created_at);\n  let v; try { v = JSON.parse(kv.value); } catch (e) { return null; }\n  if (!v || typeof v !== \"object\") return null;\n  const num = (x) => (x === undefined || x === null ? undefined : Number.isFinite(x) && x > 0 ? x : NaN);\n  if (v.side === \"sell\") return typeof v.of === \"string\" ? { id: kv.key, created, side: \"sell\", of: v.of, modified } : null;\n  if (v.side !== \"buy\" || !ASSETS.includes(v.asset)) return null;\n  const usd = num(v.usd), lev = v.lev === undefined ? 1 : v.lev, tp = num(v.tp), sl = num(v.sl);\n  if (!(usd >= MIN_USD) || (lev !== 1 && lev !== 2) || Number.isNaN(tp) || Number.isNaN(sl)) return null;\n  return { id: kv.key, created, side: \"buy\", asset: v.asset, usd, lev, tp, sl, modified };\n}\n\n// Replays every order against the candles. Fills (liq, sl, tp) happen inside a candle; orders fill at its close.\nfunction replay(keyValues, candles, now) {\n  const sStart = seasonStart(now); // the season start is an implicit reset: older keys are ignored entirely\n  const all = keyValues.map(parseOrder).filter((o) => o && o.created >= sStart).sort((a, b) => a.created - b.created || (a.id < b.id ? -1 : 1));\n  const resets = all.filter((o) => o.reset);\n  const last = resets[resets.length - 1];\n  const orders = all.filter((o) => !o.reset && (!last || o.created > last.created));\n  const st = { balance: START_USD, equity: START_USD, perf: 0, resets: resets.length, season: { start: sStart, end: seasonEnd(now) }, positions: [], pending: [], history: [] };\n  if (last) st.history.push({ t: last.created, kind: \"reset\", id: last.id });\n  const closed = (k) => k.t + CANDLE <= now;\n  const closePos = (p, kind, price, t) => {\n    const pnl = p.qty * (price - p.entry);\n    const back = kind === \"liq\" ? 0 : Math.max(0, p.usd + pnl);\n    st.balance += back;\n    st.positions.splice(st.positions.indexOf(p), 1);\n    st.history.push({ t, kind, asset: p.asset, price, usd: back, pnl: kind === \"liq\" ? -p.usd : pnl, id: p.id });\n  };\n  const times = [...new Set(ASSETS.flatMap((a) => candles[a].map((k) => k.t)))].sort((a, b) => a - b);\n  const at = Object.fromEntries(ASSETS.map((a) => { const m = new Map(); for (const k of candles[a]) if (!m.has(k.t)) m.set(k.t, k); return [a, m]; })); // first candle per time, as find() did\n  let qi = 0;\n  for (const t of times) {\n    const byAsset = Object.fromEntries(ASSETS.map((a) => [a, at[a].get(t)]));\n    if (!closed({ t })) break;\n    for (const p of [...st.positions]) {\n      const k = byAsset[p.asset];\n      if (!k || k.t <= p.openedAt) continue;\n      // Falling price reaches the higher level first: an SL above the liquidation price wins\n      if (p.sl && k.l <= p.sl && !(p.liq && p.sl < p.liq && k.l <= p.liq)) closePos(p, \"sl\", Math.min(p.sl, k.h), t);\n      else if (p.liq && k.l <= p.liq) closePos(p, \"liq\", Math.min(p.liq, k.h), t);\n      else if (p.tp && k.h >= p.tp) closePos(p, \"tp\", Math.max(p.tp, k.l), t);\n    }\n    // Orders created inside this candle fill at its close\n    for (; qi < orders.length && orders[qi].created < t + CANDLE; qi++) {\n      const o = orders[qi];\n      const tc = t + CANDLE;\n      if (o.created < t) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n      if (o.modified) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n      if (o.side === \"sell\") {\n        const p = st.positions.find((x) => x.id === o.of);\n        if (!p) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"La posición ya estaba cerrada\" }); continue; }\n        if (!byAsset[p.asset]) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + p.asset.toUpperCase() }); continue; }\n        closePos(p, \"sell\", byAsset[p.asset].c, tc);\n        continue;\n      }\n      const k = byAsset[o.asset];\n      if (!k) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Sin vela de \" + o.asset.toUpperCase() }); continue; }\n      if (o.usd > st.balance + 1e-9) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"Saldo insuficiente\" }); continue; }\n      if ((o.sl && o.sl >= k.c) || (o.tp && o.tp <= k.c)) { st.history.push({ t: tc, kind: \"invalid\", id: o.id, why: \"SL o TP del lado equivocado del precio de entrada\" }); continue; }\n      st.balance -= o.usd;\n      const entry = k.c, qty = (o.usd * o.lev) / entry;\n      st.positions.push({ id: o.id, asset: o.asset, lev: o.lev, usd: o.usd, qty, entry, tp: o.tp, sl: o.sl, liq: o.lev === 2 ? entry * (1 - LIQ_PCT) : undefined, openedAt: t, value: o.usd, pnl: 0 });\n      st.history.push({ t: tc, kind: \"buy\", asset: o.asset, price: entry, usd: o.usd, id: o.id });\n    }\n  }\n  for (; qi < orders.length; qi++) {\n    const o = orders[qi];\n    const lastT = times.length ? times[times.length - 1] : null;\n    if (lastT === null || o.created < lastT) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: \"Sin velas publicadas para esa fecha\" }); continue; }\n    if (o.modified) { st.history.push({ t: o.created, kind: \"invalid\", id: o.id, why: MODIFIED }); continue; }\n    st.pending.push({ ...o, fillAt: Math.floor(o.created / CANDLE) * CANDLE + CANDLE });\n  }\n  for (const p of st.positions) {\n    const list = candles[p.asset].filter(closed);\n    const c = list.length ? list[list.length - 1].c : p.entry;\n    p.pnl = p.qty * (c - p.entry);\n    p.value = Math.max(0, p.usd + p.pnl);\n  }\n  st.equity = st.balance + st.positions.reduce((a, p) => a + p.value, 0);\n  st.perf = Math.round(((st.equity / START_USD) - 1) * 10000) / 100;\n  return st;\n}\n\n// Validates a buy before writing it. Messages are what the form shows; equality with ref is rejected.\nfunction checkOrder(o, ref, balance, keyCount) {\n  if (keyCount >= 95) return KEYS_FULL; // the last 5 of the 100 keys stay free for closing positions\n  if (!Number.isFinite(ref) || ref <= 0) return \"sin precio de referencia todavía.\";\n  if (!(o.usd >= MIN_USD)) return \"el monto mínimo es 10 USD.\";\n  if (o.usd > balance) return \"el monto supera el saldo disponible.\";\n  if (o.tp !== undefined && !(o.tp > ref)) return \"el take-profit va por encima del precio actual.\";\n  if (o.sl !== undefined && !(o.sl < ref)) return \"el stop-loss va por debajo del precio actual.\";\n  if (o.lev === 2 && o.sl !== undefined && o.sl <= ref * (1 - LIQ_PCT)) return \"con 2x el stop-loss va por encima del precio de liquidación.\";\n  return \"\";\n}\n\nconst api = { checkOrder, KEYS_FULL, ASSETS, GROUPS, CANDLE, START_USD, MIN_USD, LIQ_PCT, SYSTEM_ID, weekStart, weekKey, seasonStart, seasonEnd, mergeCandles, candleAt, parseOrder, replay };\nif (typeof module !== \"undefined\") module.exports = api; else if (typeof window !== \"undefined\") window.Replay = api;\n\n// n8n/ranking.js — Code node of paper-trading-ranking. Paste dist/n8n-ranking.js into the node.\n// epoch ms from an ISO string, a Date, or a number (seconds if < 1e12, else ms); NaN if unparseable\nfunction ts(x) {\n  if (x instanceof Date) return x.getTime();\n  if (typeof x === \"number\") return x < 1e12 ? x * 1000 : x;\n  return typeof x === \"string\" ? Date.parse(x) : NaN;\n}\nfunction rankAll(keyValues, candles, now, seen) {\n  const byUser = new Map();\n  for (const kv of keyValues) { if (!byUser.has(kv.user_id)) byUser.set(kv.user_id, { name: kv.user && kv.user.username, kvs: [] }); byUser.get(kv.user_id).kvs.push(kv); }\n  const flagged = [];\n  const seasonMs = seasonStart(now) * 1000; // keys from past seasons may vanish or change freely\n  const cutoff = (kvs) => Math.max(seasonMs, ...kvs.filter((k) => /^reset-/.test(k.key)).map((k) => ts(k.created_at)).filter((t) => !isNaN(t)));\n  for (const row of seen) {\n    const u = byUser.get(row.user_id);\n    const present = u && u.kvs.some((k) => k.key === row.key && ts(k.created_at) === ts(row.created_at));\n    if (present) continue;\n    const lastReset = cutoff(u ? u.kvs : []);\n    const rt = ts(row.created_at); // unparseable → flag (fail closed)\n    if ((isNaN(rt) || rt > lastReset) && !flagged.includes(row.user_id)) flagged.push(row.user_id);\n  }\n  // Discourse keeps created_at when a key is overwritten: a moved (or unparseable) updated_at after the last reset is an edited order\n  for (const [uid, u] of byUser) {\n    const lastReset = cutoff(u.kvs);\n    const edited = u.kvs.some((k) => /^(o|reset)-\\d+$/.test(k.key) && k.updated_at != null && ts(k.created_at) > lastReset && ts(k.updated_at) !== ts(k.created_at));\n    if (edited && !flagged.includes(uid)) flagged.push(uid);\n  }\n  const rows = [];\n  for (const [uid, u] of byUser) {\n    if (flagged.includes(uid) || !u.name) continue;\n    const st = replay(u.kvs, candles, now);\n    if (!st.history.some((h) => h.kind === \"buy\")) continue;\n    rows.push({ u: u.name, r: st.perf, resets: st.resets });\n  }\n  rows.sort((a, b) => b.r - a.r || a.u.localeCompare(b.u));\n  const seenNow = keyValues.filter((k) => /^(o|reset)-\\d+$/.test(k.key)).map((k) => ({ user_id: k.user_id, key: k.key, created_at: k.created_at }));\n  return { ranking: { t: now, season: { start: seasonStart(now), end: seasonEnd(now) }, rows }, seenNow, flagged };\n}\nif (typeof module !== \"undefined\") module.exports = { rankAll, ts };\n\nconst now = Math.floor(Date.now() / 1000);\nconst all = $('merge-pages').first().json.key_values;\nconst candles = mergeCandles({ key_values: all });\nconst users = all.filter((k) => k.user_id !== -1);\nconst seen = $('read-seen').all().map((i) => i.json).filter((r) => r.user_id !== undefined && r.key);\nconst r = rankAll(users, candles, now, seen);\nconst newSeen = r.seenNow.filter((s) => !seen.some((x) => x.user_id === s.user_id && x.key === s.key));\nreturn [{ json: { ranking: JSON.stringify(r.ranking), newSeen, flagged: r.flagged } }];\n"
+      },
+      "notes": "Why Code: runs the shared replay/ranking engine (rankAll) over every user's orders; too much logic for native nodes."
+    },
+    {
+      "id": "f8bd8f75-a491-43d9-a609-9648e6028e4b",
+      "name": "write-ranking",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/discourse-ai/ai-bot/artifact-key-values/39.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ key: 'ranking', value: $json.ranking, public: true }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "id": "cd8ddbd1-5264-4f03-9491-7dfedfba4bad",
+      "name": "split-new-seen",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        192
+      ],
+      "parameters": {
+        "fieldToSplitOut": "newSeen",
+        "options": {}
+      }
+    },
+    {
+      "id": "92e3a7de-d40c-4350-b06b-a20bf3b98bb0",
+      "name": "insert-seen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        192
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "cB0hW6kfXmqhErN2",
+          "cachedResultName": "paper_trading_keys"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.user_id }}",
+            "key": "={{ $json.key }}",
+            "created_at": "={{ $json.created_at }}"
+          },
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "key",
+              "displayName": "key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "57b1380f-fe60-41e1-b33f-8872f52b3043",
+      "name": "any flagged?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        384
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.flagged.length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "38d1d4c4-ce5a-4a41-991a-e6a4e4a7cf1f",
+      "name": "notify-flag",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        384
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/posts.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ topic_id: $('topic').first().json.topic_id, raw: 'Usuarios fuera del ranking por borrar operaciones (user_id): ' + $json.flagged.join(', ') }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "disabled": true
+    },
+    {
+      "id": "f26a449d-bf59-49d2-91d2-b16533a23a47",
+      "name": "Sticky Note c91979ae",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        720,
+        384
+      ],
+      "parameters": {
+        "content": "## paper-trading-ranking\nHourly: reads every key (all pages), replays orders, publishes public key `ranking`, remembers seen order keys in Data Table paper_trading_keys, flags users who deleted or overwrote orders. `notify-flag` is disabled until staff notices get a private destination (node `topic`). Ranked traders not yet in group paper-trading are added (members -> any-new? -> add-members, only adds). Paste dist/n8n-ranking.js on top of `rank`."
+      }
+    },
+    {
+      "id": "1e705361-9e8b-457d-8b36-ddc6f5bf169c",
+      "name": "group",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        576
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://comunidad.criptonautas.co/groups/paper-trading.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "id": "37a748f4-f685-44c9-8dca-820078bb896c",
+      "name": "any-new?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        576
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ JSON.parse($('rank').first().json.ranking).rows.map((r) => r.u).filter((u) => !($('members').first().json.members || []).some((m) => m.username === u)).length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "8f40f737-0e84-4633-8669-7cc73bf77fc2",
+      "name": "add-members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2016,
+        576
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "={{ 'https://comunidad.criptonautas.co/groups/' + $('group').first().json.group.id + '/members.json' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ usernames: JSON.parse($('rank').first().json.ranking).rows.map((r) => r.u).filter((u) => !($('members').first().json.members || []).some((m) => m.username === u)).join(',') }) }}"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "notes": "Only adds members; never removes.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "50a62214-72df-4bbf-929c-2ce3eefddfde",
+      "name": "members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        576
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://comunidad.criptonautas.co/groups/paper-trading/members.json?limit=1000",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi"
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "notes": "Current members, so add-members only sends new usernames.",
+      "retryOnFail": true,
+      "maxTries": 3
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "timezone": "UTC"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "fzvv7c56koRWUzpK",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T05:38:25.207Z",
+      "updatedAt": "2026-10-28T05:38:25.207Z"
+    }
+  ],
+  "staticData": {
+    "node:Hourly at :07": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "tags": [
+    {
+      "id": "BJZa2IMpZN7NG1SR",
+      "name": "discourse",
+      "createdAt": "2023-12-16T00:20:30.575Z",
+      "updatedAt": "2023-12-16T00:20:30.575Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-28T16:00:16.048Z",
+  "versionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224"
+}
