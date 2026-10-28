@@ -1,0 +1,629 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "cd01e720-23b1-4568-a12f-bb1c85843c35",
+    "workflowId": "dLaYcQFzXLVpYheu",
+    "nodes": [
+      {
+        "id": "2080b9f6-131c-4f89-b784-641d33c5169a",
+        "name": "Cada 5 minutos",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 5
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "68af16df-878a-40c3-9b41-1162bc84c673",
+        "name": "Leer servicios",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          272,
+          128
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "eLoOeI3IWEcZg1uP",
+            "cachedResultName": "estado_servicios"
+          },
+          "returnAll": true
+        }
+      },
+      {
+        "id": "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+        "name": "Consultar servicio",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          496,
+          128
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "={{ $json.url }}",
+          "options": {
+            "timeout": 10000,
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "neverError": true,
+                "responseFormat": "text",
+                "outputPropertyName": "data"
+              }
+            }
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "2f4ac824-40ec-4786-b3a2-8521c81f65ca",
+        "name": "Guardar estado",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          720,
+          128
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "upsert",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "eLoOeI3IWEcZg1uP",
+            "cachedResultName": "estado_servicios"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "name",
+                "condition": "eq",
+                "keyValue": "={{ $('Leer servicios').item.json.name }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "name": "={{ $('Leer servicios').item.json.name }}",
+              "ok": "={{ Number($json.statusCode || 0) > 0 && Number($json.statusCode) < 500 }}",
+              "code": "={{ Number($json.statusCode || 0) }}",
+              "checkedAt": "={{ $now.toISO() }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "name",
+                "displayName": "name",
+                "type": "string",
+                "display": true,
+                "required": false
+              },
+              {
+                "id": "ok",
+                "displayName": "ok",
+                "type": "boolean",
+                "display": true,
+                "required": false
+              },
+              {
+                "id": "code",
+                "displayName": "code",
+                "type": "number",
+                "display": true,
+                "required": false
+              },
+              {
+                "id": "checkedAt",
+                "displayName": "checkedAt",
+                "type": "dateTime",
+                "display": true,
+                "required": false
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "02afbce9-0105-421a-8fec-5219cadc8010",
+        "name": "Estado (GET)",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          224
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "estado",
+          "authentication": "none",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "https://criptonautas.co"
+          }
+        },
+        "webhookId": "19744071-5108-4777-b6c5-a508541c7496"
+      },
+      {
+        "id": "7749b381-6650-4f15-b486-a2bf98f07bb7",
+        "name": "Leer estado",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          272,
+          352
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "eLoOeI3IWEcZg1uP",
+            "cachedResultName": "estado_servicios"
+          },
+          "returnAll": true,
+          "orderBy": true,
+          "orderByColumn": "orden",
+          "orderByDirection": "ASC"
+        }
+      },
+      {
+        "id": "382dadfb-d6c5-4b27-8780-f0ca5b316454",
+        "name": "Responder JSON",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          496,
+          352
+        ],
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Cache-Control",
+                  "value": "public, max-age=60"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Cada 5 minutos": {
+        "main": [
+          [
+            {
+              "node": "Leer servicios",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer servicios": {
+        "main": [
+          [
+            {
+              "node": "Consultar servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consultar servicio": {
+        "main": [
+          [
+            {
+              "node": "Guardar estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Estado (GET)": {
+        "main": [
+          [
+            {
+              "node": "Leer estado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Leer estado": {
+        "main": [
+          [
+            {
+              "node": "Responder JSON",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [
+      {
+        "id": "c69f1f32-a7c9-48eb-9a02-cf82e1993126",
+        "name": "Chequeo",
+        "nodeIds": [
+          "68af16df-878a-40c3-9b41-1162bc84c673",
+          "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+          "2f4ac824-40ec-4786-b3a2-8521c81f65ca"
+        ],
+        "description": "Lee los servicios de la tabla estado_servicios, consulta cada uno y guarda si respondió"
+      },
+      {
+        "id": "64cb31a7-a818-4553-8b80-76ef3b127c4f",
+        "name": "Respuesta",
+        "nodeIds": [
+          "7749b381-6650-4f15-b486-a2bf98f07bb7",
+          "382dadfb-d6c5-4b27-8780-f0ca5b316454"
+        ],
+        "description": "Devuelve la tabla en JSON, solo para criptonautas.co"
+      }
+    ],
+    "authors": "D C (via MCP)",
+    "name": "check-stacks",
+    "description": "Created with 7 nodes: Cada 5 minutos, Leer servicios, Consultar servicio, Guardar estado, Estado (GET) and 2 more",
+    "autosaved": false,
+    "createdAt": "2026-10-15T21:22:21.708Z",
+    "updatedAt": "2026-10-16T04:30:10.387Z"
+  },
+  "activeVersionId": "cd01e720-23b1-4568-a12f-bb1c85843c35",
+  "connections": {
+    "Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "Leer servicios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer servicios": {
+      "main": [
+        [
+          {
+            "node": "Consultar servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar servicio": {
+      "main": [
+        [
+          {
+            "node": "Guardar estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Estado (GET)": {
+      "main": [
+        [
+          {
+            "node": "Leer estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer estado": {
+      "main": [
+        [
+          {
+            "node": "Responder JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-15T21:22:21.708Z",
+  "id": "dLaYcQFzXLVpYheu",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "stack-status-check",
+  "nodeGroups": [
+    {
+      "id": "c69f1f32-a7c9-48eb-9a02-cf82e1993126",
+      "name": "Chequeo",
+      "nodeIds": [
+        "68af16df-878a-40c3-9b41-1162bc84c673",
+        "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+        "2f4ac824-40ec-4786-b3a2-8521c81f65ca"
+      ],
+      "description": "Lee los servicios de la tabla estado_servicios, consulta cada uno y guarda si respondió"
+    },
+    {
+      "id": "64cb31a7-a818-4553-8b80-76ef3b127c4f",
+      "name": "Respuesta",
+      "nodeIds": [
+        "7749b381-6650-4f15-b486-a2bf98f07bb7",
+        "382dadfb-d6c5-4b27-8780-f0ca5b316454"
+      ],
+      "description": "Devuelve la tabla en JSON, solo para criptonautas.co"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "2080b9f6-131c-4f89-b784-641d33c5169a",
+      "name": "Cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "68af16df-878a-40c3-9b41-1162bc84c673",
+      "name": "Leer servicios",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "eLoOeI3IWEcZg1uP",
+          "cachedResultName": "estado_servicios"
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "a0933ab0-982c-48f6-8751-7cad8478a9a1",
+      "name": "Consultar servicio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        128
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "2f4ac824-40ec-4786-b3a2-8521c81f65ca",
+      "name": "Guardar estado",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        128
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "eLoOeI3IWEcZg1uP",
+          "cachedResultName": "estado_servicios"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "name",
+              "condition": "eq",
+              "keyValue": "={{ $('Leer servicios').item.json.name }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "name": "={{ $('Leer servicios').item.json.name }}",
+            "ok": "={{ Number($json.statusCode || 0) > 0 && Number($json.statusCode) < 500 }}",
+            "code": "={{ Number($json.statusCode || 0) }}",
+            "checkedAt": "={{ $now.toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "type": "string",
+              "display": true,
+              "required": false
+            },
+            {
+              "id": "ok",
+              "displayName": "ok",
+              "type": "boolean",
+              "display": true,
+              "required": false
+            },
+            {
+              "id": "code",
+              "displayName": "code",
+              "type": "number",
+              "display": true,
+              "required": false
+            },
+            {
+              "id": "checkedAt",
+              "displayName": "checkedAt",
+              "type": "dateTime",
+              "display": true,
+              "required": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "02afbce9-0105-421a-8fec-5219cadc8010",
+      "name": "Estado (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        224
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "estado",
+        "authentication": "none",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://criptonautas.co"
+        }
+      },
+      "webhookId": "19744071-5108-4777-b6c5-a508541c7496"
+    },
+    {
+      "id": "7749b381-6650-4f15-b486-a2bf98f07bb7",
+      "name": "Leer estado",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        352
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "eLoOeI3IWEcZg1uP",
+          "cachedResultName": "estado_servicios"
+        },
+        "returnAll": true,
+        "orderBy": true,
+        "orderByColumn": "orden",
+        "orderByDirection": "ASC"
+      }
+    },
+    {
+      "id": "382dadfb-d6c5-4b27-8780-f0ca5b316454",
+      "name": "Responder JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        496,
+        352
+      ],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Cache-Control",
+                "value": "public, max-age=60"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "dLaYcQFzXLVpYheu",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-15T21:22:21.708Z",
+      "updatedAt": "2026-10-15T21:22:21.708Z"
+    }
+  ],
+  "staticData": {
+    "node:Cada 5 minutos": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "tags": [
+    {
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2026-10-20T17:13:40.955Z",
+  "versionId": "cd01e720-23b1-4568-a12f-bb1c85843c35"
+}
