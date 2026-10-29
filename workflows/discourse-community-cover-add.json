@@ -1,0 +1,1573 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "311c15e6-7684-4790-9c50-180be6bd8df3",
+    "workflowId": "rJ4Bdm5CYnWADTxC",
+    "nodes": [
+      {
+        "id": "b8bcb942-b274-4b42-9b2b-772568b6c0cf",
+        "name": "discourse-topic-event",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          448,
+          192
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "discourse-community-cover-Xk7pQ2vR9mLw4tYb",
+          "options": {}
+        },
+        "webhookId": "e3dfc6ba-f7a0-4bcb-9e17-63ee68f12c8f"
+      },
+      {
+        "id": "0790d42a-92ae-418f-aa66-d4ae1ab09938",
+        "name": "topic-from-event",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          192
+        ],
+        "parameters": {
+          "jsCode": "return $input.all().filter(i => i.json.body?.topic?.id).map(i => ({ json: i.json.body.topic }));"
+        }
+      },
+      {
+        "id": "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",
+        "name": "pick-label",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          96
+        ],
+        "parameters": {
+          "jsCode": "// curso (41) and glosario (15) win over the wiki tag; subcategories of curso are left out\n// curso always gets the cover so its og:image stays uniform, even when the post already has images\nconst out = [];\nfor (const item of $input.all()) {\n  const t = item.json;\n  const tags = (t.tags ?? []).map(tag => typeof tag === 'string' ? tag : tag.name);\n  const label = t.category_id === 41 ? 'Curso' : t.category_id === 15 ? 'Glosario' : tags.includes('wiki') ? 'Wiki' : '';\n  if (t.id && t.title && label && (label === 'Curso' || !t.image_url)) out.push({ json: { topic_id: t.id, title: t.title, label } });\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "1e946022-1e5f-40f7-80aa-1c3301198b8e",
+        "name": "manual-backfill",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "e765736c-7663-4702-a9d3-bd225fc12854",
+        "name": "backfill-lists",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "jsCode": "// curso without its subcategories, all of glosario, and every topic tagged wiki\nreturn ['/c/41/l/latest.json?no_subcategories=true', '/c/15/l/latest.json', '/tag/wiki/l/latest.json'].map(path => ({ json: { path } }));"
+        }
+      },
+      {
+        "id": "c22779c8-f2c5-47e6-ace2-6af681fef32d",
+        "name": "list-topics",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "url": "=https://comunidad.criptonautas.co{{ $json.path }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "options": {
+            "pagination": {
+              "pagination": {
+                "paginationMode": "updateAParameterInEachRequest",
+                "parameters": {
+                  "parameters": [
+                    {
+                      "type": "qs",
+                      "name": "page",
+                      "value": "={{ $pageCount }}"
+                    }
+                  ]
+                },
+                "paginationCompleteWhen": "other",
+                "completeExpression": "={{ $response.body.topic_list.topics.length === 0 }}",
+                "limitPagesFetched": true,
+                "maxRequests": 40,
+                "requestInterval": 2000
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "a5e276d5-5cb5-4b62-a169-546b6516e666",
+        "name": "topics-from-lists",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "jsCode": "const seen = new Set();\nconst out = [];\nfor (const page of $input.all()) {\n  for (const t of page.json.topic_list?.topics ?? []) {\n    if (seen.has(t.id)) continue;\n    seen.add(t.id);\n    out.push({ json: t });\n  }\n}\nreturn out;"
+        }
+      },
+      {
+        "id": "664cdc1f-f718-4f1e-8ccc-e589225e86ef",
+        "name": "skip-processed",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1120,
+          96
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "rowNotExists",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "OCMfj1Y8PhZ7relE",
+            "cachedResultName": "discourse_community_covers"
+          },
+          "matchType": "anyCondition",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "topic_id",
+                "keyValue": "={{ $json.topic_id }}"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "07192c2d-175c-46e8-afea-7435b6692eae",
+        "name": "read-topic",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1344,
+          96
+        ],
+        "parameters": {
+          "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json?include_raw=true",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchInterval": 2000,
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "b240e295-62e6-4b33-a263-4f3b59c39baf",
+        "name": "curso-or-without-image",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          1568,
+          96
+        ],
+        "parameters": {
+          "conditions": {
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $('skip-processed').item.json.label === 'Curso' || !$json.image_url }}",
+                "operator": {
+                  "operation": "true",
+                  "singleValue": true,
+                  "type": "boolean"
+                },
+                "rightValue": ""
+              }
+            ],
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            }
+          }
+        }
+      },
+      {
+        "id": "7ea10c10-c5e4-4c7d-87f8-dff1fa5313ee",
+        "name": "claim-topic",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          2016,
+          96
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "insert",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "OCMfj1Y8PhZ7relE",
+            "cachedResultName": "discourse_community_covers"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "topic_id": "={{ $(\"skip-processed\").item.json.topic_id }}",
+              "label": "={{ $(\"skip-processed\").item.json.label }}",
+              "applied": false
+            },
+            "schema": [
+              {
+                "id": "topic_id",
+                "displayName": "topic_id",
+                "type": "number",
+                "required": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "defaultMatch": false
+              },
+              {
+                "id": "label",
+                "displayName": "label",
+                "type": "string",
+                "required": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "defaultMatch": false
+              },
+              {
+                "id": "applied",
+                "displayName": "applied",
+                "type": "boolean",
+                "required": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "defaultMatch": false
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "d271f50e-1991-485c-91c2-07325ab443d6",
+        "name": "generate-cover",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2240,
+          96
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://criptonautas-featured-cover:8000/cover",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ category: $(\"skip-processed\").item.json.label, title: $(\"skip-processed\").item.json.title, format: \"webp\", style: \"community\" }) }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file",
+                "outputPropertyName": "cover"
+              }
+            },
+            "batching": {
+              "batch": {
+                "batchInterval": 700,
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "NTR6mUfvwoRHSq0g",
+            "name": "criptonautas-featured-ghost-cover-token"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 3000
+      },
+      {
+        "id": "22543407-2874-403e-b368-da50d3fc300e",
+        "name": "cover-generated",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2464,
+          96
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ !$json.error }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
+        }
+      },
+      {
+        "id": "1b9ce36a-5aac-44f3-800a-e85ba94d4e9a",
+        "name": "upload-cover",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2688,
+          0
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://comunidad.criptonautas.co/uploads.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "cover"
+              },
+              {
+                "name": "type",
+                "value": "composer"
+              },
+              {
+                "name": "synchronous",
+                "value": "true"
+              }
+            ]
+          },
+          "options": {
+            "batching": {
+              "batch": {
+                "batchInterval": 2000,
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "80efd8ef-4dea-4aa7-a7cd-7f13e9dbc864",
+        "name": "add-cover-to-first-post",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2912,
+          0
+        ],
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://comunidad.criptonautas.co/posts/{{ $(\"read-topic\").item.json.post_stream.posts[0].id }}.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ post: { raw: $(\"read-topic\").item.json.post_stream.posts[0].raw.trimEnd() + \"\\n\\n[wrap=cover]\\n![cover|1200x630|thumbnail](\" + $json.short_url + \")\\n[/wrap]\", edit_reason: \"automatic cover\" }, bypass_bump: true }) }}",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchInterval": 2000,
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
+      },
+      {
+        "id": "9704cee5-beb5-489f-97d3-0e4936a279b7",
+        "name": "mark-applied",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          3136,
+          0
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "OCMfj1Y8PhZ7relE",
+            "cachedResultName": "discourse_community_covers"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "condition": "eq",
+                "keyName": "topic_id",
+                "keyValue": "={{ $(\"skip-processed\").item.json.topic_id }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "upload_url": "={{ $(\"upload-cover\").item.json.short_url }}",
+              "applied": true
+            },
+            "schema": [
+              {
+                "id": "upload_url",
+                "displayName": "upload_url",
+                "type": "string",
+                "required": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "defaultMatch": false
+              },
+              {
+                "id": "applied",
+                "displayName": "applied",
+                "type": "boolean",
+                "required": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "defaultMatch": false
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "48804875-dbca-4fed-8035-ebff96335b83",
+        "name": "mark-rejected",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          2688,
+          192
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "OCMfj1Y8PhZ7relE",
+            "cachedResultName": "discourse_community_covers"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "condition": "eq",
+                "keyName": "topic_id",
+                "keyValue": "={{ $(\"skip-processed\").item.json.topic_id }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "error": "={{ $json.error?.message ?? String($json.error) }}",
+              "topic_id": "={{ -$('skip-processed').item.json.topic_id }}"
+            },
+            "schema": [
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "topic_id",
+                "id": "topic_id",
+                "required": false,
+                "type": "number"
+              },
+              {
+                "canBeUsedToMatch": true,
+                "defaultMatch": false,
+                "display": true,
+                "displayName": "error",
+                "id": "error",
+                "required": false,
+                "type": "string"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "connections": {
+      "discourse-topic-event": {
+        "main": [
+          [
+            {
+              "node": "topic-from-event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "topic-from-event": {
+        "main": [
+          [
+            {
+              "node": "pick-label",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "pick-label": {
+        "main": [
+          [
+            {
+              "node": "skip-processed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "manual-backfill": {
+        "main": [
+          [
+            {
+              "node": "backfill-lists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "backfill-lists": {
+        "main": [
+          [
+            {
+              "node": "list-topics",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "list-topics": {
+        "main": [
+          [
+            {
+              "node": "topics-from-lists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "topics-from-lists": {
+        "main": [
+          [
+            {
+              "node": "pick-label",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "skip-processed": {
+        "main": [
+          [
+            {
+              "node": "read-topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-topic": {
+        "main": [
+          [
+            {
+              "node": "curso-or-without-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "claim-topic": {
+        "main": [
+          [
+            {
+              "node": "generate-cover",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "generate-cover": {
+        "main": [
+          [
+            {
+              "node": "cover-generated",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "cover-generated": {
+        "main": [
+          [
+            {
+              "node": "upload-cover",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "mark-rejected",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "upload-cover": {
+        "main": [
+          [
+            {
+              "node": "add-cover-to-first-post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "add-cover-to-first-post": {
+        "main": [
+          [
+            {
+              "node": "mark-applied",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "curso-or-without-image": {
+        "main": [
+          [
+            {
+              "node": "claim-topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [
+      {
+        "id": "6842b8f3-4120-4528-9328-a8f030374473",
+        "name": "select",
+        "nodeIds": [
+          "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",
+          "664cdc1f-f718-4f1e-8ccc-e589225e86ef",
+          "07192c2d-175c-46e8-afea-7435b6692eae",
+          "b240e295-62e6-4b33-a263-4f3b59c39baf",
+          "7ea10c10-c5e4-4c7d-87f8-dff1fa5313ee"
+        ],
+        "description": "Label by category or tag, skip topics already in the table or with an image, claim a row"
+      },
+      {
+        "id": "4c0e5f31-41f3-4f54-a783-0b5e4cb619d1",
+        "name": "cover",
+        "nodeIds": [
+          "d271f50e-1991-485c-91c2-07325ab443d6",
+          "22543407-2874-403e-b368-da50d3fc300e",
+          "1b9ce36a-5aac-44f3-800a-e85ba94d4e9a",
+          "80efd8ef-4dea-4aa7-a7cd-7f13e9dbc864",
+          "9704cee5-beb5-489f-97d3-0e4936a279b7",
+          "48804875-dbca-4fed-8035-ebff96335b83"
+        ],
+        "description": "Draw the community cover, upload it, append it to the first post without bumping, record the result"
+      },
+      {
+        "id": "4487aa3e-e8ca-4b73-b648-e59ea0c9570c",
+        "name": "backfill",
+        "nodeIds": [
+          "e765736c-7663-4702-a9d3-bd225fc12854",
+          "c22779c8-f2c5-47e6-ace2-6af681fef32d",
+          "a5e276d5-5cb5-4b62-a169-546b6516e666"
+        ],
+        "description": "Every topic in curso (no subcategories), glosario and the wiki tag, deduplicated"
+      }
+    ],
+    "authors": "D C (via MCP)",
+    "name": "Space cover requests 700 ms apart",
+    "description": "A batch interval of 0 still sent the cover requests together and the service dropped them; 700 ms keeps them one after another.",
+    "autosaved": false,
+    "createdAt": "2026-10-28T21:47:45.217Z",
+    "updatedAt": "2026-10-28T21:47:45.217Z"
+  },
+  "activeVersionId": "311c15e6-7684-4790-9c50-180be6bd8df3",
+  "connections": {
+    "discourse-topic-event": {
+      "main": [
+        [
+          {
+            "node": "topic-from-event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topic-from-event": {
+      "main": [
+        [
+          {
+            "node": "pick-label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pick-label": {
+      "main": [
+        [
+          {
+            "node": "skip-processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manual-backfill": {
+      "main": [
+        [
+          {
+            "node": "backfill-lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "backfill-lists": {
+      "main": [
+        [
+          {
+            "node": "list-topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "list-topics": {
+      "main": [
+        [
+          {
+            "node": "topics-from-lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topics-from-lists": {
+      "main": [
+        [
+          {
+            "node": "pick-label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "skip-processed": {
+      "main": [
+        [
+          {
+            "node": "read-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-topic": {
+      "main": [
+        [
+          {
+            "node": "curso-or-without-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "claim-topic": {
+      "main": [
+        [
+          {
+            "node": "generate-cover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate-cover": {
+      "main": [
+        [
+          {
+            "node": "cover-generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cover-generated": {
+      "main": [
+        [
+          {
+            "node": "upload-cover",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mark-rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "upload-cover": {
+      "main": [
+        [
+          {
+            "node": "add-cover-to-first-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "add-cover-to-first-post": {
+      "main": [
+        [
+          {
+            "node": "mark-applied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "curso-or-without-image": {
+      "main": [
+        [
+          {
+            "node": "claim-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T18:19:34.783Z",
+  "id": "rJ4Bdm5CYnWADTxC",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "discourse-community-cover-add",
+  "nodeGroups": [
+    {
+      "id": "6842b8f3-4120-4528-9328-a8f030374473",
+      "name": "select",
+      "nodeIds": [
+        "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",
+        "664cdc1f-f718-4f1e-8ccc-e589225e86ef",
+        "07192c2d-175c-46e8-afea-7435b6692eae",
+        "b240e295-62e6-4b33-a263-4f3b59c39baf",
+        "7ea10c10-c5e4-4c7d-87f8-dff1fa5313ee"
+      ],
+      "description": "Label by category or tag, skip topics already in the table or with an image, claim a row"
+    },
+    {
+      "id": "4c0e5f31-41f3-4f54-a783-0b5e4cb619d1",
+      "name": "cover",
+      "nodeIds": [
+        "d271f50e-1991-485c-91c2-07325ab443d6",
+        "22543407-2874-403e-b368-da50d3fc300e",
+        "1b9ce36a-5aac-44f3-800a-e85ba94d4e9a",
+        "80efd8ef-4dea-4aa7-a7cd-7f13e9dbc864",
+        "9704cee5-beb5-489f-97d3-0e4936a279b7",
+        "48804875-dbca-4fed-8035-ebff96335b83"
+      ],
+      "description": "Draw the community cover, upload it, append it to the first post without bumping, record the result"
+    },
+    {
+      "id": "4487aa3e-e8ca-4b73-b648-e59ea0c9570c",
+      "name": "backfill",
+      "nodeIds": [
+        "e765736c-7663-4702-a9d3-bd225fc12854",
+        "c22779c8-f2c5-47e6-ace2-6af681fef32d",
+        "a5e276d5-5cb5-4b62-a169-546b6516e666"
+      ],
+      "description": "Every topic in curso (no subcategories), glosario and the wiki tag, deduplicated"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "b8bcb942-b274-4b42-9b2b-772568b6c0cf",
+      "name": "discourse-topic-event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        192
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "discourse-community-cover-Xk7pQ2vR9mLw4tYb",
+        "options": {}
+      },
+      "webhookId": "e3dfc6ba-f7a0-4bcb-9e17-63ee68f12c8f"
+    },
+    {
+      "id": "0790d42a-92ae-418f-aa66-d4ae1ab09938",
+      "name": "topic-from-event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().filter(i => i.json.body?.topic?.id).map(i => ({ json: i.json.body.topic }));"
+      }
+    },
+    {
+      "id": "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",
+      "name": "pick-label",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        96
+      ],
+      "parameters": {
+        "jsCode": "// curso (41) and glosario (15) win over the wiki tag; subcategories of curso are left out\n// curso always gets the cover so its og:image stays uniform, even when the post already has images\nconst out = [];\nfor (const item of $input.all()) {\n  const t = item.json;\n  const tags = (t.tags ?? []).map(tag => typeof tag === 'string' ? tag : tag.name);\n  const label = t.category_id === 41 ? 'Curso' : t.category_id === 15 ? 'Glosario' : tags.includes('wiki') ? 'Wiki' : '';\n  if (t.id && t.title && label && (label === 'Curso' || !t.image_url)) out.push({ json: { topic_id: t.id, title: t.title, label } });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "1e946022-1e5f-40f7-80aa-1c3301198b8e",
+      "name": "manual-backfill",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e765736c-7663-4702-a9d3-bd225fc12854",
+      "name": "backfill-lists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// curso without its subcategories, all of glosario, and every topic tagged wiki\nreturn ['/c/41/l/latest.json?no_subcategories=true', '/c/15/l/latest.json', '/tag/wiki/l/latest.json'].map(path => ({ json: { path } }));"
+      }
+    },
+    {
+      "id": "c22779c8-f2c5-47e6-ace2-6af681fef32d",
+      "name": "list-topics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co{{ $json.path }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "qs",
+                    "name": "page",
+                    "value": "={{ $pageCount }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.topic_list.topics.length === 0 }}",
+              "limitPagesFetched": true,
+              "maxRequests": 40,
+              "requestInterval": 2000
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "a5e276d5-5cb5-4b62-a169-546b6516e666",
+      "name": "topics-from-lists",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const seen = new Set();\nconst out = [];\nfor (const page of $input.all()) {\n  for (const t of page.json.topic_list?.topics ?? []) {\n    if (seen.has(t.id)) continue;\n    seen.add(t.id);\n    out.push({ json: t });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "664cdc1f-f718-4f1e-8ccc-e589225e86ef",
+      "name": "skip-processed",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        96
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "rowNotExists",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "topic_id",
+              "keyValue": "={{ $json.topic_id }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "07192c2d-175c-46e8-afea-7435b6692eae",
+      "name": "read-topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        96
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json?include_raw=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 2000,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "b240e295-62e6-4b33-a263-4f3b59c39baf",
+      "name": "curso-or-without-image",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $('skip-processed').item.json.label === 'Curso' || !$json.image_url }}",
+              "operator": {
+                "operation": "true",
+                "singleValue": true,
+                "type": "boolean"
+              },
+              "rightValue": ""
+            }
+          ],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          }
+        }
+      }
+    },
+    {
+      "id": "7ea10c10-c5e4-4c7d-87f8-dff1fa5313ee",
+      "name": "claim-topic",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2016,
+        96
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic_id": "={{ $(\"skip-processed\").item.json.topic_id }}",
+            "label": "={{ $(\"skip-processed\").item.json.label }}",
+            "applied": false
+          },
+          "schema": [
+            {
+              "id": "topic_id",
+              "displayName": "topic_id",
+              "type": "number",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "defaultMatch": false
+            },
+            {
+              "id": "label",
+              "displayName": "label",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "defaultMatch": false
+            },
+            {
+              "id": "applied",
+              "displayName": "applied",
+              "type": "boolean",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "defaultMatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d271f50e-1991-485c-91c2-07325ab443d6",
+      "name": "generate-cover",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        96
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://criptonautas-featured-cover:8000/cover",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ category: $(\"skip-processed\").item.json.label, title: $(\"skip-processed\").item.json.title, format: \"webp\", style: \"community\" }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "cover"
+            }
+          },
+          "batching": {
+            "batch": {
+              "batchInterval": 700,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NTR6mUfvwoRHSq0g",
+          "name": "criptonautas-featured-ghost-cover-token"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "22543407-2874-403e-b368-da50d3fc300e",
+      "name": "cover-generated",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !$json.error }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "1b9ce36a-5aac-44f3-800a-e85ba94d4e9a",
+      "name": "upload-cover",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2688,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://comunidad.criptonautas.co/uploads.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "cover"
+            },
+            {
+              "name": "type",
+              "value": "composer"
+            },
+            {
+              "name": "synchronous",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 2000,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "80efd8ef-4dea-4aa7-a7cd-7f13e9dbc864",
+      "name": "add-cover-to-first-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2912,
+        0
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://comunidad.criptonautas.co/posts/{{ $(\"read-topic\").item.json.post_stream.posts[0].id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post: { raw: $(\"read-topic\").item.json.post_stream.posts[0].raw.trimEnd() + \"\\n\\n[wrap=cover]\\n![cover|1200x630|thumbnail](\" + $json.short_url + \")\\n[/wrap]\", edit_reason: \"automatic cover\" }, bypass_bump: true }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 2000,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "9704cee5-beb5-489f-97d3-0e4936a279b7",
+      "name": "mark-applied",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3136,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "topic_id",
+              "keyValue": "={{ $(\"skip-processed\").item.json.topic_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "upload_url": "={{ $(\"upload-cover\").item.json.short_url }}",
+            "applied": true
+          },
+          "schema": [
+            {
+              "id": "upload_url",
+              "displayName": "upload_url",
+              "type": "string",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "defaultMatch": false
+            },
+            {
+              "id": "applied",
+              "displayName": "applied",
+              "type": "boolean",
+              "required": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "defaultMatch": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "48804875-dbca-4fed-8035-ebff96335b83",
+      "name": "mark-rejected",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2688,
+        192
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "condition": "eq",
+              "keyName": "topic_id",
+              "keyValue": "={{ $(\"skip-processed\").item.json.topic_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "error": "={{ $json.error?.message ?? String($json.error) }}",
+            "topic_id": "={{ -$('skip-processed').item.json.topic_id }}"
+          },
+          "schema": [
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "topic_id",
+              "id": "topic_id",
+              "required": false,
+              "type": "number"
+            },
+            {
+              "canBeUsedToMatch": true,
+              "defaultMatch": false,
+              "display": true,
+              "displayName": "error",
+              "id": "error",
+              "required": false,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj",
+    "saveDataSuccessExecution": "none",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "rJ4Bdm5CYnWADTxC",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T18:19:34.783Z",
+      "updatedAt": "2026-10-28T18:19:34.783Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [
+    {
+      "id": "BJZa2IMpZN7NG1SR",
+      "name": "discourse",
+      "createdAt": "2023-12-16T00:20:30.575Z",
+      "updatedAt": "2023-12-16T00:20:30.575Z"
+    }
+  ],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-28T21:47:45.215Z",
+  "versionId": "311c15e6-7684-4790-9c50-180be6bd8df3"
+}
