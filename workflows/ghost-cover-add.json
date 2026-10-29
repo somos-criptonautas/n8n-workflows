@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "c5111adb-9e3f-41b6-99e5-527ae2d16c0d",
+    "versionId": "453bf0fb-e52e-40a2-aba8-d0faef8475df",
     "workflowId": "mbIpe7751DqGVraW",
     "nodes": [
       {
@@ -109,7 +109,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://criptonautas-featured-ghost-cover:8000/cover",
+          "url": "http://criptonautas-featured-cover:8000/cover",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
@@ -135,7 +135,7 @@
         "credentials": {
           "httpHeaderAuth": {
             "id": "NTR6mUfvwoRHSq0g",
-            "name": "ghost-portadas"
+            "name": "criptonautas-featured-ghost-cover-token"
           }
         }
       },
@@ -284,13 +284,13 @@
       }
     ],
     "authors": "D C (via MCP)",
-    "name": "Point expressions at the renamed nodes",
-    "description": "Updated nodes: upload-cover-to-ghost, set-featured-image",
+    "name": "Point to criptonautas-featured-cover",
+    "description": "Updated nodes: generate-cover",
     "autosaved": false,
-    "createdAt": "2026-10-16T04:06:11.552Z",
-    "updatedAt": "2026-10-16T04:06:11.552Z"
+    "createdAt": "2026-10-28T16:01:00.446Z",
+    "updatedAt": "2026-10-28T16:01:00.446Z"
   },
-  "activeVersionId": "c5111adb-9e3f-41b6-99e5-527ae2d16c0d",
+  "activeVersionId": "453bf0fb-e52e-40a2-aba8-d0faef8475df",
   "connections": {
     "ghost-post-published": {
       "main": [
