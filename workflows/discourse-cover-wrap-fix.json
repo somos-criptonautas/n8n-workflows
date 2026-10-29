@@ -1,0 +1,220 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "start": {
+      "main": [
+        [
+          {
+            "node": "topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "topics": {
+      "main": [
+        [
+          {
+            "node": "read-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-topic": {
+      "main": [
+        [
+          {
+            "node": "read-first-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "read-first-post": {
+      "main": [
+        [
+          {
+            "node": "wrap-cover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "wrap-cover": {
+      "main": [
+        [
+          {
+            "node": "update-post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T18:45:48.519Z",
+  "id": "FdXWYKDPrTDtuadA",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "discourse-cover-wrap-fix",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "a3017deb-a375-4f1c-ba21-e646aa24b710",
+      "name": "start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c87cf6c6-ba3d-4e54-8066-2315a65b3de8",
+      "name": "topics",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return [6914, 6924].map(topic_id => ({ json: { topic_id } }));"
+      }
+    },
+    {
+      "id": "a289ab24-8f6a-4f29-9bf6-69539a37216b",
+      "name": "read-topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1100
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "id": "d4925b04-bc25-4fc0-8438-59a524175bae",
+      "name": "read-first-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/posts/{{ $json.post_stream.posts[0].id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1100
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "id": "30e99746-3467-42fb-87bd-7f26096a44e2",
+      "name": "wrap-cover",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "jsCode": "return $input.all().map(i => {\n  const raw = i.json.raw.replace(/\\n*!\\[cover\\|1200x630(?:\\|thumbnail)?\\]\\((upload:\\/\\/[^)]+)\\)\\s*$/, '\\n\\n[wrap=cover]\\n![cover|1200x630|thumbnail]($1)\\n[/wrap]');\n  if (raw === i.json.raw) throw new Error('cover line not found in post ' + i.json.id);\n  return { json: { id: i.json.id, raw } };\n});"
+      }
+    },
+    {
+      "id": "ccb08b66-f9f7-4bf9-bc9b-0d58ce848328",
+      "name": "update-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://comunidad.criptonautas.co/posts/{{ $json.id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ post: { raw: $json.raw, edit_reason: \"automatic cover\" }, bypass_bump: true }) }}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1100
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "FdXWYKDPrTDtuadA",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T18:45:48.519Z",
+      "updatedAt": "2026-10-28T18:45:48.519Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-28T18:46:41.250Z",
+  "versionId": "ad6eef78-5365-43e2-ba98-ff8915014234"
+}
