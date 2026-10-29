@@ -1,0 +1,92 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "start": {
+      "main": [
+        [
+          {
+            "node": "delete-failed-rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T19:38:06.166Z",
+  "id": "qQ6tx70DhIQvE3iZ",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "discourse-cover-failed-rows-cleanup",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "fff6c6da-4df6-4a84-b096-e7df3a565697",
+      "name": "start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b93b09c0-1da4-4f1d-a946-cd301f1266c7",
+      "name": "delete-failed-rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "error",
+              "condition": "isNotEmpty"
+            },
+            {
+              "keyName": "applied",
+              "condition": "isFalse"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "qQ6tx70DhIQvE3iZ",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T19:38:06.166Z",
+      "updatedAt": "2026-10-28T19:38:06.166Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-28T19:38:31.528Z",
+  "versionId": "4566dcc7-3df5-4075-a04d-3fde93b439ef"
+}
