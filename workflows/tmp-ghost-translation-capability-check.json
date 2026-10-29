@@ -1,0 +1,203 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Probe Environment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Probe Environment": {
+      "main": [
+        [
+          {
+            "node": "Usage Before",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Usage Before": {
+      "main": [
+        [
+          {
+            "node": "Translate Sample",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Translate Sample": {
+      "main": [
+        [
+          {
+            "node": "Usage After",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Usage After": {
+      "main": [
+        [
+          {
+            "node": "Summarize Findings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-28T19:22:27.242Z",
+  "id": "RTbtJkzWZGPKuozG",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translation-capability-check",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "0be3ff38-013e-4d3a-8725-7f820b77d815",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a16f8291-ad52-4a46-943c-f08b32e934bb",
+      "name": "Probe Environment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const mods = ['cheerio','node-html-parser','htmlparser2','parse5','jsdom','linkedom','crypto'];\nconst modules = {};\nfor (const m of mods) {\n  try { require(m); modules[m] = 'allowed'; } catch (e) { modules[m] = 'blocked: ' + String(e.message).slice(0, 90); }\n}\nlet env = 'blocked';\ntry { env = { ghost_admin_url_set: typeof $env.GHOST_ADMIN_URL === 'string' && $env.GHOST_ADMIN_URL.length > 0, ghost_webhook_secret_set: typeof $env.GHOST_WEBHOOK_SECRET === 'string' && $env.GHOST_WEBHOOK_SECRET.length > 0 }; } catch (e) { env = 'blocked: ' + String(e.message).slice(0, 90); }\nconst sample = '<figure class=\"kg-card kg-image-card kg-width-wide\"><img src=\"https://criptonautas.co/content/images/2026/10/retoswap-interface.png\" class=\"kg-image\" alt=\"Interfaz de RetoSwap\" loading=\"lazy\" width=\"2000\" height=\"1315\"><figcaption>Esta es una prueba breve</figcaption></figure>';\nreturn [{ json: { modules, env, sample } }];"
+      }
+    },
+    {
+      "id": "a9d5eac2-b06f-4794-9abb-738f591c5a9c",
+      "name": "Usage Before",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        480,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api-free.deepl.com/v2/usage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi"
+      },
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "56496d84-c61f-4087-ab19-2063b5b04a75",
+      "name": "Translate Sample",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        720,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-free.deepl.com/v2/translate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: [$(\"Probe Environment\").first().json.sample], source_lang: \"ES\", target_lang: \"EN-US\", tag_handling: \"html\" }) }}"
+      },
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "cebc3bb8-c07f-412a-a093-85a73227552b",
+      "name": "Usage After",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        960,
+        300
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api-free.deepl.com/v2/usage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi"
+      },
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "886369eb-f52f-4f9a-b273-11df45385935",
+      "name": "Summarize Findings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const probe = $('Probe Environment').first().json;\nconst before = $('Usage Before').first().json.character_count;\nconst after = $input.first().json.character_count;\nconst visible = probe.sample.replace(/<[^>]+>/g, '').length;\nreturn [{ json: { modules: probe.modules, env: probe.env, usage_before: before, usage_after: after, billed: after - before, markup_chars: probe.sample.length, visible_chars: visible, translated: $('Translate Sample').first().json.translations[0].text } }];"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "RTbtJkzWZGPKuozG",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-28T19:22:27.242Z",
+      "updatedAt": "2026-10-28T19:22:27.242Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-28T19:23:43.667Z",
+  "versionId": "40997ba4-5e73-4286-a8fd-1edaa28dd226"
+}
