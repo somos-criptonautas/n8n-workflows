@@ -125,16 +125,16 @@
   "staticData": null,
   "tags": [
     {
-      "id": "t971t28GAunyX7gw",
-      "name": "ghost",
-      "createdAt": "2026-07-19T15:29:32.896Z",
-      "updatedAt": "2026-07-19T15:29:32.896Z"
-    },
-    {
       "id": "smrjaKewOr2jfDEk",
       "name": "translations",
       "createdAt": "2026-07-19T15:24:45.213Z",
       "updatedAt": "2026-07-19T15:24:45.213Z"
+    },
+    {
+      "id": "t971t28GAunyX7gw",
+      "name": "ghost",
+      "createdAt": "2026-07-19T15:29:32.896Z",
+      "updatedAt": "2026-07-19T15:29:32.896Z"
     }
   ],
   "triggerCount": 0,
