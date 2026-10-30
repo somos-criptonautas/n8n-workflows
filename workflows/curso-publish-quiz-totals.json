@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "4c4fc41a-1d58-47e5-a49e-2a565f4821fc",
+    "versionId": "25537275-cfb2-4978-9d39-ae15ac3689b5",
     "workflowId": "63bczmWnwNKG34Of",
     "nodes": [
       {
@@ -237,6 +237,23 @@
           "width": 608,
           "height": 224
         }
+      },
+      {
+        "id": "71581b75-c1aa-4c67-942e-3e4be2bbb18f",
+        "name": "Pausa 1 s",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          560,
+          0
+        ],
+        "parameters": {
+          "resume": "timeInterval",
+          "amount": 1,
+          "unit": "seconds"
+        },
+        "notes": "Espacia los quizzes para no superar el límite de la API de Discourse.",
+        "webhookId": "8b78d202-29f6-4e1c-8a4f-b8df7708d851"
       }
     ],
     "connections": {
@@ -315,7 +332,18 @@
       },
       "Recorrer quizzes": {
         "main": [
-          [],
+          null,
+          [
+            {
+              "node": "Pausa 1 s",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Pausa 1 s": {
+        "main": [
           [
             {
               "node": "Leer respuestas privadas",
@@ -328,13 +356,13 @@
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Totales sin nodo Code, un quiz por vuelta",
-    "description": "Created with 8 nodes: Cada hora, Leer quizzes, Leer respuestas privadas, Sumar respuestas, ¿Hay 5 respuestas o más? and 3 more",
+    "name": "Pausa de 1 s entre quizzes",
+    "description": "Added nodes: Pausa 1 s\nConnections: 2 added, 1 removed",
     "autosaved": false,
-    "createdAt": "2026-10-14T23:49:49.607Z",
-    "updatedAt": "2026-10-14T23:49:49.607Z"
+    "createdAt": "2026-10-30T07:03:28.919Z",
+    "updatedAt": "2026-10-30T07:03:28.919Z"
   },
-  "activeVersionId": "4c4fc41a-1d58-47e5-a49e-2a565f4821fc",
+  "activeVersionId": "25537275-cfb2-4978-9d39-ae15ac3689b5",
   "connections": {
     "Cada hora": {
       "main": [
@@ -411,7 +439,18 @@
     },
     "Recorrer quizzes": {
       "main": [
-        [],
+        null,
+        [
+          {
+            "node": "Pausa 1 s",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pausa 1 s": {
+      "main": [
         [
           {
             "node": "Leer respuestas privadas",
@@ -665,6 +704,23 @@
         "width": 608,
         "height": 224
       }
+    },
+    {
+      "id": "71581b75-c1aa-4c67-942e-3e4be2bbb18f",
+      "name": "Pausa 1 s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        560,
+        0
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "notes": "Espacia los quizzes para no superar el límite de la API de Discourse.",
+      "webhookId": "8b78d202-29f6-4e1c-8a4f-b8df7708d851"
     }
   ],
   "pinData": null,
@@ -700,6 +756,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-10-20T17:13:42.098Z",
-  "versionId": "4c4fc41a-1d58-47e5-a49e-2a565f4821fc"
+  "updatedAt": "2026-10-30T07:03:28.916Z",
+  "versionId": "25537275-cfb2-4978-9d39-ae15ac3689b5"
 }
