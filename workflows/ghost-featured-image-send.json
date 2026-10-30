@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0",
+    "versionId": "dba475f4-0c9f-4018-b219-0421c55c6600",
     "workflowId": "8Ad7YALJ8uw43dGj",
     "nodes": [
       {
@@ -28,37 +28,37 @@
                 "id": "a1",
                 "name": "post_id",
                 "type": "string",
-                "value": "={{ $json.body?.post?.current?.id ?? \"\" }}"
+                "value": "={{ $json.posts?.[0]?.id ?? \"\" }}"
               },
               {
                 "id": "a2",
                 "name": "slug",
                 "type": "string",
-                "value": "={{ $json.body?.post?.current?.slug ?? \"\" }}"
+                "value": "={{ $json.posts?.[0]?.slug ?? \"\" }}"
               },
               {
                 "id": "a3",
                 "name": "updated_at",
                 "type": "string",
-                "value": "={{ $json.body?.post?.current?.updated_at ?? \"\" }}"
+                "value": "={{ $json.posts?.[0]?.updated_at ?? \"\" }}"
               },
               {
                 "id": "a4",
                 "name": "feature_image",
                 "type": "string",
-                "value": "={{ $json.body?.post?.current?.feature_image ?? \"\" }}"
+                "value": "={{ $json.posts?.[0]?.feature_image ?? \"\" }}"
               },
               {
                 "id": "a5",
                 "name": "has_tag",
                 "type": "boolean",
-                "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
+                "value": "={{ ($json.posts?.[0]?.tags ?? []).some(t => [\"hash-cover-filter\", \"hash-graph-filter\"].includes(t.slug)) }}"
               },
               {
                 "id": "a6",
                 "name": "ghost_url",
                 "type": "string",
-                "value": "={{ ($json.body?.post?.current?.url ?? \"\").split('/').slice(0, 3).join('/') }}"
+                "value": "https://criptonautas.co"
               },
               {
                 "id": "a7",
@@ -76,7 +76,7 @@
                 "id": "a9",
                 "name": "mode",
                 "type": "string",
-                "value": "={{ ($json.body?.post?.current?.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
+                "value": "={{ ($json.posts?.[0]?.tags ?? []).some(t => t.slug === \"hash-graph-filter\") ? \"chart\" : \"photo\" }}"
               }
             ]
           },
@@ -684,6 +684,31 @@
         "retryOnFail": true,
         "maxTries": 3,
         "waitBetweenTries": 5000
+      },
+      {
+        "id": "5e0b6a1c-2f4d-4c8e-9a71-3b6d2e8f0c14",
+        "name": "read-webhook-post",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          144,
+          -160
+        ],
+        "parameters": {
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {},
+          "url": "=https://criptonautas.co/ghost/api/admin/posts/{{ String($json.body?.post?.current?.id ?? \"\").replace(/[^a-f0-9]/g, \"\") }}/?include=tags"
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
       }
     ],
     "connections": {
@@ -793,17 +818,6 @@
           ]
         ]
       },
-      "ghost-post-changed": {
-        "main": [
-          [
-            {
-              "node": "extract-post-fields",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "filter-tagged-with-image": {
         "main": [
           [
@@ -842,6 +856,28 @@
           [
             {
               "node": "update-featured-image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "ghost-post-changed": {
+        "main": [
+          [
+            {
+              "node": "read-webhook-post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-webhook-post": {
+        "main": [
+          [
+            {
+              "node": "extract-post-fields",
               "type": "main",
               "index": 0
             }
@@ -886,13 +922,13 @@
       }
     ],
     "authors": "D C (via MCP)",
-    "name": "Process drafts on edit, claim rows, retries",
-    "description": "Runs on post.published and post.edited. Skips by image URL (original or filtered) instead of post id, claims a row before processing so repeated saves do not process twice, reads updated_at right before the update, retries network steps.",
+    "name": "Read webhook post from Ghost instead of trusting the body",
+    "description": "Security fix matching n8n-workflows PR #1. Only the hex post id comes from the unauthenticated webhook body; the post is read from criptonautas.co and ghost_url is a constant, so a forged call can no longer send the Ghost Admin credential to another host.",
     "autosaved": false,
-    "createdAt": "2026-10-23T17:34:32.324Z",
-    "updatedAt": "2026-10-23T17:34:32.324Z"
+    "createdAt": "2026-10-30T08:31:04.480Z",
+    "updatedAt": "2026-10-30T08:31:04.480Z"
   },
-  "activeVersionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0",
+  "activeVersionId": "dba475f4-0c9f-4018-b219-0421c55c6600",
   "connections": {
     "extract-post-fields": {
       "main": [
@@ -1000,17 +1036,6 @@
         ]
       ]
     },
-    "ghost-post-changed": {
-      "main": [
-        [
-          {
-            "node": "read-webhook-post",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "filter-tagged-with-image": {
       "main": [
         [
@@ -1049,6 +1074,17 @@
         [
           {
             "node": "update-featured-image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ghost-post-changed": {
+      "main": [
+        [
+          {
+            "node": "read-webhook-post",
             "type": "main",
             "index": 0
           }
@@ -1127,31 +1163,6 @@
         -160
       ],
       "webhookId": "297802d0-e9d6-4597-9066-a1ddda10f550"
-    },
-    {
-      "id": "5e0b6a1c-2f4d-4c8e-9a71-3b6d2e8f0c14",
-      "name": "read-webhook-post",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        144,
-        -160
-      ],
-      "parameters": {
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "ghostAdminApi",
-        "options": {},
-        "url": "=https://criptonautas.co/ghost/api/admin/posts/{{ String($json.body?.post?.current?.id ?? \"\").replace(/[^a-f0-9]/g, \"\") }}/?include=tags"
-      },
-      "credentials": {
-        "ghostAdminApi": {
-          "id": "1A8x4AjzoI4VhxKp",
-          "name": "nautas-ghost-api"
-        }
-      },
-      "retryOnFail": true,
-      "maxTries": 3,
-      "waitBetweenTries": 5000
     },
     {
       "parameters": {
@@ -1817,6 +1828,31 @@
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000
+    },
+    {
+      "id": "5e0b6a1c-2f4d-4c8e-9a71-3b6d2e8f0c14",
+      "name": "read-webhook-post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        144,
+        -160
+      ],
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {},
+        "url": "=https://criptonautas.co/ghost/api/admin/posts/{{ String($json.body?.post?.current?.id ?? \"\").replace(/[^a-f0-9]/g, \"\") }}/?include=tags"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     }
   ],
   "pinData": {},
@@ -1848,6 +1884,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-10-23T17:34:32.316Z",
-  "versionId": "96ccb7dd-3fdf-4271-8c04-ffd6584035d0"
+  "updatedAt": "2026-10-30T08:31:04.478Z",
+  "versionId": "dba475f4-0c9f-4018-b219-0421c55c6600"
 }
