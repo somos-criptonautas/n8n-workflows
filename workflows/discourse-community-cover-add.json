@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "311c15e6-7684-4790-9c50-180be6bd8df3",
+    "versionId": "1c222338-9e1d-428a-8fd9-cad7a24842fd",
     "workflowId": "rJ4Bdm5CYnWADTxC",
     "nodes": [
       {
@@ -30,7 +30,7 @@
           192
         ],
         "parameters": {
-          "jsCode": "return $input.all().filter(i => i.json.body?.topic?.id).map(i => ({ json: i.json.body.topic }));"
+          "jsCode": "return $input.all().filter(i => Number.isInteger(i.json.body?.topic?.id)).map(i => ({ json: { topic_id: i.json.body.topic.id } }));"
         }
       },
       {
@@ -551,6 +551,38 @@
             ]
           }
         }
+      },
+      {
+        "id": "ff6698c6-bf06-48e3-8b4a-4ae488dee2ad",
+        "name": "read-event-topic",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          784,
+          304
+        ],
+        "parameters": {
+          "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "discourseApi",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchInterval": 2000,
+                "batchSize": 1
+              }
+            }
+          }
+        },
+        "credentials": {
+          "discourseApi": {
+            "id": "cbowr6XQ4h8BpO8f",
+            "name": "Discourse account"
+          }
+        },
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
       }
     ],
     "connections": {
@@ -559,17 +591,6 @@
           [
             {
               "node": "topic-from-event",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "topic-from-event": {
-        "main": [
-          [
-            {
-              "node": "pick-label",
               "type": "main",
               "index": 0
             }
@@ -725,6 +746,28 @@
             }
           ]
         ]
+      },
+      "topic-from-event": {
+        "main": [
+          [
+            {
+              "node": "read-event-topic",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "read-event-topic": {
+        "main": [
+          [
+            {
+              "node": "pick-label",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [
@@ -765,30 +808,19 @@
       }
     ],
     "authors": "D C (via MCP)",
-    "name": "Space cover requests 700 ms apart",
-    "description": "A batch interval of 0 still sent the cover requests together and the service dropped them; 700 ms keeps them one after another.",
+    "name": "Read event topic from Discourse instead of trusting the body",
+    "description": "Security fix matching n8n-workflows PR #1. Only the integer topic id comes from the unauthenticated webhook body; title, category and tags are read from Discourse before pick-label.",
     "autosaved": false,
-    "createdAt": "2026-10-28T21:47:45.217Z",
-    "updatedAt": "2026-10-28T21:47:45.217Z"
+    "createdAt": "2026-10-30T08:31:05.778Z",
+    "updatedAt": "2026-10-30T08:31:05.778Z"
   },
-  "activeVersionId": "311c15e6-7684-4790-9c50-180be6bd8df3",
+  "activeVersionId": "1c222338-9e1d-428a-8fd9-cad7a24842fd",
   "connections": {
     "discourse-topic-event": {
       "main": [
         [
           {
             "node": "topic-from-event",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "topic-from-event": {
-      "main": [
-        [
-          {
-            "node": "read-event-topic",
             "type": "main",
             "index": 0
           }
@@ -945,6 +977,17 @@
         ]
       ]
     },
+    "topic-from-event": {
+      "main": [
+        [
+          {
+            "node": "read-event-topic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "read-event-topic": {
       "main": [
         [
@@ -1031,38 +1074,6 @@
       "parameters": {
         "jsCode": "return $input.all().filter(i => Number.isInteger(i.json.body?.topic?.id)).map(i => ({ json: { topic_id: i.json.body.topic.id } }));"
       }
-    },
-    {
-      "id": "9c4e2b7a-6d1f-4a3e-8b5c-0f7a1d2e3b46",
-      "name": "read-event-topic",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        784,
-        304
-      ],
-      "parameters": {
-        "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "discourseApi",
-        "options": {
-          "batching": {
-            "batch": {
-              "batchInterval": 2000,
-              "batchSize": 1
-            }
-          }
-        }
-      },
-      "credentials": {
-        "discourseApi": {
-          "id": "cbowr6XQ4h8BpO8f",
-          "name": "Discourse account"
-        }
-      },
-      "retryOnFail": true,
-      "maxTries": 5,
-      "waitBetweenTries": 5000
     },
     {
       "id": "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",
@@ -1582,6 +1593,38 @@
           ]
         }
       }
+    },
+    {
+      "id": "ff6698c6-bf06-48e3-8b4a-4ae488dee2ad",
+      "name": "read-event-topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        304
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 2000,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
     }
   ],
   "pinData": null,
@@ -1611,6 +1654,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-10-28T21:47:45.215Z",
-  "versionId": "311c15e6-7684-4790-9c50-180be6bd8df3"
+  "updatedAt": "2026-10-30T08:31:05.774Z",
+  "versionId": "1c222338-9e1d-428a-8fd9-cad7a24842fd"
 }
