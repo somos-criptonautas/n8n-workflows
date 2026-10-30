@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224",
+    "versionId": "6c73f6db-28e0-4090-8edc-fcaa622688a8",
     "workflowId": "fzvv7c56koRWUzpK",
     "nodes": [
       {
@@ -353,7 +353,11 @@
             "id": "cbowr6XQ4h8BpO8f",
             "name": "Discourse account"
           }
-        }
+        },
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
       },
       {
         "id": "37a748f4-f685-44c9-8dca-820078bb896c",
@@ -411,7 +415,10 @@
           }
         },
         "notes": "Only adds members; never removes.",
-        "onError": "continueRegularOutput"
+        "onError": "continueRegularOutput",
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 5000
       },
       {
         "id": "50a62214-72df-4bbf-929c-2ce3eefddfde",
@@ -436,7 +443,9 @@
         },
         "notes": "Current members, so add-members only sends new usernames.",
         "retryOnFail": true,
-        "maxTries": 3
+        "maxTries": 3,
+        "onError": "continueRegularOutput",
+        "waitBetweenTries": 5000
       }
     ],
     "connections": {
@@ -579,13 +588,13 @@
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Seasons in rank engine",
-    "description": "Updated nodes: rank",
+    "name": "Group branch retries and never stops the run",
+    "description": "Discourse rate limits (429) on GET /groups/paper-trading.json stopped five hourly runs on 2026-10-28 before split-new-seen/insert-seen ran. group and members now retry 3 times 5 s apart and continue on error, so the anti-cheat bookkeeping always runs.",
     "autosaved": false,
-    "createdAt": "2026-10-28T16:00:16.050Z",
-    "updatedAt": "2026-10-28T16:00:16.050Z"
+    "createdAt": "2026-10-30T04:09:20.544Z",
+    "updatedAt": "2026-10-30T04:09:20.544Z"
   },
-  "activeVersionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224",
+  "activeVersionId": "6c73f6db-28e0-4090-8edc-fcaa622688a8",
   "connections": {
     "Hourly at :07": {
       "main": [
@@ -1083,7 +1092,11 @@
           "id": "cbowr6XQ4h8BpO8f",
           "name": "Discourse account"
         }
-      }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "37a748f4-f685-44c9-8dca-820078bb896c",
@@ -1141,7 +1154,10 @@
         }
       },
       "notes": "Only adds members; never removes.",
-      "onError": "continueRegularOutput"
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
     },
     {
       "id": "50a62214-72df-4bbf-929c-2ce3eefddfde",
@@ -1166,7 +1182,9 @@
       },
       "notes": "Current members, so add-members only sends new usernames.",
       "retryOnFail": true,
-      "maxTries": 3
+      "maxTries": 3,
+      "onError": "continueRegularOutput",
+      "waitBetweenTries": 5000
     }
   ],
   "pinData": null,
@@ -1204,6 +1222,6 @@
     }
   ],
   "triggerCount": 1,
-  "updatedAt": "2026-10-28T16:00:16.048Z",
-  "versionId": "503d6f4f-ed8f-4b85-86f2-3d3e51ec3224"
+  "updatedAt": "2026-10-30T04:09:20.542Z",
+  "versionId": "6c73f6db-28e0-4090-8edc-fcaa622688a8"
 }
