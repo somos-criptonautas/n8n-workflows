@@ -788,7 +788,7 @@
       "main": [
         [
           {
-            "node": "pick-label",
+            "node": "read-event-topic",
             "type": "main",
             "index": 0
           }
@@ -944,6 +944,17 @@
           }
         ]
       ]
+    },
+    "read-event-topic": {
+      "main": [
+        [
+          {
+            "node": "pick-label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-10-28T18:19:34.783Z",
@@ -1018,8 +1029,40 @@
         192
       ],
       "parameters": {
-        "jsCode": "return $input.all().filter(i => i.json.body?.topic?.id).map(i => ({ json: i.json.body.topic }));"
+        "jsCode": "return $input.all().filter(i => Number.isInteger(i.json.body?.topic?.id)).map(i => ({ json: { topic_id: i.json.body.topic.id } }));"
       }
+    },
+    {
+      "id": "9c4e2b7a-6d1f-4a3e-8b5c-0f7a1d2e3b46",
+      "name": "read-event-topic",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        784,
+        304
+      ],
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/t/{{ $json.topic_id }}.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchInterval": 2000,
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
     },
     {
       "id": "c6fff75d-0b5b-4f7c-aec5-c9c4c677315c",

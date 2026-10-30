@@ -110,7 +110,7 @@
           "parameters": [
             {
               "name": "client_id",
-              "value": "6DL5FtrKTaVHUEOEi_lh16npMzAiqWor7hhAmsUhPtA"
+              "value": "={{ $env.UNSPLASH_ACCESS_KEY }}"
             },
             {
               "name": "query",
