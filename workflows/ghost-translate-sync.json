@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "c8105974-f27d-47d1-8938-9cd51108a437",
+    "versionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6",
     "workflowId": "HEdpSdE8bIh3c1RZ",
     "nodes": [
       {
@@ -181,189 +181,6 @@
         }
       },
       {
-        "id": "39a5d897-bb64-4ee5-be37-ada795c3db45",
-        "name": "Slug Changed",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.2,
-        "position": [
-          896,
-          288
-        ],
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "strict"
-            },
-            "combinator": "and",
-            "conditions": [
-              {
-                "leftValue": "={{ $('Normalize Event').first().json.old_slug !== '' && $('Normalize Event').first().json.old_slug !== $('Normalize Event').first().json.slug && !['terminos','privacidad'].includes($('Normalize Event').first().json.old_slug) }}",
-                "operator": {
-                  "type": "boolean",
-                  "operation": "true",
-                  "singleValue": true
-                },
-                "rightValue": ""
-              }
-            ]
-          }
-        }
-      },
-      {
-        "id": "ca3fec03-092d-4602-9da2-c726e4ca62a3",
-        "name": "Find English By Old Slug",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.5,
-        "position": [
-          1120,
-          144
-        ],
-        "parameters": {
-          "method": "GET",
-          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/slug/{{ $('Normalize Event').first().json.old_slug }}/",
-          "authentication": "predefinedCredentialType",
-          "nodeCredentialType": "ghostAdminApi",
-          "options": {
-            "response": {
-              "response": {
-                "neverError": true
-              }
-            }
-          }
-        },
-        "credentials": {
-          "ghostAdminApi": {
-            "id": "dB4sfMhTDWOirbsM",
-            "name": "ghost-en-admin-api"
-          }
-        },
-        "onError": "continueRegularOutput"
-      },
-      {
-        "id": "9700da3c-0c46-47ce-9a71-70418f7c868f",
-        "name": "Old Slug Lookup",
-        "type": "n8n-nodes-base.switch",
-        "typeVersion": 3.2,
-        "position": [
-          1344,
-          128
-        ],
-        "parameters": {
-          "rules": {
-            "values": [
-              {
-                "outputKey": "found",
-                "conditions": {
-                  "options": {
-                    "caseSensitive": true,
-                    "leftValue": "",
-                    "typeValidation": "strict"
-                  },
-                  "combinator": "and",
-                  "conditions": [
-                    {
-                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) }}",
-                      "operator": {
-                        "type": "boolean",
-                        "operation": "true",
-                        "singleValue": true
-                      },
-                      "rightValue": ""
-                    }
-                  ]
-                }
-              },
-              {
-                "outputKey": "no-twin",
-                "conditions": {
-                  "options": {
-                    "caseSensitive": true,
-                    "leftValue": "",
-                    "typeValidation": "strict"
-                  },
-                  "combinator": "and",
-                  "conditions": [
-                    {
-                      "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' }}",
-                      "operator": {
-                        "type": "boolean",
-                        "operation": "true",
-                        "singleValue": true
-                      },
-                      "rightValue": ""
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          "options": {
-            "fallbackOutput": "extra",
-            "renameFallbackOutput": "failed"
-          }
-        }
-      },
-      {
-        "id": "9065009a-7724-4261-8133-7bd2d72336fd",
-        "name": "Rename English",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.5,
-        "position": [
-          1568,
-          0
-        ],
-        "parameters": {
-          "method": "PUT",
-          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
-          "authentication": "predefinedCredentialType",
-          "nodeCredentialType": "ghostAdminApi",
-          "sendBody": true,
-          "contentType": "json",
-          "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ [$('Normalize Event').first().json.type]: [{ slug: $('Normalize Event').first().json.slug, updated_at: $json[$('Normalize Event').first().json.type][0].updated_at }] }) }}",
-          "options": {}
-        },
-        "credentials": {
-          "ghostAdminApi": {
-            "id": "dB4sfMhTDWOirbsM",
-            "name": "ghost-en-admin-api"
-          }
-        }
-      },
-      {
-        "id": "9e96a42d-dd6e-4c6b-9b5a-8a15df392290",
-        "name": "Delete Old State Row",
-        "type": "n8n-nodes-base.dataTable",
-        "typeVersion": 1.1,
-        "position": [
-          1792,
-          64
-        ],
-        "parameters": {
-          "resource": "row",
-          "operation": "deleteRows",
-          "dataTableId": {
-            "__rl": true,
-            "mode": "id",
-            "value": "lzuhgFaxodl1m3Mx"
-          },
-          "matchType": "allConditions",
-          "filters": {
-            "conditions": [
-              {
-                "keyName": "slug",
-                "condition": "eq",
-                "keyValue": "={{ $('Normalize Event').first().json.old_slug }}"
-              }
-            ]
-          },
-          "options": {}
-        },
-        "alwaysOutputData": true
-      },
-      {
         "id": "f5f4e495-25ca-41fd-b9b4-935191290d6e",
         "name": "Translate Post",
         "type": "n8n-nodes-base.executeWorkflow",
@@ -458,7 +275,7 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/slug/{{ $('Normalize Event').first().json.slug }}/",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json.en_id || '000000000000000000000000' }}/",
           "authentication": "predefinedCredentialType",
           "nodeCredentialType": "ghostAdminApi",
           "options": {
@@ -680,9 +497,9 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "slug",
+                "keyName": "source_id",
                 "condition": "eq",
-                "keyValue": "={{ $('Normalize Event').first().json.slug }}"
+                "keyValue": "={{ $('Normalize Event').first().json.id }}"
               }
             ]
           },
@@ -711,9 +528,9 @@
           "filters": {
             "conditions": [
               {
-                "keyName": "slug",
+                "keyName": "source_id",
                 "condition": "eq",
-                "keyValue": "={{ $('Normalize Event').first().json.slug }}"
+                "keyValue": "={{ $('Normalize Event').first().json.id }}"
               }
             ]
           },
@@ -786,7 +603,7 @@
                   "combinator": "and",
                   "conditions": [
                     {
-                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && (!(new Date($json[$('Normalize Event').first().json.type][0].updated_at) > new Date($('Normalize Event').first().json.updated_at)) || ($('Normalize Event').first().json.old_slug !== '' && $('Normalize Event').first().json.old_slug !== $('Normalize Event').first().json.slug)) }}",
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && !(new Date($json[$('Normalize Event').first().json.type][0].updated_at) > new Date($('Normalize Event').first().json.updated_at)) }}",
                       "operator": {
                         "type": "boolean",
                         "operation": "true",
@@ -903,6 +720,38 @@
           }
         },
         "onError": "continueRegularOutput"
+      },
+      {
+        "id": "fde108bd-1a1f-4c18-939f-6963d85a8936",
+        "name": "Find State",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          780
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "lzuhgFaxodl1m3Mx"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "source_id",
+                "condition": "eq",
+                "keyValue": "={{ $('Normalize Event').first().json.id }}"
+              }
+            ]
+          },
+          "returnAll": false,
+          "limit": 1
+        },
+        "alwaysOutputData": true
       }
     ],
     "connections": {
@@ -955,90 +804,14 @@
           ],
           [
             {
-              "node": "Find English",
+              "node": "Find State",
               "type": "main",
               "index": 0
             }
           ],
           [
             {
-              "node": "Find English",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Slug Changed": {
-        "main": [
-          [
-            {
-              "node": "Find English By Old Slug",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "Translate Post",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Find English By Old Slug": {
-        "main": [
-          [
-            {
-              "node": "Old Slug Lookup",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Old Slug Lookup": {
-        "main": [
-          [
-            {
-              "node": "Rename English",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "Delete Old State Row",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "English Lookup Failed",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Rename English": {
-        "main": [
-          [
-            {
-              "node": "Delete Old State Row",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Delete Old State Row": {
-        "main": [
-          [
-            {
-              "node": "Translate Post",
+              "node": "Find State",
               "type": "main",
               "index": 0
             }
@@ -1143,7 +916,7 @@
         "main": [
           [
             {
-              "node": "Slug Changed",
+              "node": "Translate Post",
               "type": "main",
               "index": 0
             }
@@ -1163,17 +936,28 @@
             }
           ]
         ]
+      },
+      "Find State": {
+        "main": [
+          [
+            {
+              "node": "Find English",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Draft: index Spanish doc",
-    "description": "Added nodes: Index Spanish\nConnections: 1 added, 0 removed",
+    "name": "Draft: find English through source id",
+    "description": "Added nodes: Find State\nRemoved nodes: Slug Changed, Find English By Old Slug, Old Slug Lookup, Rename English, Delete Old State Row\nUpdated nodes: Find English, Delete State Row, Delete Orphan State Row, Is Latest Save\nConnections: 4 added, 11 removed",
     "autosaved": false,
-    "createdAt": "2026-10-31T04:03:08.164Z",
-    "updatedAt": "2026-10-31T04:03:08.164Z"
+    "createdAt": "2026-10-31T04:23:17.645Z",
+    "updatedAt": "2026-10-31T04:23:17.645Z"
   },
-  "activeVersionId": "c8105974-f27d-47d1-8938-9cd51108a437",
+  "activeVersionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6",
   "connections": {
     "Ghost Webhook": {
       "main": [
