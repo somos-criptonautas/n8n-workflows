@@ -1,0 +1,337 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Approved List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved List": {
+      "main": [
+        [
+          {
+            "node": "One Per Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Per Slug": {
+      "main": [
+        [
+          {
+            "node": "Read Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Row": {
+      "main": [
+        [
+          {
+            "node": "Get English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get English": {
+      "main": [
+        [
+          {
+            "node": "Apply Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Slug": {
+      "main": [
+        [
+          {
+            "node": "Slug Applied Exactly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slug Applied Exactly": {
+      "main": [
+        [
+          {
+            "node": "Update Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Slug Collision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T04:24:16.813Z",
+  "id": "wq5eDiRKkWK74YEp",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-translate-apply-slugs",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "8274fbf0-06f1-4350-b3ff-a6a045e009b3",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "fe460849-faaa-4177-bbf0-ba4263cba20a",
+      "name": "Approved List",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        96
+      ],
+      "parameters": {
+        "mode": "raw",
+        "includeOtherFields": false,
+        "jsonOutput": "{\"approved\":[]}"
+      }
+    },
+    {
+      "id": "119e4215-4999-41d8-995c-5eb6e9f2e313",
+      "name": "One Per Slug",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        96
+      ],
+      "parameters": {
+        "fieldToSplitOut": "approved",
+        "include": "noOtherFields",
+        "options": {}
+      }
+    },
+    {
+      "id": "1bc50f62-13f0-4962-93ed-35f481b28f37",
+      "name": "Read Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        96
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "slug",
+              "condition": "eq",
+              "keyValue": "={{ $json.approved.slug }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1
+      }
+    },
+    {
+      "id": "19fcc3f7-c1cc-48a2-b83a-f78742858f7a",
+      "name": "Get English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        96
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.en_id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "d97fcdbc-c65d-491c-8828-86a70e8a2e85",
+      "name": "Apply Slug",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        96
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Read Row').item.json.type }}/{{ $('Read Row').item.json.en_id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ [$('Read Row').item.json.type]: [{ slug: $('One Per Slug').item.json.approved.en_slug, updated_at: $json[$('Read Row').item.json.type][0].updated_at }] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "34c68bce-f71c-45cc-bd1a-98a2a5ed6198",
+      "name": "Slug Applied Exactly",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json[$('Read Row').item.json.type][0].slug === $('One Per Slug').item.json.approved.en_slug }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b2e43bf3-d436-4d7b-88d6-c4d395786eb9",
+      "name": "Update Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Read Row').item.json.source_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "value": {
+            "en_slug": "={{ $json[$('Read Row').item.json.type][0].slug }}"
+          },
+          "schema": [
+            {
+              "id": "en_slug",
+              "displayName": "en_slug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e6a9a84b-f29f-4b47-8308-ceebe910074a",
+      "name": "Slug Collision",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        192
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Ghost gave {{ $json[$('Read Row').item.json.type][0].slug }} for {{ $('One Per Slug').item.json.approved.slug }}: the wanted slug is taken"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "wq5eDiRKkWK74YEp",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T04:24:16.813Z",
+      "updatedAt": "2026-10-31T04:24:16.813Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T04:29:43.264Z",
+  "versionId": "ab4f56d8-f021-42b6-880c-50c360da3395"
+}
