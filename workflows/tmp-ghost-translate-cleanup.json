@@ -1,0 +1,219 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Slugs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slugs": {
+      "main": [
+        [
+          {
+            "node": "One Item Per Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item Per Slug": {
+      "main": [
+        [
+          {
+            "node": "Read Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Row": {
+      "main": [
+        [
+          {
+            "node": "Delete Search Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Search Doc": {
+      "main": [
+        [
+          {
+            "node": "Delete Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T03:25:36.750Z",
+  "id": "aXMauK2EVkQO8dNq",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-cleanup",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "4846af31-cbae-40c0-abb9-9b7bec295c5e",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "5c81a489-9670-4408-a7b3-21afa2593071",
+      "name": "Slugs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "raw",
+        "includeOtherFields": false,
+        "jsonOutput": "{\"slugs\":[\"hola-trader\",\"gracias\",\"hola-random\",\"hola-anon\",\"nauta\",\"start\",\"continue\"]}"
+      }
+    },
+    {
+      "id": "10b8571a-a9c3-4d33-a6ad-3593e347dec3",
+      "name": "One Item Per Slug",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "fieldToSplitOut": "slugs",
+        "include": "noOtherFields",
+        "destinationFieldName": "slug",
+        "options": {}
+      }
+    },
+    {
+      "id": "ca021e32-e7c4-418a-8c9b-d5e7effc4a84",
+      "name": "Read Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "slug",
+              "condition": "eq",
+              "keyValue": "={{ $json.slugs }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1
+      }
+    },
+    {
+      "id": "ae566974-a2dd-4a0c-bfc6-493a96e18ea1",
+      "name": "Delete Search Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://typesense.criptonautas.co/collections/ghost_en/documents?filter_by=slug:={{ encodeURIComponent($json.slug) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WPc3DZDfaLOOzy8a",
+          "name": "typesense-ghost-en-write"
+        }
+      }
+    },
+    {
+      "id": "3528dbc3-ca18-4891-abdd-867bdedca563",
+      "name": "Delete Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "slug",
+              "condition": "eq",
+              "keyValue": "={{ $('Read Row').item.json.slug }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "aXMauK2EVkQO8dNq",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T03:25:36.750Z",
+      "updatedAt": "2026-10-31T03:25:36.750Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T03:30:18.852Z",
+  "versionId": "f62bbc29-131e-4f3f-88f9-7fe75588522d"
+}
