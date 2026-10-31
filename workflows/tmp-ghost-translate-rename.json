@@ -1,0 +1,242 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get English": {
+      "main": [
+        [
+          {
+            "node": "Rename English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename English": {
+      "main": [
+        [
+          {
+            "node": "Renamed Exactly",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Renamed Exactly": {
+      "main": [
+        [
+          {
+            "node": "Update Row Slug",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unexpected Slug",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T04:11:38.186Z",
+  "id": "XfJmZwdXPdlGXYNV",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-rename",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "77066789-8cb7-442a-9416-62b9dea6fc80",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3c4f3f2a-09c6-4f22-9b4f-73d2a126a8a2",
+      "name": "Get English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        96
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/posts/slug/para-que-empezar-en-cripto/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "c5adba46-837c-4085-b320-f85c4390e13b",
+      "name": "Rename English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        96
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/posts/{{ $json.posts[0].id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ posts: [{ slug: 'empezar-en-cripto', updated_at: $json.posts[0].updated_at }] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "df385490-65b4-44ab-b08e-7871a8f40d3b",
+      "name": "Renamed Exactly",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        96
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.posts[0].slug === 'empezar-en-cripto' }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1e545b6d-ae8a-4ff7-b419-3bfff5145fbb",
+      "name": "Update Row Slug",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "slug",
+              "condition": "eq",
+              "keyValue": "para-que-empezar-en-cripto"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "value": {
+            "slug": "empezar-en-cripto"
+          },
+          "schema": [
+            {
+              "id": "slug",
+              "displayName": "slug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "767fbc51-9764-4eb6-88b6-1a6da5c5ff5f",
+      "name": "Unexpected Slug",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        896,
+        192
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=English slug came back as {{ $json.posts?.[0]?.slug }}"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "XfJmZwdXPdlGXYNV",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T04:11:38.186Z",
+      "updatedAt": "2026-10-31T04:11:38.186Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T04:20:05.131Z",
+  "versionId": "fba91b9a-551e-494f-94c3-6ffd62f8bd3b"
+}
