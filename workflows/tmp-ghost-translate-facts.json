@@ -1,0 +1,147 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "ES Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Pages": {
+      "main": [
+        [
+          {
+            "node": "ES Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Posts": {
+      "main": [
+        [
+          {
+            "node": "EN Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T02:19:44.850Z",
+  "id": "lP8d95nvBHYxmBiT",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-facts",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "6c3ccd14-ced1-49f8-9049-398c67988ffb",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b394b388-00b6-44fa-8924-60261a5ef6d9",
+      "name": "ES Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/pages/?filter=slug:[work,journey-4,manifiesto,stack,lounge,stats]&formats=html&limit=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "b660dc8b-82f6-4f5a-b792-15c45d9d1d55",
+      "name": "ES Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?filter=slug:[trump,monero-1,tor-1]&formats=html&limit=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "c492b3eb-8fdd-4df5-b117-b6f9f270a086",
+      "name": "EN Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/pages/?filter=slug:[stack,lounge,stats]&formats=html&limit=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "lP8d95nvBHYxmBiT",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T02:19:44.850Z",
+      "updatedAt": "2026-10-31T02:19:44.850Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T02:21:42.860Z",
+  "versionId": "199f4dbf-aeb5-45e1-964f-9cb5e2d40c5f"
+}
