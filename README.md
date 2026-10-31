@@ -1,8 +1,11 @@
 # n8n-workflows
 
-Backup automático cada 12 h de los workflows activos de n8n.
+**ENGLISH** | [ESPAÑOL](README.es.md)
 
-**2026-10-20 — Reorganización de títulos y tags.** El backup ahora publica
-solo los workflows activos sin selector de estado (`[ON-HOLD]`, `[TO-*]`).
-Títulos en kebab-case `servicio-acción-objeto`. Eliminados los archivos de
-workflows archivados, en desuso y renombrados.
+Automatic backup, every 12 hours, of our active n8n workflows.
+
+**2026-10-20: titles and tags reorganized.** The backup now publishes only active workflows with no status prefix (`[ON-HOLD]`, `[TO-*]`). Titles are kebab-case `service-action-object`. Files of archived, unused and renamed workflows were removed.
+
+## License
+
+[GPL-3.0](LICENSE).
