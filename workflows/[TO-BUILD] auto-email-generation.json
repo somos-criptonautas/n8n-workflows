@@ -410,16 +410,16 @@
   "staticData": null,
   "tags": [
     {
-      "id": "ymjfgEEEwMyXBYBl",
-      "name": "nautas",
-      "createdAt": "2026-07-19T15:10:46.434Z",
-      "updatedAt": "2026-07-19T15:10:46.434Z"
-    },
-    {
       "id": "EfRtHddGh10rItqC",
       "name": "marketing",
       "createdAt": "2026-07-19T15:08:18.307Z",
       "updatedAt": "2026-07-19T15:08:18.307Z"
+    },
+    {
+      "id": "ymjfgEEEwMyXBYBl",
+      "name": "nautas",
+      "createdAt": "2026-07-19T15:10:46.434Z",
+      "updatedAt": "2026-07-19T15:10:46.434Z"
     },
     {
       "id": "uKN64TK7JNFhZFiD",
