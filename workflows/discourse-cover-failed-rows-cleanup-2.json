@@ -1,0 +1,89 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "start": {
+      "main": [
+        [
+          {
+            "node": "delete-failed-rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-30T17:49:36.677Z",
+  "id": "IeMgo8NTRfGGc50R",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "discourse-cover-failed-rows-cleanup-2",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "81c0ccb3-a36e-4251-bbbe-ac50054a2144",
+      "name": "start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "223b5c41-5d6a-4dcf-9cde-8bf784c741ac",
+      "name": "delete-failed-rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "OCMfj1Y8PhZ7relE",
+          "cachedResultName": "discourse_community_covers"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "topic_id",
+              "condition": "lt",
+              "keyValue": "0"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "IeMgo8NTRfGGc50R",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-30T17:49:36.677Z",
+      "updatedAt": "2026-10-30T17:49:36.677Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-30T17:49:51.081Z",
+  "versionId": "0f7bd5df-4ee0-437b-810e-33614f89d9d7"
+}
