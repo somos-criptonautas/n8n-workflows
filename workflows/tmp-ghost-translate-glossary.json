@@ -1,0 +1,192 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Language Pairs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Language Pairs": {
+      "main": [
+        [
+          {
+            "node": "List Glossaries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Glossaries": {
+      "main": [
+        [
+          {
+            "node": "Create Glossary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Glossary": {
+      "main": [
+        [
+          {
+            "node": "Delete Dry Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T00:49:25.647Z",
+  "id": "qgdlWswk4qxZKOaz",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-glossary",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "690a98a7-8aad-4662-b058-ccdda5d916d1",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "296562f1-49fe-4763-9f9f-b301ef8ef5ae",
+      "name": "Language Pairs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api-free.deepl.com/v2/glossary-language-pairs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi"
+      },
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "d9685530-769e-46e7-b0e8-6fa1f10dbc60",
+      "name": "List Glossaries",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api-free.deepl.com/v2/glossaries",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi"
+      },
+      "executeOnce": true,
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "11428d65-da8c-4ce7-a9dd-eb6bd453b85f",
+      "name": "Create Glossary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-free.deepl.com/v2/glossaries",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "deepLApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "{\"name\":\"criptonautas\",\"source_lang\":\"es\",\"target_lang\":\"en\",\"entries_format\":\"tsv\",\"entries\":\"Criptonautas\\tCriptonautas\\ncriptonautas\\tcriptonautas\\nCriptonauta\\tCriptonauta\\ncriptonauta\\tcriptonauta\\nnauta\\tnauta\\nnautas\\tnautas\\nfilonauta\\tfilonauta\\nfilonautas\\tfilonautas\\nsomos-criptonautas\\tsomos-criptonautas\"}"
+      },
+      "credentials": {
+        "deepLApi": {
+          "id": "dvYu8wxVM8WbVYZe",
+          "name": "DeepL account"
+        }
+      }
+    },
+    {
+      "id": "8814d3c2-7349-49ac-b9b8-79f98af5158f",
+      "name": "Delete Dry Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        950,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "slug",
+              "condition": "eq",
+              "keyValue": "dry:monero-2"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "qgdlWswk4qxZKOaz",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T00:49:25.647Z",
+      "updatedAt": "2026-10-31T00:49:25.647Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T00:50:40.069Z",
+  "versionId": "07cef8c1-aa8d-422a-9d16-b0701a9c56da"
+}
