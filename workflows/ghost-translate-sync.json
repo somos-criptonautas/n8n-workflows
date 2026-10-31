@@ -1,0 +1,2152 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "c8105974-f27d-47d1-8938-9cd51108a437",
+    "workflowId": "HEdpSdE8bIh3c1RZ",
+    "nodes": [
+      {
+        "id": "c00ec7d0-687e-407b-89a5-a8adc9471fd2",
+        "name": "Ghost Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          560
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ghost-translate-eeac4ee26c9c7a626211ea450fba8455",
+          "responseMode": "onReceived",
+          "options": {}
+        },
+        "webhookId": "35db8408-8514-4e0a-9c97-f7099b3220be"
+      },
+      {
+        "id": "f1ec130a-c346-412b-b261-c1e096f0fe22",
+        "name": "Normalize Event",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          560
+        ],
+        "parameters": {
+          "mode": "manual",
+          "includeOtherFields": false,
+          "assignments": {
+            "assignments": [
+              {
+                "id": "event",
+                "name": "event",
+                "type": "string",
+                "value": "={{ $json.query.event }}"
+              },
+              {
+                "id": "type",
+                "name": "type",
+                "type": "string",
+                "value": "={{ $json.query.event.startsWith('page') ? 'pages' : 'posts' }}"
+              },
+              {
+                "id": "id",
+                "name": "id",
+                "type": "string",
+                "value": "={{ ($json.body.post || $json.body.page).current?.id || ($json.body.post || $json.body.page).previous?.id }}"
+              },
+              {
+                "id": "slug",
+                "name": "slug",
+                "type": "string",
+                "value": "={{ ($json.body.post || $json.body.page).current?.slug || ($json.body.post || $json.body.page).previous?.slug }}"
+              },
+              {
+                "id": "old_slug",
+                "name": "old_slug",
+                "type": "string",
+                "value": "={{ ($json.body.post || $json.body.page).previous?.slug || '' }}"
+              },
+              {
+                "id": "has_current",
+                "name": "has_current",
+                "type": "boolean",
+                "value": "={{ Boolean(($json.body.post || $json.body.page).current?.id) }}"
+              },
+              {
+                "id": "updated_at",
+                "name": "updated_at",
+                "type": "string",
+                "value": "={{ ($json.body.post || $json.body.page).current?.updated_at || '' }}"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "bbca5627-9535-4f69-8a5e-eca63e50062c",
+        "name": "Debounce",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          448,
+          560
+        ],
+        "parameters": {
+          "resume": "timeInterval",
+          "amount": 15,
+          "unit": "seconds"
+        },
+        "webhookId": "031c2aca-8ddf-49e3-ad8b-d465a0873954"
+      },
+      {
+        "id": "89b8c6b3-6934-42fa-8e8d-f4367fbf6bdc",
+        "name": "Route Event",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          672,
+          544
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "outputKey": "published",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ /\\.published(\\.edited)?$/.test($json.event) }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "unpublished",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad'].includes($json.slug) }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "deleted",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad'].includes($json.slug) }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {}
+        }
+      },
+      {
+        "id": "39a5d897-bb64-4ee5-be37-ada795c3db45",
+        "name": "Slug Changed",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          896,
+          288
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $('Normalize Event').first().json.old_slug !== '' && $('Normalize Event').first().json.old_slug !== $('Normalize Event').first().json.slug && !['terminos','privacidad'].includes($('Normalize Event').first().json.old_slug) }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "ca3fec03-092d-4602-9da2-c726e4ca62a3",
+        "name": "Find English By Old Slug",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1120,
+          144
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/slug/{{ $('Normalize Event').first().json.old_slug }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "dB4sfMhTDWOirbsM",
+            "name": "ghost-en-admin-api"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "9700da3c-0c46-47ce-9a71-70418f7c868f",
+        "name": "Old Slug Lookup",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          1344,
+          128
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "outputKey": "found",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "no-twin",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "failed"
+          }
+        }
+      },
+      {
+        "id": "9065009a-7724-4261-8133-7bd2d72336fd",
+        "name": "Rename English",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          0
+        ],
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ [$('Normalize Event').first().json.type]: [{ slug: $('Normalize Event').first().json.slug, updated_at: $json[$('Normalize Event').first().json.type][0].updated_at }] }) }}",
+          "options": {}
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "dB4sfMhTDWOirbsM",
+            "name": "ghost-en-admin-api"
+          }
+        }
+      },
+      {
+        "id": "9e96a42d-dd6e-4c6b-9b5a-8a15df392290",
+        "name": "Delete Old State Row",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1792,
+          64
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "deleteRows",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "lzuhgFaxodl1m3Mx"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "slug",
+                "condition": "eq",
+                "keyValue": "={{ $('Normalize Event').first().json.old_slug }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "id": "f5f4e495-25ca-41fd-b9b4-935191290d6e",
+        "name": "Translate Post",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          2016,
+          224
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "SrFAelNFFszu09q5"
+          },
+          "mode": "once",
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "type": "={{ $('Normalize Event').first().json.type }}",
+              "id": "={{ $('Normalize Event').first().json.id }}",
+              "dry_run": false,
+              "reindex": false
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "type",
+                "displayName": "type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              },
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              },
+              {
+                "id": "dry_run",
+                "displayName": "dry_run",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "boolean"
+              },
+              {
+                "id": "reindex",
+                "displayName": "reindex",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "boolean"
+              }
+            ]
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        }
+      },
+      {
+        "id": "e8d97de1-f361-42e3-b9c6-56ada5cd0317",
+        "name": "English Lookup Failed",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          1568,
+          288
+        ],
+        "parameters": {
+          "errorType": "errorMessage",
+          "errorMessage": "=English lookup failed for {{ $('Normalize Event').first().json.slug }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+        }
+      },
+      {
+        "id": "14edee43-277a-4219-a2ba-d51d603c4e0b",
+        "name": "Find English",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          896,
+          960
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/slug/{{ $('Normalize Event').first().json.slug }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "dB4sfMhTDWOirbsM",
+            "name": "ghost-en-admin-api"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "4aed8c52-0d78-44ce-b816-455f03740464",
+        "name": "English Lookup",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          1120,
+          912
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "outputKey": "unpublish",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $('Normalize Event').first().json.event.endsWith('.unpublished') }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "delete",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $('Normalize Event').first().json.event.endsWith('.deleted') }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "no-twin-delete",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' && $('Normalize Event').first().json.event.endsWith('.deleted') }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "outputKey": "no-twin-unpublish",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "failed"
+          }
+        }
+      },
+      {
+        "id": "e525db7f-cd53-47d2-b78e-b68fb20003ad",
+        "name": "Unpublish English",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          576
+        ],
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ [$('Normalize Event').first().json.type]: [{ status: 'draft', updated_at: $json[$('Normalize Event').first().json.type][0].updated_at }] }) }}",
+          "options": {}
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "dB4sfMhTDWOirbsM",
+            "name": "ghost-en-admin-api"
+          }
+        }
+      },
+      {
+        "id": "8ec5e3bf-acef-4029-9b6f-2a4630447201",
+        "name": "Delete Search Doc",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1792,
+          704
+        ],
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://typesense.criptonautas.co/collections/ghost_en/documents/{{ $('Find English').first().json[$('Normalize Event').first().json.type][0].id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "WPc3DZDfaLOOzy8a",
+            "name": "typesense-ghost-en-write"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "c12be1ff-a9de-48b5-afe7-037b2f18b1ab",
+        "name": "Delete English",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1344,
+          768
+        ],
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {}
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "dB4sfMhTDWOirbsM",
+            "name": "ghost-en-admin-api"
+          }
+        }
+      },
+      {
+        "id": "d20c79b6-3106-493b-bde9-f38c28dfe8e0",
+        "name": "Delete State Row",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1568,
+          768
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "deleteRows",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "lzuhgFaxodl1m3Mx"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "slug",
+                "condition": "eq",
+                "keyValue": "={{ $('Normalize Event').first().json.slug }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "id": "8d58c754-ea4d-4c55-8d68-3677a54aed10",
+        "name": "Delete Orphan State Row",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1344,
+          960
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "deleteRows",
+          "dataTableId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "lzuhgFaxodl1m3Mx"
+          },
+          "matchType": "allConditions",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "slug",
+                "condition": "eq",
+                "keyValue": "={{ $('Normalize Event').first().json.slug }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "alwaysOutputData": true
+      },
+      {
+        "id": "fa272580-cd98-4cf1-9bb5-bff8c56e33d4",
+        "name": "No English Twin",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          1152
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "7383c118-537e-4907-8c7d-4df590b2d593",
+        "name": "Fetch Latest Source",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          900,
+          -200
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $('Normalize Event').first().json.id }}/?fields=updated_at",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "dfa9e7fa-9968-464e-b88c-1b2effa99e57",
+        "name": "Is Latest Save",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          1120,
+          -200
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "renameOutput": true,
+                "outputKey": "latest",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && (!(new Date($json[$('Normalize Event').first().json.type][0].updated_at) > new Date($('Normalize Event').first().json.updated_at)) || ($('Normalize Event').first().json.old_slug !== '' && $('Normalize Event').first().json.old_slug !== $('Normalize Event').first().json.slug)) }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "renameOutput": true,
+                "outputKey": "superseded-or-gone",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "failed"
+          }
+        }
+      },
+      {
+        "id": "faf7a3fb-9217-4e9c-bd5f-e089da568f81",
+        "name": "Superseded Or Gone",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1340,
+          -340
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "1afe61b4-38eb-4743-9774-42f79c74bfd3",
+        "name": "Source Lookup Failed",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          1340,
+          -60
+        ],
+        "parameters": {
+          "errorType": "errorMessage",
+          "errorMessage": "=Source lookup failed for {{ $('Normalize Event').first().json.slug }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+        }
+      },
+      {
+        "id": "4cc72ed7-a937-4bf5-825f-b19dc48b132a",
+        "name": "Index Spanish",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          672,
+          300
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "3cl4kcFN9rtNd8hD"
+          },
+          "mode": "once",
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "type": "={{ $json.type }}",
+              "id": "={{ $json.id }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "type",
+                "displayName": "type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              },
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              }
+            ]
+          },
+          "options": {
+            "waitForSubWorkflow": false
+          }
+        },
+        "onError": "continueRegularOutput"
+      }
+    ],
+    "connections": {
+      "Ghost Webhook": {
+        "main": [
+          [
+            {
+              "node": "Normalize Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Event": {
+        "main": [
+          [
+            {
+              "node": "Debounce",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Debounce": {
+        "main": [
+          [
+            {
+              "node": "Route Event",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Index Spanish",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Event": {
+        "main": [
+          [
+            {
+              "node": "Fetch Latest Source",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Find English",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Find English",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Slug Changed": {
+        "main": [
+          [
+            {
+              "node": "Find English By Old Slug",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Translate Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find English By Old Slug": {
+        "main": [
+          [
+            {
+              "node": "Old Slug Lookup",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Old Slug Lookup": {
+        "main": [
+          [
+            {
+              "node": "Rename English",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Delete Old State Row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "English Lookup Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Rename English": {
+        "main": [
+          [
+            {
+              "node": "Delete Old State Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete Old State Row": {
+        "main": [
+          [
+            {
+              "node": "Translate Post",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Find English": {
+        "main": [
+          [
+            {
+              "node": "English Lookup",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "English Lookup": {
+        "main": [
+          [
+            {
+              "node": "Unpublish English",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Delete English",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Delete Orphan State Row",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "No English Twin",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "English Lookup Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Unpublish English": {
+        "main": [
+          [
+            {
+              "node": "Delete Search Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete English": {
+        "main": [
+          [
+            {
+              "node": "Delete State Row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete State Row": {
+        "main": [
+          [
+            {
+              "node": "Delete Search Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Latest Source": {
+        "main": [
+          [
+            {
+              "node": "Is Latest Save",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Latest Save": {
+        "main": [
+          [
+            {
+              "node": "Slug Changed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Superseded Or Gone",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Source Lookup Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Draft: index Spanish doc",
+    "description": "Added nodes: Index Spanish\nConnections: 1 added, 0 removed",
+    "autosaved": false,
+    "createdAt": "2026-10-31T04:03:08.164Z",
+    "updatedAt": "2026-10-31T04:03:08.164Z"
+  },
+  "activeVersionId": "c8105974-f27d-47d1-8938-9cd51108a437",
+  "connections": {
+    "Ghost Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Event": {
+      "main": [
+        [
+          {
+            "node": "Debounce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Debounce": {
+      "main": [
+        [
+          {
+            "node": "Route Event",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Index Spanish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event": {
+      "main": [
+        [
+          {
+            "node": "Fetch Latest Source",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find English": {
+      "main": [
+        [
+          {
+            "node": "English Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "English Lookup": {
+      "main": [
+        [
+          {
+            "node": "Unpublish English",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete English",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Orphan State Row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No English Twin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "English Lookup Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unpublish English": {
+      "main": [
+        [
+          {
+            "node": "Delete Search Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete English": {
+      "main": [
+        [
+          {
+            "node": "Delete State Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete State Row": {
+      "main": [
+        [
+          {
+            "node": "Delete Search Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Latest Source": {
+      "main": [
+        [
+          {
+            "node": "Is Latest Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Latest Save": {
+      "main": [
+        [
+          {
+            "node": "Translate Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Superseded Or Gone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Source Lookup Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find State": {
+      "main": [
+        [
+          {
+            "node": "Find English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T03:25:12.887Z",
+  "id": "HEdpSdE8bIh3c1RZ",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-translate-sync",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "c00ec7d0-687e-407b-89a5-a8adc9471fd2",
+      "name": "Ghost Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        560
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ghost-translate-eeac4ee26c9c7a626211ea450fba8455",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "35db8408-8514-4e0a-9c97-f7099b3220be"
+    },
+    {
+      "id": "f1ec130a-c346-412b-b261-c1e096f0fe22",
+      "name": "Normalize Event",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        560
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "event",
+              "name": "event",
+              "type": "string",
+              "value": "={{ $json.query.event }}"
+            },
+            {
+              "id": "type",
+              "name": "type",
+              "type": "string",
+              "value": "={{ $json.query.event.startsWith('page') ? 'pages' : 'posts' }}"
+            },
+            {
+              "id": "id",
+              "name": "id",
+              "type": "string",
+              "value": "={{ ($json.body.post || $json.body.page).current?.id || ($json.body.post || $json.body.page).previous?.id }}"
+            },
+            {
+              "id": "slug",
+              "name": "slug",
+              "type": "string",
+              "value": "={{ ($json.body.post || $json.body.page).current?.slug || ($json.body.post || $json.body.page).previous?.slug }}"
+            },
+            {
+              "id": "old_slug",
+              "name": "old_slug",
+              "type": "string",
+              "value": "={{ ($json.body.post || $json.body.page).previous?.slug || '' }}"
+            },
+            {
+              "id": "has_current",
+              "name": "has_current",
+              "type": "boolean",
+              "value": "={{ Boolean(($json.body.post || $json.body.page).current?.id) }}"
+            },
+            {
+              "id": "updated_at",
+              "name": "updated_at",
+              "type": "string",
+              "value": "={{ ($json.body.post || $json.body.page).current?.updated_at || '' }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bbca5627-9535-4f69-8a5e-eca63e50062c",
+      "name": "Debounce",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        560
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": 15,
+        "unit": "seconds"
+      },
+      "webhookId": "031c2aca-8ddf-49e3-ad8b-d465a0873954"
+    },
+    {
+      "id": "89b8c6b3-6934-42fa-8e8d-f4367fbf6bdc",
+      "name": "Route Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        544
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "published",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ /\\.published(\\.edited)?$/.test($json.event) }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "unpublished",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad'].includes($json.slug) }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "deleted",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad'].includes($json.slug) }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f5f4e495-25ca-41fd-b9b4-935191290d6e",
+      "name": "Translate Post",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        224
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SrFAelNFFszu09q5"
+        },
+        "mode": "once",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "={{ $('Normalize Event').first().json.type }}",
+            "id": "={{ $('Normalize Event').first().json.id }}",
+            "dry_run": false,
+            "reindex": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "dry_run",
+              "displayName": "dry_run",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean"
+            },
+            {
+              "id": "reindex",
+              "displayName": "reindex",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      }
+    },
+    {
+      "id": "e8d97de1-f361-42e3-b9c6-56ada5cd0317",
+      "name": "English Lookup Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        288
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=English lookup failed for {{ $('Normalize Event').first().json.slug }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+      }
+    },
+    {
+      "id": "14edee43-277a-4219-a2ba-d51d603c4e0b",
+      "name": "Find English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        960
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json.en_id || '000000000000000000000000' }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "4aed8c52-0d78-44ce-b816-455f03740464",
+      "name": "English Lookup",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        912
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "unpublish",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $('Normalize Event').first().json.event.endsWith('.unpublished') }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "delete",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $('Normalize Event').first().json.event.endsWith('.deleted') }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "no-twin-delete",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' && $('Normalize Event').first().json.event.endsWith('.deleted') }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "no-twin-unpublish",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.errors?.[0]?.type === 'NotFoundError' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "failed"
+        }
+      }
+    },
+    {
+      "id": "e525db7f-cd53-47d2-b78e-b68fb20003ad",
+      "name": "Unpublish English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1568,
+        576
+      ],
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ [$('Normalize Event').first().json.type]: [{ status: 'draft', updated_at: $json[$('Normalize Event').first().json.type][0].updated_at }] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "8ec5e3bf-acef-4029-9b6f-2a4630447201",
+      "name": "Delete Search Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1792,
+        704
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://typesense.criptonautas.co/collections/ghost_en/documents/{{ $('Find English').first().json[$('Normalize Event').first().json.type][0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WPc3DZDfaLOOzy8a",
+          "name": "typesense-ghost-en-write"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "c12be1ff-a9de-48b5-afe7-037b2f18b1ab",
+      "name": "Delete English",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        768
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $json[$('Normalize Event').first().json.type][0].id }}/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "d20c79b6-3106-493b-bde9-f38c28dfe8e0",
+      "name": "Delete State Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        768
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Event').first().json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "8d58c754-ea4d-4c55-8d68-3677a54aed10",
+      "name": "Delete Orphan State Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        960
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Event').first().json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "fa272580-cd98-4cf1-9bb5-bff8c56e33d4",
+      "name": "No English Twin",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1152
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "7383c118-537e-4907-8c7d-4df590b2d593",
+      "name": "Fetch Latest Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        900,
+        -200
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $('Normalize Event').first().json.id }}/?fields=updated_at",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "dfa9e7fa-9968-464e-b88c-1b2effa99e57",
+      "name": "Is Latest Save",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1120,
+        -200
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "renameOutput": true,
+              "outputKey": "latest",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) && !(new Date($json[$('Normalize Event').first().json.type][0].updated_at) > new Date($('Normalize Event').first().json.updated_at)) }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "superseded-or-gone",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "failed"
+        }
+      }
+    },
+    {
+      "id": "faf7a3fb-9217-4e9c-bd5f-e089da568f81",
+      "name": "Superseded Or Gone",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        -340
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "1afe61b4-38eb-4743-9774-42f79c74bfd3",
+      "name": "Source Lookup Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        -60
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Source lookup failed for {{ $('Normalize Event').first().json.slug }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+      }
+    },
+    {
+      "id": "4cc72ed7-a937-4bf5-825f-b19dc48b132a",
+      "name": "Index Spanish",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        300
+      ],
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "3cl4kcFN9rtNd8hD"
+        },
+        "mode": "once",
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "={{ $json.type }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "fde108bd-1a1f-4c18-939f-6963d85a8936",
+      "name": "Find State",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        780
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "source_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Normalize Event').first().json.id }}"
+            }
+          ]
+        },
+        "returnAll": false,
+        "limit": 1
+      },
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "HEdpSdE8bIh3c1RZ",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T03:25:12.887Z",
+      "updatedAt": "2026-10-31T03:25:12.887Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 1,
+  "updatedAt": "2026-10-31T04:23:17.643Z",
+  "versionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6"
+}
