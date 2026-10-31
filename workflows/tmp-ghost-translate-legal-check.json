@@ -1,0 +1,81 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "English Legal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T01:59:14.571Z",
+  "id": "APIkTpT6Qn0KOAd8",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-legal-check",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "f7aba082-c970-40b9-b4e1-33d4970e25bf",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d17e66ae-0ecf-475e-a3af-739fff377df3",
+      "name": "English Legal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/pages/?filter=slug:[terminos,privacidad]&fields=slug,title,custom_excerpt,updated_at,codeinjection_head&limit=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "APIkTpT6Qn0KOAd8",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T01:59:14.571Z",
+      "updatedAt": "2026-10-31T01:59:14.571Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T02:01:54.157Z",
+  "versionId": "740089ac-885e-4cd3-ad6d-4e98e0ea878a"
+}
