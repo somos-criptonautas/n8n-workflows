@@ -13,10 +13,32 @@
           }
         ]
       ]
+    },
+    "Typesense Check": {
+      "main": [
+        [
+          {
+            "node": "Spanish Snapshot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spanish Snapshot": {
+      "main": [
+        [
+          {
+            "node": "Latest Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "createdAt": "2026-10-31T01:10:03.908Z",
-  "id": "e70EdfK2q2VUsDxw",
+  "createdAt": "2026-10-31T01:14:22.604Z",
+  "id": "WaF2071ilFdzutGF",
   "isArchived": true,
   "meta": {
     "aiBuilderAssisted": true,
@@ -62,7 +84,51 @@
       "credentials": {
         "httpHeaderAuth": {
           "id": "WPc3DZDfaLOOzy8a",
-          "name": "Header Auth account"
+          "name": "typesense-ghost-en-write"
+        }
+      }
+    },
+    {
+      "id": "8d414efe-b9de-4167-afc8-bb38e5a27844",
+      "name": "Spanish Snapshot",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?filter=slug:[monero-1,monero-2,monero-3]&formats=html&include=tags&limit=all",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "e195ee7b-e9c5-40c7-8f78-f612c7842b8b",
+      "name": "Latest Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=all&fields=id,slug,title,status&filter=status:published",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
         }
       }
     }
@@ -75,15 +141,15 @@
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "e70EdfK2q2VUsDxw",
+      "workflowId": "WaF2071ilFdzutGF",
       "projectId": "HXLppsMA2lbH4F4C",
-      "createdAt": "2026-10-31T01:10:03.908Z",
-      "updatedAt": "2026-10-31T01:10:03.908Z"
+      "createdAt": "2026-10-31T01:14:22.604Z",
+      "updatedAt": "2026-10-31T01:14:22.604Z"
     }
   ],
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-10-31T01:10:27.231Z",
-  "versionId": "eeab93e1-8e20-41fc-963e-ba1550459d39"
+  "updatedAt": "2026-10-31T01:16:19.984Z",
+  "versionId": "7574d995-f8fd-49c8-9899-75689289da1e"
 }
