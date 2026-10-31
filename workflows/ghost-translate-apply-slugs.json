@@ -121,7 +121,7 @@
       "parameters": {
         "mode": "raw",
         "includeOtherFields": false,
-        "jsonOutput": "{\"approved\":[]}"
+        "jsonOutput": "{\"approved\":[{\"slug\":\"inicio\",\"en_slug\":\"home\"},{\"slug\":\"curso\",\"en_slug\":\"course\"},{\"slug\":\"comunidad\",\"en_slug\":\"community\"},{\"slug\":\"contacto\",\"en_slug\":\"contact\"},{\"slug\":\"filosofia\",\"en_slug\":\"philosophy\"},{\"slug\":\"manifiesto\",\"en_slug\":\"manifesto\"},{\"slug\":\"sumar\",\"en_slug\":\"contribute\"},{\"slug\":\"dinero\",\"en_slug\":\"money\"},{\"slug\":\"expandir-dinero\",\"en_slug\":\"trade-our-money\"},{\"slug\":\"patrones\",\"en_slug\":\"patterns\"},{\"slug\":\"empezar-en-cripto\",\"en_slug\":\"get-started-on-crypto\"}]}"
       }
     },
     {
@@ -162,7 +162,7 @@
             {
               "keyName": "slug",
               "condition": "eq",
-              "keyValue": "={{ $json.approved.slug }}"
+              "keyValue": "={{ $json.approved?.slug ?? $json.slug }}"
             }
           ]
         },
@@ -210,7 +210,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ [$('Read Row').item.json.type]: [{ slug: $('One Per Slug').item.json.approved.en_slug, updated_at: $json[$('Read Row').item.json.type][0].updated_at }] }) }}",
+        "jsonBody": "={{ JSON.stringify({ [$('Read Row').item.json.type]: [{ slug: $('One Per Slug').item.json.en_slug ?? $('One Per Slug').item.json.approved.en_slug, updated_at: $json[$('Read Row').item.json.type][0].updated_at }] }) }}",
         "options": {}
       },
       "credentials": {
@@ -239,7 +239,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ $json[$('Read Row').item.json.type][0].slug === $('One Per Slug').item.json.approved.en_slug }}",
+              "leftValue": "={{ $json[$('Read Row').item.json.type][0].slug === ($('One Per Slug').item.json.en_slug ?? $('One Per Slug').item.json.approved.en_slug) }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -332,6 +332,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-10-31T04:29:43.264Z",
-  "versionId": "ab4f56d8-f021-42b6-880c-50c360da3395"
+  "updatedAt": "2026-10-31T05:15:35.387Z",
+  "versionId": "e3e43eda-26a6-4d9a-a5dd-5e9fd15295a1"
 }
