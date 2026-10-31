@@ -1,0 +1,1284 @@
+{
+  "active": true,
+  "activeVersion": {
+    "versionId": "a3454798-1577-4887-81a3-570730766b54",
+    "workflowId": "3cl4kcFN9rtNd8hD",
+    "nodes": [
+      {
+        "id": "52cf41ce-b74c-4898-a496-252f57ac121a",
+        "name": "Rebuild",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          96
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "35284ba2-32b0-4473-90d4-6535fbebdb96",
+        "name": "List Posts",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=100&filter=status:published&formats=html&include=tags,authors",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {}
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "id": "69827b12-34d9-4969-8809-22c296678864",
+        "name": "Posts And Pages",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          448,
+          96
+        ],
+        "parameters": {
+          "mode": "append"
+        }
+      },
+      {
+        "id": "9ae7db53-5839-4f13-bda3-616fa78fcbba",
+        "name": "List Pages",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          192
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://criptonautas.co/ghost/api/admin/pages/?limit=100&filter=status:published&formats=html&include=tags,authors",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {}
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "id": "1e374a2c-b6dd-49e8-afbe-8a2392e737be",
+        "name": "Build Docs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          144
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\n\nconst sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');\nconst VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\nconst RAW = new Set(['script', 'style']);\nconst MEDIA = /<(img|iframe|video|audio|hr|svg|embed|object|canvas)\\b/i;\n\n// Ghost HTML is well formed, so a depth counter is enough and no parser library is needed.\nfunction splitBlocks(html) {\n  const blocks = [];\n  const lower = html.toLowerCase();\n  const re = /<!--[\\s\\S]*?-->|<(\\/?)([a-zA-Z][\\w-]*)(?:\"[^\"]*\"|'[^']*'|[^>\"'])*>/g;\n  let depth = 0, from = 0, open = 0, m;\n  const flush = (upto) => {\n    const t = html.slice(from, upto).trim();\n    if (t) blocks.push(t);\n    from = upto;\n  };\n  while ((m = re.exec(html))) {\n    const tok = m[0], close = m[1], tag = m[2] ? m[2].toLowerCase() : '';\n    let end = re.lastIndex;\n    if (close) {\n      if (depth === 0) { flush(m.index); from = end; continue; }\n      if (--depth === 0) { blocks.push(html.slice(open, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) flush(m.index);\n    if (RAW.has(tag)) {\n      const at = lower.indexOf('</' + tag, end);\n      const gt = at < 0 ? -1 : html.indexOf('>', at);\n      end = gt < 0 ? html.length : gt + 1;\n      re.lastIndex = end;\n    }\n    // Browsers ignore the slash on a div, so <div id=\"x\" /></div> is one element and the closer belongs to it.\n    if (tag && tok.endsWith('/>') && lower.startsWith('</' + tag + '>', end)) {\n      end += tag.length + 3;\n      re.lastIndex = end;\n    }\n    if (!tag || VOID.has(tag) || RAW.has(tag) || tok.endsWith('/>')) {\n      if (depth === 0) { blocks.push(html.slice(m.index, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) open = m.index;\n    depth++;\n  }\n  flush(html.length);\n  return blocks;\n}\n\nconst isComment = (b) => b.startsWith('<!--');\nconst textOf = (b) => b\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<(script|style)\\b[\\s\\S]*?<\\/\\1>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&#160;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n// Code blocks and comments are never sent to DeepL.\nconst needsTranslation = (b) => !isComment(b) && !/^<pre\\b/i.test(b) && textOf(b) !== '';\n// An empty element with an id or class is a mount point for a script or style, not a spacer.\nconst isMount = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && /^<[\\w-]+[^>]*\\s(?:id|class)=\"[^\"]/i.test(b);\n// Blocks Ghost drops on import anyway (empty spacer paragraphs).\nconst isJunk = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && !/<(script|style)\\b/i.test(b) && !isMount(b);\nconst units = (html) => splitBlocks(html || '').filter((b) => !isJunk(b));\n\n// Ghost's html import drops scripts and rewrites iframes unless they sit inside an html card.\nconst isRawBlock = (b) => /^<(script|style|iframe)\\b/i.test(b) || isMount(b);\nfunction protectRaw(blocks) {\n  const out = [];\n  let inCard = false, wrapping = false;\n  for (const b of blocks) {\n    if (/^<!--kg-card-begin:/.test(b)) inCard = true;\n    if (/^<!--kg-card-end:/.test(b)) inCard = false;\n    const raw = !inCard && isRawBlock(b);\n    if (raw && !wrapping) out.push('<!--kg-card-begin: html-->');\n    if (!raw && wrapping) out.push('<!--kg-card-end: html-->');\n    wrapping = raw;\n    out.push(b);\n  }\n  if (wrapping) out.push('<!--kg-card-end: html-->');\n  return out;\n}\n\n\n// DeepL may split one inline span or link into several, so these tags compare by presence, not count.\nconst INLINE = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'span', 'mark', 'sub', 'sup', 'small']);\n// Two translations of one block must carry the same tags and the same links, in any order.\nfunction shape(b) {\n  const tags = (b.match(/<([a-zA-Z][\\w-]*)/g) || []).map((t) => t.slice(1).toLowerCase()).sort()\n    .filter((t, i, all) => !INLINE.has(t) || all.indexOf(t) === i);\n  const urls = [...new Set([...b.matchAll(/\\s(?:href|src)=\"([^\"]*)\"/g)].map((m) => m[1]))].sort();\n  return JSON.stringify({ tags, urls });\n}\n// allowLost names inline tags a translation may drop; anything else must still match.\nfunction sameShape(a, b, allowLost = []) {\n  const from = JSON.parse(shape(a)), to = JSON.parse(shape(b));\n  from.tags = from.tags.filter((t) => !allowLost.includes(t) || to.tags.includes(t));\n  return JSON.stringify(from) === JSON.stringify(to);\n}\n\nconst ES = 'https://criptonautas.co';\nconst EN = 'https://en.criptonautas.co';\n\nfunction rewriteLinks(html, slugs, es = ES, en = EN) {\n  const known = new Set(slugs);\n  const esc = es.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const re = new RegExp('href=\"' + esc + '/([^/\"?#]*)/?([?#][^\"]*)?\"', 'g');\n  return html.replace(re, (m, slug, tail) => (slug === '' || known.has(slug)\n    ? 'href=\"' + en + '/' + (slug ? slug + '/' : '') + (tail || '') + '\"'\n    : m));\n}\n\nconst I18N = /<!--i18n-->[\\s\\S]*?<!--\\/i18n-->/;\nfunction hreflangBlock(slug, es = ES, en = EN) {\n  return '<!--i18n--><link rel=\"alternate\" hreflang=\"es\" href=\"' + es + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"en\" href=\"' + en + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"x-default\" href=\"' + es + '/' + slug + '/\"><!--/i18n-->';\n}\n// Markers keep any code injection the editors added by hand.\nfunction mergeHead(head, block) {\n  const h = head || '';\n  return I18N.test(h) ? h.replace(I18N, () => block) : (h ? h + '\\n' : '') + block;\n}\n\n// DeepL accepts at most 50 texts and 128 KiB per request.\nfunction chunk(jobs, maxTexts = 40, maxChars = 50000) {\n  const out = [];\n  let cur = [], size = 0;\n  for (const j of jobs) {\n    if (cur.length && (cur.length >= maxTexts || size + j.text.length > maxChars)) { out.push(cur); cur = []; size = 0; }\n    cur.push(j);\n    size += j.text.length;\n  }\n  if (cur.length) out.push(cur);\n  return out;\n}\n\n\n// File names the cover service produces through Ghost's upload: cover.webp, cover-1.webp, ...\nconst GENERATED = /\\/cover(-\\d+)?\\.(webp|png)$/i;\nconst isGeneratedCover = (url) => Boolean(url) && GENERATED.test(url);\n\n// A drawn cover has the Spanish title baked in, so English gets its own; any other image is shared by URL.\nfunction coverPlan({ esImage, enImage, cover }) {\n  const es = esImage || null, en = enImage || null;\n  if (!es) return { mode: 'none', url: null, changed: en !== null };\n  if (!isGeneratedCover(es)) return { mode: 'copy', url: es, changed: en !== es };\n  if (cover && cover.es === es && cover.url) return { mode: 'reuse', url: cover.url, changed: en !== cover.url };\n  return { mode: 'generate', url: null, changed: true };\n}\n\n// Same fields as the Spanish `ghost` collection. Typesense computes the embedding itself.\nfunction searchDoc(en, src, base = EN) {\n  const plain = textOf(en.html || '');\n  return {\n    id: en.id,\n    slug: en.slug,\n    title: en.title,\n    excerpt: en.custom_excerpt || en.excerpt || plain.slice(0, 200),\n    url: base + '/' + en.slug + '/',\n    feature_image: en.feature_image || '',\n    html: en.html || '',\n    plaintext: plain,\n    authors: (src.authors || []).map((a) => a.name),\n    tags: (en.tags || []).filter((t) => t.visibility === 'public').map((t) => t.name),\n    published_at: Date.parse(en.published_at),\n    updated_at: Date.parse(en.updated_at),\n    visibility: 'public',\n  };\n}\n\n\nconst norm = (v) => (v == null ? '' : String(v));\n\n// Decides, per field and per block, what to reuse, what to keep from a hand edit, and what to translate.\nfunction prepare({ fields, html, state, en }) {\n  const old = state || { fields: {}, body: [], enh: null, aligned: false };\n  const enUnits = en ? units(en.html) : null;\n  // Block-level protection only works while English still lines up block for block with our last write.\n  const guard = Boolean(old.aligned && enUnits && old.enh && enUnits.length === old.enh.length);\n  const jobs = { fields: {}, blocks: {} };\n  let changed = false, kept = 0;\n\n  const outFields = {};\n  for (const [k, raw] of Object.entries(fields)) {\n    const text = norm(raw), h = sha(text), prev = old.fields[k];\n    if (!prev || prev.h !== h) changed = true;\n    // DeepL gets fields as plain text; the hash stays on the raw value so Spanish edits are still seen.\n    const plain = text.includes('<') ? textOf(text) : text;\n    if (!plain) { outFields[k] = { h, t: '' }; continue; }\n    if (prev && prev.h === h) {\n      const live = en ? norm(en.fields && en.fields[k]) : null;\n      const edited = live !== null && live !== prev.t;\n      if (edited) kept++;\n      outFields[k] = { h, t: edited ? live : prev.t, kept: edited };\n    } else {\n      jobs.fields[h] = plain;\n      outFields[k] = { h, t: null };\n    }\n  }\n\n  const queues = {};\n  old.body.forEach((u, j) => { (queues[u.h] = queues[u.h] || []).push(j); });\n  const body = protectRaw(units(html)).map((src) => {\n    const h = sha(src);\n    if (!needsTranslation(src)) return { h, src, t: src, pass: true };\n    const j = (queues[h] || []).shift();\n    if (j === undefined) { jobs.blocks[h] = src; return { h, src, t: null }; }\n    const edited = guard && sha(enUnits[j]) !== old.enh[j];\n    if (edited) kept++;\n    return { h, src, t: edited ? enUnits[j] : old.body[j].t, kept: edited };\n  });\n  if (body.length !== old.body.length || body.some((u, i) => u.h !== old.body[i].h)) changed = true;\n\n  const list = (o) => Object.entries(o).map(([id, text]) => ({ id, text }));\n  const pending = Object.keys(jobs.fields).length + Object.keys(jobs.blocks).length;\n  return {\n    fields: outFields, body, kept,\n    jobs: { fields: list(jobs.fields), blocks: list(jobs.blocks) },\n    noop: Boolean(en) && !changed && pending === 0,\n  };\n}\n\n// Author and publisher are names: DeepL merges their spans and rewrites them, so the source's stay verbatim.\nconst METADATA = /<div class=\"kg-bookmark-metadata\">[\\s\\S]*?<\\/div>/g;\nfunction restoreMetadata(src, t) {\n  const original = src.match(METADATA) || [];\n  if (original.length !== (t.match(METADATA) || []).length) return t;\n  let i = 0;\n  return t.replace(METADATA, () => original[i++]);\n}\n\n// Fills the gaps, rejects anything that changed tags or links, and builds the English html.\nfunction finish({ prepared, translations, slugs, allowLost = [] }) {\n  const problems = [];\n  const pick = (u, bucket, label) => {\n    if (u.t !== null) return u.t;\n    const t = translations[bucket][u.h];\n    if (typeof t !== 'string') { problems.push('missing translation: ' + label); return ''; }\n    return t;\n  };\n  const fields = {}, stateFields = {};\n  for (const [k, u] of Object.entries(prepared.fields)) {\n    const t = pick(u, 'fields', k);\n    fields[k] = t;\n    stateFields[k] = { h: u.h, t };\n  }\n  const body = prepared.body.map((u, i) => {\n    const t = restoreMetadata(u.src, pick(u, 'blocks', 'block ' + i));\n    if (u.t === null && !sameShape(u.src, t, allowLost)) problems.push('shape mismatch in block ' + i);\n    return { h: u.h, t };\n  });\n  const html = body.map((b) => rewriteLinks(b.t, slugs)).join('\\n');\n  return { ok: problems.length === 0, problems, fields, html, state: { fields: stateFields, body, out: sha(html), enh: null, aligned: false } };\n}\n\n// Records what English looks like after Ghost re-rendered our write, so later hand edits can be told apart.\nfunction snapshot(state, enHtml) {\n  const en = units(enHtml);\n  return { ...state, enh: en.map(sha), aligned: en.length === state.body.length };\n}\n\n\nconst BASE = 'https://criptonautas.co';\nconst out = [];\nfor (const item of $input.all()) {\n  // A second page would silently shrink the list that decides what the rebuild deletes.\n  if (item.json.meta && item.json.meta.pagination && item.json.meta.pagination.next) throw new Error('Ghost list is paginated: raise the limit');\n  for (const src of item.json.posts || item.json.pages || []) {\n    if (src.status !== 'published') continue;\n    const doc = { ...searchDoc(src, src, BASE), visibility: src.visibility };\n    // The search key is public and a filter is only a request, so paid text never enters the index.\n    if (src.visibility !== 'public') Object.assign(doc, { excerpt: '', html: '', plaintext: '' });\n    out.push({ json: { doc } });\n  }\n}\nreturn out;\n"
+        }
+      },
+      {
+        "id": "2324b50a-e264-4e61-b496-b3a0ec3fa6a7",
+        "name": "Upsert Doc",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          896,
+          144
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "https://typesense.criptonautas.co/collections/ghost/documents?action=upsert",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "json",
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.doc) }}",
+          "options": {
+            "timeout": 60000,
+            "batching": {
+              "batch": {
+                "batchSize": 1,
+                "batchInterval": 100
+              }
+            }
+          }
+        },
+        "retryOnFail": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "KOwdxezO9n3iQTdX",
+            "name": "typesense-ghost-write"
+          }
+        }
+      },
+      {
+        "id": "b11f4e70-e7f9-4b26-a73a-45cf4cbeb66b",
+        "name": "Is Rebuild",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1120,
+          144
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $('Rebuild').isExecuted }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "6d0cc620-712a-497f-9aaf-1dc6287aa643",
+        "name": "Export Ids",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1344,
+          96
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://typesense.criptonautas.co/collections/ghost/documents/export?include_fields=id",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text",
+                "outputPropertyName": "data"
+              }
+            }
+          }
+        },
+        "executeOnce": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "KOwdxezO9n3iQTdX",
+            "name": "typesense-ghost-write"
+          }
+        }
+      },
+      {
+        "id": "ed58a59d-2166-4623-96b2-eb39d6095359",
+        "name": "Plan Deletes",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          96
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const crypto = require('crypto');\n\nconst sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');\nconst VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\nconst RAW = new Set(['script', 'style']);\nconst MEDIA = /<(img|iframe|video|audio|hr|svg|embed|object|canvas)\\b/i;\n\n// Ghost HTML is well formed, so a depth counter is enough and no parser library is needed.\nfunction splitBlocks(html) {\n  const blocks = [];\n  const lower = html.toLowerCase();\n  const re = /<!--[\\s\\S]*?-->|<(\\/?)([a-zA-Z][\\w-]*)(?:\"[^\"]*\"|'[^']*'|[^>\"'])*>/g;\n  let depth = 0, from = 0, open = 0, m;\n  const flush = (upto) => {\n    const t = html.slice(from, upto).trim();\n    if (t) blocks.push(t);\n    from = upto;\n  };\n  while ((m = re.exec(html))) {\n    const tok = m[0], close = m[1], tag = m[2] ? m[2].toLowerCase() : '';\n    let end = re.lastIndex;\n    if (close) {\n      if (depth === 0) { flush(m.index); from = end; continue; }\n      if (--depth === 0) { blocks.push(html.slice(open, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) flush(m.index);\n    if (RAW.has(tag)) {\n      const at = lower.indexOf('</' + tag, end);\n      const gt = at < 0 ? -1 : html.indexOf('>', at);\n      end = gt < 0 ? html.length : gt + 1;\n      re.lastIndex = end;\n    }\n    // Browsers ignore the slash on a div, so <div id=\"x\" /></div> is one element and the closer belongs to it.\n    if (tag && tok.endsWith('/>') && lower.startsWith('</' + tag + '>', end)) {\n      end += tag.length + 3;\n      re.lastIndex = end;\n    }\n    if (!tag || VOID.has(tag) || RAW.has(tag) || tok.endsWith('/>')) {\n      if (depth === 0) { blocks.push(html.slice(m.index, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) open = m.index;\n    depth++;\n  }\n  flush(html.length);\n  return blocks;\n}\n\nconst isComment = (b) => b.startsWith('<!--');\nconst textOf = (b) => b\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<(script|style)\\b[\\s\\S]*?<\\/\\1>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&#160;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n// Code blocks and comments are never sent to DeepL.\nconst needsTranslation = (b) => !isComment(b) && !/^<pre\\b/i.test(b) && textOf(b) !== '';\n// An empty element with an id or class is a mount point for a script or style, not a spacer.\nconst isMount = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && /^<[\\w-]+[^>]*\\s(?:id|class)=\"[^\"]/i.test(b);\n// Blocks Ghost drops on import anyway (empty spacer paragraphs).\nconst isJunk = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && !/<(script|style)\\b/i.test(b) && !isMount(b);\nconst units = (html) => splitBlocks(html || '').filter((b) => !isJunk(b));\n\n// Ghost's html import drops scripts and rewrites iframes unless they sit inside an html card.\nconst isRawBlock = (b) => /^<(script|style|iframe)\\b/i.test(b) || isMount(b);\nfunction protectRaw(blocks) {\n  const out = [];\n  let inCard = false, wrapping = false;\n  for (const b of blocks) {\n    if (/^<!--kg-card-begin:/.test(b)) inCard = true;\n    if (/^<!--kg-card-end:/.test(b)) inCard = false;\n    const raw = !inCard && isRawBlock(b);\n    if (raw && !wrapping) out.push('<!--kg-card-begin: html-->');\n    if (!raw && wrapping) out.push('<!--kg-card-end: html-->');\n    wrapping = raw;\n    out.push(b);\n  }\n  if (wrapping) out.push('<!--kg-card-end: html-->');\n  return out;\n}\n\n\n// DeepL may split one inline span or link into several, so these tags compare by presence, not count.\nconst INLINE = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'span', 'mark', 'sub', 'sup', 'small']);\n// Two translations of one block must carry the same tags and the same links, in any order.\nfunction shape(b) {\n  const tags = (b.match(/<([a-zA-Z][\\w-]*)/g) || []).map((t) => t.slice(1).toLowerCase()).sort()\n    .filter((t, i, all) => !INLINE.has(t) || all.indexOf(t) === i);\n  const urls = [...new Set([...b.matchAll(/\\s(?:href|src)=\"([^\"]*)\"/g)].map((m) => m[1]))].sort();\n  return JSON.stringify({ tags, urls });\n}\n// allowLost names inline tags a translation may drop; anything else must still match.\nfunction sameShape(a, b, allowLost = []) {\n  const from = JSON.parse(shape(a)), to = JSON.parse(shape(b));\n  from.tags = from.tags.filter((t) => !allowLost.includes(t) || to.tags.includes(t));\n  return JSON.stringify(from) === JSON.stringify(to);\n}\n\nconst ES = 'https://criptonautas.co';\nconst EN = 'https://en.criptonautas.co';\n\nfunction rewriteLinks(html, slugs, es = ES, en = EN) {\n  const known = new Set(slugs);\n  const esc = es.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const re = new RegExp('href=\"' + esc + '/([^/\"?#]*)/?([?#][^\"]*)?\"', 'g');\n  return html.replace(re, (m, slug, tail) => (slug === '' || known.has(slug)\n    ? 'href=\"' + en + '/' + (slug ? slug + '/' : '') + (tail || '') + '\"'\n    : m));\n}\n\nconst I18N = /<!--i18n-->[\\s\\S]*?<!--\\/i18n-->/;\nfunction hreflangBlock(slug, es = ES, en = EN) {\n  return '<!--i18n--><link rel=\"alternate\" hreflang=\"es\" href=\"' + es + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"en\" href=\"' + en + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"x-default\" href=\"' + es + '/' + slug + '/\"><!--/i18n-->';\n}\n// Markers keep any code injection the editors added by hand.\nfunction mergeHead(head, block) {\n  const h = head || '';\n  return I18N.test(h) ? h.replace(I18N, () => block) : (h ? h + '\\n' : '') + block;\n}\n\n// DeepL accepts at most 50 texts and 128 KiB per request.\nfunction chunk(jobs, maxTexts = 40, maxChars = 50000) {\n  const out = [];\n  let cur = [], size = 0;\n  for (const j of jobs) {\n    if (cur.length && (cur.length >= maxTexts || size + j.text.length > maxChars)) { out.push(cur); cur = []; size = 0; }\n    cur.push(j);\n    size += j.text.length;\n  }\n  if (cur.length) out.push(cur);\n  return out;\n}\n\n\n// File names the cover service produces through Ghost's upload: cover.webp, cover-1.webp, ...\nconst GENERATED = /\\/cover(-\\d+)?\\.(webp|png)$/i;\nconst isGeneratedCover = (url) => Boolean(url) && GENERATED.test(url);\n\n// A drawn cover has the Spanish title baked in, so English gets its own; any other image is shared by URL.\nfunction coverPlan({ esImage, enImage, cover }) {\n  const es = esImage || null, en = enImage || null;\n  if (!es) return { mode: 'none', url: null, changed: en !== null };\n  if (!isGeneratedCover(es)) return { mode: 'copy', url: es, changed: en !== es };\n  if (cover && cover.es === es && cover.url) return { mode: 'reuse', url: cover.url, changed: en !== cover.url };\n  return { mode: 'generate', url: null, changed: true };\n}\n\n// Same fields as the Spanish `ghost` collection. Typesense computes the embedding itself.\nfunction searchDoc(en, src, base = EN) {\n  const plain = textOf(en.html || '');\n  return {\n    id: en.id,\n    slug: en.slug,\n    title: en.title,\n    excerpt: en.custom_excerpt || en.excerpt || plain.slice(0, 200),\n    url: base + '/' + en.slug + '/',\n    feature_image: en.feature_image || '',\n    html: en.html || '',\n    plaintext: plain,\n    authors: (src.authors || []).map((a) => a.name),\n    tags: (en.tags || []).filter((t) => t.visibility === 'public').map((t) => t.name),\n    published_at: Date.parse(en.published_at),\n    updated_at: Date.parse(en.updated_at),\n    visibility: 'public',\n  };\n}\n\n\nconst norm = (v) => (v == null ? '' : String(v));\n\n// Decides, per field and per block, what to reuse, what to keep from a hand edit, and what to translate.\nfunction prepare({ fields, html, state, en }) {\n  const old = state || { fields: {}, body: [], enh: null, aligned: false };\n  const enUnits = en ? units(en.html) : null;\n  // Block-level protection only works while English still lines up block for block with our last write.\n  const guard = Boolean(old.aligned && enUnits && old.enh && enUnits.length === old.enh.length);\n  const jobs = { fields: {}, blocks: {} };\n  let changed = false, kept = 0;\n\n  const outFields = {};\n  for (const [k, raw] of Object.entries(fields)) {\n    const text = norm(raw), h = sha(text), prev = old.fields[k];\n    if (!prev || prev.h !== h) changed = true;\n    // DeepL gets fields as plain text; the hash stays on the raw value so Spanish edits are still seen.\n    const plain = text.includes('<') ? textOf(text) : text;\n    if (!plain) { outFields[k] = { h, t: '' }; continue; }\n    if (prev && prev.h === h) {\n      const live = en ? norm(en.fields && en.fields[k]) : null;\n      const edited = live !== null && live !== prev.t;\n      if (edited) kept++;\n      outFields[k] = { h, t: edited ? live : prev.t, kept: edited };\n    } else {\n      jobs.fields[h] = plain;\n      outFields[k] = { h, t: null };\n    }\n  }\n\n  const queues = {};\n  old.body.forEach((u, j) => { (queues[u.h] = queues[u.h] || []).push(j); });\n  const body = protectRaw(units(html)).map((src) => {\n    const h = sha(src);\n    if (!needsTranslation(src)) return { h, src, t: src, pass: true };\n    const j = (queues[h] || []).shift();\n    if (j === undefined) { jobs.blocks[h] = src; return { h, src, t: null }; }\n    const edited = guard && sha(enUnits[j]) !== old.enh[j];\n    if (edited) kept++;\n    return { h, src, t: edited ? enUnits[j] : old.body[j].t, kept: edited };\n  });\n  if (body.length !== old.body.length || body.some((u, i) => u.h !== old.body[i].h)) changed = true;\n\n  const list = (o) => Object.entries(o).map(([id, text]) => ({ id, text }));\n  const pending = Object.keys(jobs.fields).length + Object.keys(jobs.blocks).length;\n  return {\n    fields: outFields, body, kept,\n    jobs: { fields: list(jobs.fields), blocks: list(jobs.blocks) },\n    noop: Boolean(en) && !changed && pending === 0,\n  };\n}\n\n// Author and publisher are names: DeepL merges their spans and rewrites them, so the source's stay verbatim.\nconst METADATA = /<div class=\"kg-bookmark-metadata\">[\\s\\S]*?<\\/div>/g;\nfunction restoreMetadata(src, t) {\n  const original = src.match(METADATA) || [];\n  if (original.length !== (t.match(METADATA) || []).length) return t;\n  let i = 0;\n  return t.replace(METADATA, () => original[i++]);\n}\n\n// Fills the gaps, rejects anything that changed tags or links, and builds the English html.\nfunction finish({ prepared, translations, slugs, allowLost = [] }) {\n  const problems = [];\n  const pick = (u, bucket, label) => {\n    if (u.t !== null) return u.t;\n    const t = translations[bucket][u.h];\n    if (typeof t !== 'string') { problems.push('missing translation: ' + label); return ''; }\n    return t;\n  };\n  const fields = {}, stateFields = {};\n  for (const [k, u] of Object.entries(prepared.fields)) {\n    const t = pick(u, 'fields', k);\n    fields[k] = t;\n    stateFields[k] = { h: u.h, t };\n  }\n  const body = prepared.body.map((u, i) => {\n    const t = restoreMetadata(u.src, pick(u, 'blocks', 'block ' + i));\n    if (u.t === null && !sameShape(u.src, t, allowLost)) problems.push('shape mismatch in block ' + i);\n    return { h: u.h, t };\n  });\n  const html = body.map((b) => rewriteLinks(b.t, slugs)).join('\\n');\n  return { ok: problems.length === 0, problems, fields, html, state: { fields: stateFields, body, out: sha(html), enh: null, aligned: false } };\n}\n\n// Records what English looks like after Ghost re-rendered our write, so later hand edits can be told apart.\nfunction snapshot(state, enHtml) {\n  const en = units(enHtml);\n  return { ...state, enh: en.map(sha), aligned: en.length === state.body.length };\n}\n\n\n// Rebuild only: below this the Ghost list is wrong, not the site small, so nothing is deleted.\nconst MIN_DOCS = 20;\nconst keep = new Set($('Build Docs').all().map((i) => i.json.doc.id));\nif (keep.size < MIN_DOCS) throw new Error('Only ' + keep.size + ' source docs, refusing to delete');\nconst raw = String($input.first().json.data || '');\nconst ids = raw.split('\\n').filter(Boolean).map((l) => JSON.parse(l).id);\nif (!ids.length) throw new Error('Export returned no ids');\nreturn ids.filter((id) => !keep.has(id)).map((id) => ({ json: { id } }));\n"
+        }
+      },
+      {
+        "id": "c11bf755-a6f3-4314-b51f-0dbeb5d6a302",
+        "name": "Delete Stale Doc",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1792,
+          96
+        ],
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://typesense.criptonautas.co/collections/ghost/documents/{{ encodeURIComponent($json.id) }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "KOwdxezO9n3iQTdX",
+            "name": "typesense-ghost-write"
+          }
+        }
+      },
+      {
+        "id": "0722b3e4-f027-4feb-8482-5eddea9db581",
+        "name": "Done",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          416
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "2388f509-f325-491f-9856-1cfd57bfa2e8",
+        "name": "Index One",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          464
+        ],
+        "parameters": {
+          "inputSource": "workflowInputs",
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "type",
+                "type": "string"
+              },
+              {
+                "name": "id",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "bff79190-fd12-492d-89f5-174e6a94ecc7",
+        "name": "Fetch One",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          464
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "6cf38f14-37e7-4f51-ba8f-38fbf28c72bb",
+        "name": "Route One",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          448,
+          448
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "renameOutput": true,
+                "outputKey": "upsert",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ ($json.posts || $json.pages)?.[0]?.status === 'published' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "renameOutput": true,
+                "outputKey": "delete",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean(($json.posts || $json.pages)?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "failed"
+          }
+        }
+      },
+      {
+        "id": "53d1b534-0b64-4d0f-8226-9b7290a408d4",
+        "name": "Delete One",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          672,
+          512
+        ],
+        "parameters": {
+          "method": "DELETE",
+          "url": "=https://typesense.criptonautas.co/collections/ghost/documents/{{ encodeURIComponent($('Index One').first().json.id) }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {
+            "timeout": 30000,
+            "response": {
+              "response": {
+                "neverError": true,
+                "fullResponse": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "KOwdxezO9n3iQTdX",
+            "name": "typesense-ghost-write"
+          }
+        }
+      },
+      {
+        "id": "1d742c61-44c5-4661-81d0-0e66951c54c0",
+        "name": "Delete Ok",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          896,
+          512
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.statusCode === 404 || ($json.statusCode >= 200 && $json.statusCode < 300) }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "e84f8eee-862a-4cdd-9a9b-6ea0e2e8c7b8",
+        "name": "Index Failed",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          656
+        ],
+        "parameters": {
+          "errorType": "errorMessage",
+          "errorMessage": "=Spanish index failed: {{ $json.errors?.[0]?.type ?? $json.body?.message ?? $json.error?.message ?? $json.statusCode ?? 'unexpected response' }}"
+        }
+      }
+    ],
+    "connections": {
+      "Rebuild": {
+        "main": [
+          [
+            {
+              "node": "List Posts",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "List Pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Posts": {
+        "main": [
+          [
+            {
+              "node": "Posts And Pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Posts And Pages": {
+        "main": [
+          [
+            {
+              "node": "Build Docs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Pages": {
+        "main": [
+          [
+            {
+              "node": "Posts And Pages",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Build Docs": {
+        "main": [
+          [
+            {
+              "node": "Upsert Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upsert Doc": {
+        "main": [
+          [
+            {
+              "node": "Is Rebuild",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Is Rebuild": {
+        "main": [
+          [
+            {
+              "node": "Export Ids",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Export Ids": {
+        "main": [
+          [
+            {
+              "node": "Plan Deletes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Plan Deletes": {
+        "main": [
+          [
+            {
+              "node": "Delete Stale Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Index One": {
+        "main": [
+          [
+            {
+              "node": "Fetch One",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch One": {
+        "main": [
+          [
+            {
+              "node": "Route One",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route One": {
+        "main": [
+          [
+            {
+              "node": "Build Docs",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Delete One",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Index Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete One": {
+        "main": [
+          [
+            {
+              "node": "Delete Ok",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete Ok": {
+        "main": [
+          [
+            {
+              "node": "Done",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Index Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Bind typesense-ghost-write",
+    "description": "Updated nodes: Upsert Doc, Export Ids, Delete Stale Doc, Delete One",
+    "autosaved": false,
+    "createdAt": "2026-10-31T04:06:54.672Z",
+    "updatedAt": "2026-10-31T04:06:54.672Z"
+  },
+  "activeVersionId": "a3454798-1577-4887-81a3-570730766b54",
+  "connections": {
+    "Rebuild": {
+      "main": [
+        [
+          {
+            "node": "List Posts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Posts": {
+      "main": [
+        [
+          {
+            "node": "Posts And Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Posts And Pages": {
+      "main": [
+        [
+          {
+            "node": "Build Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Pages": {
+      "main": [
+        [
+          {
+            "node": "Posts And Pages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Build Docs": {
+      "main": [
+        [
+          {
+            "node": "Upsert Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Doc": {
+      "main": [
+        [
+          {
+            "node": "Is Rebuild",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Rebuild": {
+      "main": [
+        [
+          {
+            "node": "Export Ids",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Ids": {
+      "main": [
+        [
+          {
+            "node": "Plan Deletes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Deletes": {
+      "main": [
+        [
+          {
+            "node": "Delete Stale Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Index One": {
+      "main": [
+        [
+          {
+            "node": "Fetch One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch One": {
+      "main": [
+        [
+          {
+            "node": "Route One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route One": {
+      "main": [
+        [
+          {
+            "node": "Build Docs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete One",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Index Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete One": {
+      "main": [
+        [
+          {
+            "node": "Delete Ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Ok": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Index Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T03:53:33.536Z",
+  "id": "3cl4kcFN9rtNd8hD",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-search-index-es",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "52cf41ce-b74c-4898-a496-252f57ac121a",
+      "name": "Rebuild",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "35284ba2-32b0-4473-90d4-6535fbebdb96",
+      "name": "List Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=100&filter=status:published&formats=html&include=tags,authors",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "69827b12-34d9-4969-8809-22c296678864",
+      "name": "Posts And Pages",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        96
+      ],
+      "parameters": {
+        "mode": "append"
+      }
+    },
+    {
+      "id": "9ae7db53-5839-4f13-bda3-616fa78fcbba",
+      "name": "List Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        192
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/pages/?limit=100&filter=status:published&formats=html&include=tags,authors",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "1e374a2c-b6dd-49e8-afbe-8a2392e737be",
+      "name": "Build Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        144
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\n\nconst sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');\nconst VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\nconst RAW = new Set(['script', 'style']);\nconst MEDIA = /<(img|iframe|video|audio|hr|svg|embed|object|canvas)\\b/i;\n\n// Ghost HTML is well formed, so a depth counter is enough and no parser library is needed.\nfunction splitBlocks(html) {\n  const blocks = [];\n  const lower = html.toLowerCase();\n  const re = /<!--[\\s\\S]*?-->|<(\\/?)([a-zA-Z][\\w-]*)(?:\"[^\"]*\"|'[^']*'|[^>\"'])*>/g;\n  let depth = 0, from = 0, open = 0, m;\n  const flush = (upto) => {\n    const t = html.slice(from, upto).trim();\n    if (t) blocks.push(t);\n    from = upto;\n  };\n  while ((m = re.exec(html))) {\n    const tok = m[0], close = m[1], tag = m[2] ? m[2].toLowerCase() : '';\n    let end = re.lastIndex;\n    if (close) {\n      if (depth === 0) { flush(m.index); from = end; continue; }\n      if (--depth === 0) { blocks.push(html.slice(open, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) flush(m.index);\n    if (RAW.has(tag)) {\n      const at = lower.indexOf('</' + tag, end);\n      const gt = at < 0 ? -1 : html.indexOf('>', at);\n      end = gt < 0 ? html.length : gt + 1;\n      re.lastIndex = end;\n    }\n    // Browsers ignore the slash on a div, so <div id=\"x\" /></div> is one element and the closer belongs to it.\n    if (tag && tok.endsWith('/>') && lower.startsWith('</' + tag + '>', end)) {\n      end += tag.length + 3;\n      re.lastIndex = end;\n    }\n    if (!tag || VOID.has(tag) || RAW.has(tag) || tok.endsWith('/>')) {\n      if (depth === 0) { blocks.push(html.slice(m.index, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) open = m.index;\n    depth++;\n  }\n  flush(html.length);\n  return blocks;\n}\n\nconst isComment = (b) => b.startsWith('<!--');\nconst textOf = (b) => b\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<(script|style)\\b[\\s\\S]*?<\\/\\1>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&#160;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n// Code blocks and comments are never sent to DeepL.\nconst needsTranslation = (b) => !isComment(b) && !/^<pre\\b/i.test(b) && textOf(b) !== '';\n// An empty element with an id or class is a mount point for a script or style, not a spacer.\nconst isMount = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && /^<[\\w-]+[^>]*\\s(?:id|class)=\"[^\"]/i.test(b);\n// Blocks Ghost drops on import anyway (empty spacer paragraphs).\nconst isJunk = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && !/<(script|style)\\b/i.test(b) && !isMount(b);\nconst units = (html) => splitBlocks(html || '').filter((b) => !isJunk(b));\n\n// Ghost's html import drops scripts and rewrites iframes unless they sit inside an html card.\nconst isRawBlock = (b) => /^<(script|style|iframe)\\b/i.test(b) || isMount(b);\nfunction protectRaw(blocks) {\n  const out = [];\n  let inCard = false, wrapping = false;\n  for (const b of blocks) {\n    if (/^<!--kg-card-begin:/.test(b)) inCard = true;\n    if (/^<!--kg-card-end:/.test(b)) inCard = false;\n    const raw = !inCard && isRawBlock(b);\n    if (raw && !wrapping) out.push('<!--kg-card-begin: html-->');\n    if (!raw && wrapping) out.push('<!--kg-card-end: html-->');\n    wrapping = raw;\n    out.push(b);\n  }\n  if (wrapping) out.push('<!--kg-card-end: html-->');\n  return out;\n}\n\n\n// DeepL may split one inline span or link into several, so these tags compare by presence, not count.\nconst INLINE = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'span', 'mark', 'sub', 'sup', 'small']);\n// Two translations of one block must carry the same tags and the same links, in any order.\nfunction shape(b) {\n  const tags = (b.match(/<([a-zA-Z][\\w-]*)/g) || []).map((t) => t.slice(1).toLowerCase()).sort()\n    .filter((t, i, all) => !INLINE.has(t) || all.indexOf(t) === i);\n  const urls = [...new Set([...b.matchAll(/\\s(?:href|src)=\"([^\"]*)\"/g)].map((m) => m[1]))].sort();\n  return JSON.stringify({ tags, urls });\n}\n// allowLost names inline tags a translation may drop; anything else must still match.\nfunction sameShape(a, b, allowLost = []) {\n  const from = JSON.parse(shape(a)), to = JSON.parse(shape(b));\n  from.tags = from.tags.filter((t) => !allowLost.includes(t) || to.tags.includes(t));\n  return JSON.stringify(from) === JSON.stringify(to);\n}\n\nconst ES = 'https://criptonautas.co';\nconst EN = 'https://en.criptonautas.co';\n\nfunction rewriteLinks(html, slugs, es = ES, en = EN) {\n  const known = new Set(slugs);\n  const esc = es.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const re = new RegExp('href=\"' + esc + '/([^/\"?#]*)/?([?#][^\"]*)?\"', 'g');\n  return html.replace(re, (m, slug, tail) => (slug === '' || known.has(slug)\n    ? 'href=\"' + en + '/' + (slug ? slug + '/' : '') + (tail || '') + '\"'\n    : m));\n}\n\nconst I18N = /<!--i18n-->[\\s\\S]*?<!--\\/i18n-->/;\nfunction hreflangBlock(slug, es = ES, en = EN) {\n  return '<!--i18n--><link rel=\"alternate\" hreflang=\"es\" href=\"' + es + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"en\" href=\"' + en + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"x-default\" href=\"' + es + '/' + slug + '/\"><!--/i18n-->';\n}\n// Markers keep any code injection the editors added by hand.\nfunction mergeHead(head, block) {\n  const h = head || '';\n  return I18N.test(h) ? h.replace(I18N, () => block) : (h ? h + '\\n' : '') + block;\n}\n\n// DeepL accepts at most 50 texts and 128 KiB per request.\nfunction chunk(jobs, maxTexts = 40, maxChars = 50000) {\n  const out = [];\n  let cur = [], size = 0;\n  for (const j of jobs) {\n    if (cur.length && (cur.length >= maxTexts || size + j.text.length > maxChars)) { out.push(cur); cur = []; size = 0; }\n    cur.push(j);\n    size += j.text.length;\n  }\n  if (cur.length) out.push(cur);\n  return out;\n}\n\n\n// File names the cover service produces through Ghost's upload: cover.webp, cover-1.webp, ...\nconst GENERATED = /\\/cover(-\\d+)?\\.(webp|png)$/i;\nconst isGeneratedCover = (url) => Boolean(url) && GENERATED.test(url);\n\n// A drawn cover has the Spanish title baked in, so English gets its own; any other image is shared by URL.\nfunction coverPlan({ esImage, enImage, cover }) {\n  const es = esImage || null, en = enImage || null;\n  if (!es) return { mode: 'none', url: null, changed: en !== null };\n  if (!isGeneratedCover(es)) return { mode: 'copy', url: es, changed: en !== es };\n  if (cover && cover.es === es && cover.url) return { mode: 'reuse', url: cover.url, changed: en !== cover.url };\n  return { mode: 'generate', url: null, changed: true };\n}\n\n// Same fields as the Spanish `ghost` collection. Typesense computes the embedding itself.\nfunction searchDoc(en, src, base = EN) {\n  const plain = textOf(en.html || '');\n  return {\n    id: en.id,\n    slug: en.slug,\n    title: en.title,\n    excerpt: en.custom_excerpt || en.excerpt || plain.slice(0, 200),\n    url: base + '/' + en.slug + '/',\n    feature_image: en.feature_image || '',\n    html: en.html || '',\n    plaintext: plain,\n    authors: (src.authors || []).map((a) => a.name),\n    tags: (en.tags || []).filter((t) => t.visibility === 'public').map((t) => t.name),\n    published_at: Date.parse(en.published_at),\n    updated_at: Date.parse(en.updated_at),\n    visibility: 'public',\n  };\n}\n\n\nconst norm = (v) => (v == null ? '' : String(v));\n\n// Decides, per field and per block, what to reuse, what to keep from a hand edit, and what to translate.\nfunction prepare({ fields, html, state, en }) {\n  const old = state || { fields: {}, body: [], enh: null, aligned: false };\n  const enUnits = en ? units(en.html) : null;\n  // Block-level protection only works while English still lines up block for block with our last write.\n  const guard = Boolean(old.aligned && enUnits && old.enh && enUnits.length === old.enh.length);\n  const jobs = { fields: {}, blocks: {} };\n  let changed = false, kept = 0;\n\n  const outFields = {};\n  for (const [k, raw] of Object.entries(fields)) {\n    const text = norm(raw), h = sha(text), prev = old.fields[k];\n    if (!prev || prev.h !== h) changed = true;\n    // DeepL gets fields as plain text; the hash stays on the raw value so Spanish edits are still seen.\n    const plain = text.includes('<') ? textOf(text) : text;\n    if (!plain) { outFields[k] = { h, t: '' }; continue; }\n    if (prev && prev.h === h) {\n      const live = en ? norm(en.fields && en.fields[k]) : null;\n      const edited = live !== null && live !== prev.t;\n      if (edited) kept++;\n      outFields[k] = { h, t: edited ? live : prev.t, kept: edited };\n    } else {\n      jobs.fields[h] = plain;\n      outFields[k] = { h, t: null };\n    }\n  }\n\n  const queues = {};\n  old.body.forEach((u, j) => { (queues[u.h] = queues[u.h] || []).push(j); });\n  const body = protectRaw(units(html)).map((src) => {\n    const h = sha(src);\n    if (!needsTranslation(src)) return { h, src, t: src, pass: true };\n    const j = (queues[h] || []).shift();\n    if (j === undefined) { jobs.blocks[h] = src; return { h, src, t: null }; }\n    const edited = guard && sha(enUnits[j]) !== old.enh[j];\n    if (edited) kept++;\n    return { h, src, t: edited ? enUnits[j] : old.body[j].t, kept: edited };\n  });\n  if (body.length !== old.body.length || body.some((u, i) => u.h !== old.body[i].h)) changed = true;\n\n  const list = (o) => Object.entries(o).map(([id, text]) => ({ id, text }));\n  const pending = Object.keys(jobs.fields).length + Object.keys(jobs.blocks).length;\n  return {\n    fields: outFields, body, kept,\n    jobs: { fields: list(jobs.fields), blocks: list(jobs.blocks) },\n    noop: Boolean(en) && !changed && pending === 0,\n  };\n}\n\n// Author and publisher are names: DeepL merges their spans and rewrites them, so the source's stay verbatim.\nconst METADATA = /<div class=\"kg-bookmark-metadata\">[\\s\\S]*?<\\/div>/g;\nfunction restoreMetadata(src, t) {\n  const original = src.match(METADATA) || [];\n  if (original.length !== (t.match(METADATA) || []).length) return t;\n  let i = 0;\n  return t.replace(METADATA, () => original[i++]);\n}\n\n// Fills the gaps, rejects anything that changed tags or links, and builds the English html.\nfunction finish({ prepared, translations, slugs, allowLost = [] }) {\n  const problems = [];\n  const pick = (u, bucket, label) => {\n    if (u.t !== null) return u.t;\n    const t = translations[bucket][u.h];\n    if (typeof t !== 'string') { problems.push('missing translation: ' + label); return ''; }\n    return t;\n  };\n  const fields = {}, stateFields = {};\n  for (const [k, u] of Object.entries(prepared.fields)) {\n    const t = pick(u, 'fields', k);\n    fields[k] = t;\n    stateFields[k] = { h: u.h, t };\n  }\n  const body = prepared.body.map((u, i) => {\n    const t = restoreMetadata(u.src, pick(u, 'blocks', 'block ' + i));\n    if (u.t === null && !sameShape(u.src, t, allowLost)) problems.push('shape mismatch in block ' + i);\n    return { h: u.h, t };\n  });\n  const html = body.map((b) => rewriteLinks(b.t, slugs)).join('\\n');\n  return { ok: problems.length === 0, problems, fields, html, state: { fields: stateFields, body, out: sha(html), enh: null, aligned: false } };\n}\n\n// Records what English looks like after Ghost re-rendered our write, so later hand edits can be told apart.\nfunction snapshot(state, enHtml) {\n  const en = units(enHtml);\n  return { ...state, enh: en.map(sha), aligned: en.length === state.body.length };\n}\n\n\nconst BASE = 'https://criptonautas.co';\nconst out = [];\nfor (const item of $input.all()) {\n  // A second page would silently shrink the list that decides what the rebuild deletes.\n  if (item.json.meta && item.json.meta.pagination && item.json.meta.pagination.next) throw new Error('Ghost list is paginated: raise the limit');\n  for (const src of item.json.posts || item.json.pages || []) {\n    if (src.status !== 'published') continue;\n    const doc = { ...searchDoc(src, src, BASE), visibility: src.visibility };\n    // The search key is public and a filter is only a request, so paid text never enters the index.\n    if (src.visibility !== 'public') Object.assign(doc, { excerpt: '', html: '', plaintext: '' });\n    out.push({ json: { doc } });\n  }\n}\nreturn out;\n"
+      }
+    },
+    {
+      "id": "2324b50a-e264-4e61-b496-b3a0ec3fa6a7",
+      "name": "Upsert Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        144
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://typesense.criptonautas.co/collections/ghost/documents?action=upsert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.doc) }}",
+        "options": {
+          "timeout": 60000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 100
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KOwdxezO9n3iQTdX",
+          "name": "typesense-ghost-write"
+        }
+      }
+    },
+    {
+      "id": "b11f4e70-e7f9-4b26-a73a-45cf4cbeb66b",
+      "name": "Is Rebuild",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        144
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $('Rebuild').isExecuted }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6d0cc620-712a-497f-9aaf-1dc6287aa643",
+      "name": "Export Ids",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1344,
+        96
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://typesense.criptonautas.co/collections/ghost/documents/export?include_fields=id",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KOwdxezO9n3iQTdX",
+          "name": "typesense-ghost-write"
+        }
+      }
+    },
+    {
+      "id": "ed58a59d-2166-4623-96b2-eb39d6095359",
+      "name": "Plan Deletes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        96
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\n\nconst sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');\nconst VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\nconst RAW = new Set(['script', 'style']);\nconst MEDIA = /<(img|iframe|video|audio|hr|svg|embed|object|canvas)\\b/i;\n\n// Ghost HTML is well formed, so a depth counter is enough and no parser library is needed.\nfunction splitBlocks(html) {\n  const blocks = [];\n  const lower = html.toLowerCase();\n  const re = /<!--[\\s\\S]*?-->|<(\\/?)([a-zA-Z][\\w-]*)(?:\"[^\"]*\"|'[^']*'|[^>\"'])*>/g;\n  let depth = 0, from = 0, open = 0, m;\n  const flush = (upto) => {\n    const t = html.slice(from, upto).trim();\n    if (t) blocks.push(t);\n    from = upto;\n  };\n  while ((m = re.exec(html))) {\n    const tok = m[0], close = m[1], tag = m[2] ? m[2].toLowerCase() : '';\n    let end = re.lastIndex;\n    if (close) {\n      if (depth === 0) { flush(m.index); from = end; continue; }\n      if (--depth === 0) { blocks.push(html.slice(open, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) flush(m.index);\n    if (RAW.has(tag)) {\n      const at = lower.indexOf('</' + tag, end);\n      const gt = at < 0 ? -1 : html.indexOf('>', at);\n      end = gt < 0 ? html.length : gt + 1;\n      re.lastIndex = end;\n    }\n    // Browsers ignore the slash on a div, so <div id=\"x\" /></div> is one element and the closer belongs to it.\n    if (tag && tok.endsWith('/>') && lower.startsWith('</' + tag + '>', end)) {\n      end += tag.length + 3;\n      re.lastIndex = end;\n    }\n    if (!tag || VOID.has(tag) || RAW.has(tag) || tok.endsWith('/>')) {\n      if (depth === 0) { blocks.push(html.slice(m.index, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) open = m.index;\n    depth++;\n  }\n  flush(html.length);\n  return blocks;\n}\n\nconst isComment = (b) => b.startsWith('<!--');\nconst textOf = (b) => b\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<(script|style)\\b[\\s\\S]*?<\\/\\1>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&#160;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n// Code blocks and comments are never sent to DeepL.\nconst needsTranslation = (b) => !isComment(b) && !/^<pre\\b/i.test(b) && textOf(b) !== '';\n// An empty element with an id or class is a mount point for a script or style, not a spacer.\nconst isMount = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && /^<[\\w-]+[^>]*\\s(?:id|class)=\"[^\"]/i.test(b);\n// Blocks Ghost drops on import anyway (empty spacer paragraphs).\nconst isJunk = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && !/<(script|style)\\b/i.test(b) && !isMount(b);\nconst units = (html) => splitBlocks(html || '').filter((b) => !isJunk(b));\n\n// Ghost's html import drops scripts and rewrites iframes unless they sit inside an html card.\nconst isRawBlock = (b) => /^<(script|style|iframe)\\b/i.test(b) || isMount(b);\nfunction protectRaw(blocks) {\n  const out = [];\n  let inCard = false, wrapping = false;\n  for (const b of blocks) {\n    if (/^<!--kg-card-begin:/.test(b)) inCard = true;\n    if (/^<!--kg-card-end:/.test(b)) inCard = false;\n    const raw = !inCard && isRawBlock(b);\n    if (raw && !wrapping) out.push('<!--kg-card-begin: html-->');\n    if (!raw && wrapping) out.push('<!--kg-card-end: html-->');\n    wrapping = raw;\n    out.push(b);\n  }\n  if (wrapping) out.push('<!--kg-card-end: html-->');\n  return out;\n}\n\n\n// DeepL may split one inline span or link into several, so these tags compare by presence, not count.\nconst INLINE = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'span', 'mark', 'sub', 'sup', 'small']);\n// Two translations of one block must carry the same tags and the same links, in any order.\nfunction shape(b) {\n  const tags = (b.match(/<([a-zA-Z][\\w-]*)/g) || []).map((t) => t.slice(1).toLowerCase()).sort()\n    .filter((t, i, all) => !INLINE.has(t) || all.indexOf(t) === i);\n  const urls = [...new Set([...b.matchAll(/\\s(?:href|src)=\"([^\"]*)\"/g)].map((m) => m[1]))].sort();\n  return JSON.stringify({ tags, urls });\n}\n// allowLost names inline tags a translation may drop; anything else must still match.\nfunction sameShape(a, b, allowLost = []) {\n  const from = JSON.parse(shape(a)), to = JSON.parse(shape(b));\n  from.tags = from.tags.filter((t) => !allowLost.includes(t) || to.tags.includes(t));\n  return JSON.stringify(from) === JSON.stringify(to);\n}\n\nconst ES = 'https://criptonautas.co';\nconst EN = 'https://en.criptonautas.co';\n\nfunction rewriteLinks(html, slugs, es = ES, en = EN) {\n  const known = new Set(slugs);\n  const esc = es.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const re = new RegExp('href=\"' + esc + '/([^/\"?#]*)/?([?#][^\"]*)?\"', 'g');\n  return html.replace(re, (m, slug, tail) => (slug === '' || known.has(slug)\n    ? 'href=\"' + en + '/' + (slug ? slug + '/' : '') + (tail || '') + '\"'\n    : m));\n}\n\nconst I18N = /<!--i18n-->[\\s\\S]*?<!--\\/i18n-->/;\nfunction hreflangBlock(slug, es = ES, en = EN) {\n  return '<!--i18n--><link rel=\"alternate\" hreflang=\"es\" href=\"' + es + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"en\" href=\"' + en + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"x-default\" href=\"' + es + '/' + slug + '/\"><!--/i18n-->';\n}\n// Markers keep any code injection the editors added by hand.\nfunction mergeHead(head, block) {\n  const h = head || '';\n  return I18N.test(h) ? h.replace(I18N, () => block) : (h ? h + '\\n' : '') + block;\n}\n\n// DeepL accepts at most 50 texts and 128 KiB per request.\nfunction chunk(jobs, maxTexts = 40, maxChars = 50000) {\n  const out = [];\n  let cur = [], size = 0;\n  for (const j of jobs) {\n    if (cur.length && (cur.length >= maxTexts || size + j.text.length > maxChars)) { out.push(cur); cur = []; size = 0; }\n    cur.push(j);\n    size += j.text.length;\n  }\n  if (cur.length) out.push(cur);\n  return out;\n}\n\n\n// File names the cover service produces through Ghost's upload: cover.webp, cover-1.webp, ...\nconst GENERATED = /\\/cover(-\\d+)?\\.(webp|png)$/i;\nconst isGeneratedCover = (url) => Boolean(url) && GENERATED.test(url);\n\n// A drawn cover has the Spanish title baked in, so English gets its own; any other image is shared by URL.\nfunction coverPlan({ esImage, enImage, cover }) {\n  const es = esImage || null, en = enImage || null;\n  if (!es) return { mode: 'none', url: null, changed: en !== null };\n  if (!isGeneratedCover(es)) return { mode: 'copy', url: es, changed: en !== es };\n  if (cover && cover.es === es && cover.url) return { mode: 'reuse', url: cover.url, changed: en !== cover.url };\n  return { mode: 'generate', url: null, changed: true };\n}\n\n// Same fields as the Spanish `ghost` collection. Typesense computes the embedding itself.\nfunction searchDoc(en, src, base = EN) {\n  const plain = textOf(en.html || '');\n  return {\n    id: en.id,\n    slug: en.slug,\n    title: en.title,\n    excerpt: en.custom_excerpt || en.excerpt || plain.slice(0, 200),\n    url: base + '/' + en.slug + '/',\n    feature_image: en.feature_image || '',\n    html: en.html || '',\n    plaintext: plain,\n    authors: (src.authors || []).map((a) => a.name),\n    tags: (en.tags || []).filter((t) => t.visibility === 'public').map((t) => t.name),\n    published_at: Date.parse(en.published_at),\n    updated_at: Date.parse(en.updated_at),\n    visibility: 'public',\n  };\n}\n\n\nconst norm = (v) => (v == null ? '' : String(v));\n\n// Decides, per field and per block, what to reuse, what to keep from a hand edit, and what to translate.\nfunction prepare({ fields, html, state, en }) {\n  const old = state || { fields: {}, body: [], enh: null, aligned: false };\n  const enUnits = en ? units(en.html) : null;\n  // Block-level protection only works while English still lines up block for block with our last write.\n  const guard = Boolean(old.aligned && enUnits && old.enh && enUnits.length === old.enh.length);\n  const jobs = { fields: {}, blocks: {} };\n  let changed = false, kept = 0;\n\n  const outFields = {};\n  for (const [k, raw] of Object.entries(fields)) {\n    const text = norm(raw), h = sha(text), prev = old.fields[k];\n    if (!prev || prev.h !== h) changed = true;\n    // DeepL gets fields as plain text; the hash stays on the raw value so Spanish edits are still seen.\n    const plain = text.includes('<') ? textOf(text) : text;\n    if (!plain) { outFields[k] = { h, t: '' }; continue; }\n    if (prev && prev.h === h) {\n      const live = en ? norm(en.fields && en.fields[k]) : null;\n      const edited = live !== null && live !== prev.t;\n      if (edited) kept++;\n      outFields[k] = { h, t: edited ? live : prev.t, kept: edited };\n    } else {\n      jobs.fields[h] = plain;\n      outFields[k] = { h, t: null };\n    }\n  }\n\n  const queues = {};\n  old.body.forEach((u, j) => { (queues[u.h] = queues[u.h] || []).push(j); });\n  const body = protectRaw(units(html)).map((src) => {\n    const h = sha(src);\n    if (!needsTranslation(src)) return { h, src, t: src, pass: true };\n    const j = (queues[h] || []).shift();\n    if (j === undefined) { jobs.blocks[h] = src; return { h, src, t: null }; }\n    const edited = guard && sha(enUnits[j]) !== old.enh[j];\n    if (edited) kept++;\n    return { h, src, t: edited ? enUnits[j] : old.body[j].t, kept: edited };\n  });\n  if (body.length !== old.body.length || body.some((u, i) => u.h !== old.body[i].h)) changed = true;\n\n  const list = (o) => Object.entries(o).map(([id, text]) => ({ id, text }));\n  const pending = Object.keys(jobs.fields).length + Object.keys(jobs.blocks).length;\n  return {\n    fields: outFields, body, kept,\n    jobs: { fields: list(jobs.fields), blocks: list(jobs.blocks) },\n    noop: Boolean(en) && !changed && pending === 0,\n  };\n}\n\n// Author and publisher are names: DeepL merges their spans and rewrites them, so the source's stay verbatim.\nconst METADATA = /<div class=\"kg-bookmark-metadata\">[\\s\\S]*?<\\/div>/g;\nfunction restoreMetadata(src, t) {\n  const original = src.match(METADATA) || [];\n  if (original.length !== (t.match(METADATA) || []).length) return t;\n  let i = 0;\n  return t.replace(METADATA, () => original[i++]);\n}\n\n// Fills the gaps, rejects anything that changed tags or links, and builds the English html.\nfunction finish({ prepared, translations, slugs, allowLost = [] }) {\n  const problems = [];\n  const pick = (u, bucket, label) => {\n    if (u.t !== null) return u.t;\n    const t = translations[bucket][u.h];\n    if (typeof t !== 'string') { problems.push('missing translation: ' + label); return ''; }\n    return t;\n  };\n  const fields = {}, stateFields = {};\n  for (const [k, u] of Object.entries(prepared.fields)) {\n    const t = pick(u, 'fields', k);\n    fields[k] = t;\n    stateFields[k] = { h: u.h, t };\n  }\n  const body = prepared.body.map((u, i) => {\n    const t = restoreMetadata(u.src, pick(u, 'blocks', 'block ' + i));\n    if (u.t === null && !sameShape(u.src, t, allowLost)) problems.push('shape mismatch in block ' + i);\n    return { h: u.h, t };\n  });\n  const html = body.map((b) => rewriteLinks(b.t, slugs)).join('\\n');\n  return { ok: problems.length === 0, problems, fields, html, state: { fields: stateFields, body, out: sha(html), enh: null, aligned: false } };\n}\n\n// Records what English looks like after Ghost re-rendered our write, so later hand edits can be told apart.\nfunction snapshot(state, enHtml) {\n  const en = units(enHtml);\n  return { ...state, enh: en.map(sha), aligned: en.length === state.body.length };\n}\n\n\n// Rebuild only: below this the Ghost list is wrong, not the site small, so nothing is deleted.\nconst MIN_DOCS = 20;\nconst keep = new Set($('Build Docs').all().map((i) => i.json.doc.id));\nif (keep.size < MIN_DOCS) throw new Error('Only ' + keep.size + ' source docs, refusing to delete');\nconst raw = String($input.first().json.data || '');\nconst ids = raw.split('\\n').filter(Boolean).map((l) => JSON.parse(l).id);\nif (!ids.length) throw new Error('Export returned no ids');\nreturn ids.filter((id) => !keep.has(id)).map((id) => ({ json: { id } }));\n"
+      }
+    },
+    {
+      "id": "c11bf755-a6f3-4314-b51f-0dbeb5d6a302",
+      "name": "Delete Stale Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1792,
+        96
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://typesense.criptonautas.co/collections/ghost/documents/{{ encodeURIComponent($json.id) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KOwdxezO9n3iQTdX",
+          "name": "typesense-ghost-write"
+        }
+      }
+    },
+    {
+      "id": "0722b3e4-f027-4feb-8482-5eddea9db581",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        416
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "2388f509-f325-491f-9856-1cfd57bfa2e8",
+      "name": "Index One",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        464
+      ],
+      "parameters": {
+        "inputSource": "workflowInputs",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "type",
+              "type": "string"
+            },
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bff79190-fd12-492d-89f5-174e6a94ecc7",
+      "name": "Fetch One",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        464
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "6cf38f14-37e7-4f51-ba8f-38fbf28c72bb",
+      "name": "Route One",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        448
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "renameOutput": true,
+              "outputKey": "upsert",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ ($json.posts || $json.pages)?.[0]?.status === 'published' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "delete",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean(($json.posts || $json.pages)?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "failed"
+        }
+      }
+    },
+    {
+      "id": "53d1b534-0b64-4d0f-8226-9b7290a408d4",
+      "name": "Delete One",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        512
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://typesense.criptonautas.co/collections/ghost/documents/{{ encodeURIComponent($('Index One').first().json.id) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KOwdxezO9n3iQTdX",
+          "name": "typesense-ghost-write"
+        }
+      }
+    },
+    {
+      "id": "1d742c61-44c5-4661-81d0-0e66951c54c0",
+      "name": "Delete Ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        512
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.statusCode === 404 || ($json.statusCode >= 200 && $json.statusCode < 300) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e84f8eee-862a-4cdd-9a9b-6ea0e2e8c7b8",
+      "name": "Index Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        656
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Spanish index failed: {{ $json.errors?.[0]?.type ?? $json.body?.message ?? $json.error?.message ?? $json.statusCode ?? 'unexpected response' }}"
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "3cl4kcFN9rtNd8hD",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T03:53:33.536Z",
+      "updatedAt": "2026-10-31T03:53:33.536Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T04:06:54.670Z",
+  "versionId": "a3454798-1577-4887-81a3-570730766b54"
+}
