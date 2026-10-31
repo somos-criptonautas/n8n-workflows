@@ -1,0 +1,180 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "ES Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Posts": {
+      "main": [
+        [
+          {
+            "node": "ES Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ES Pages": {
+      "main": [
+        [
+          {
+            "node": "EN Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EN Posts": {
+      "main": [
+        [
+          {
+            "node": "EN Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T02:28:06.161Z",
+  "id": "QhL0UvJsafCurjXU",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-audit",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "5b0e7d1e-6e58-4858-8ade-16239bd2d35d",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "cfd83dfa-2f27-4830-b18c-71a7fe00f5e7",
+      "name": "ES Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=all&formats=html&fields=slug,html,status&filter=status:published",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "0011c971-be23-4ea6-b7d0-6d438c2b5d7b",
+      "name": "ES Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/pages/?limit=all&formats=html&fields=slug,html,status&filter=status:published",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "79d67605-dccf-4a62-9a28-a3b9a28f8aa2",
+      "name": "EN Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/posts/?limit=all&formats=html&fields=slug,html,status&filter=status:published",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "aa8e6269-65bc-40b1-9783-8032ee9ee0d8",
+      "name": "EN Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/pages/?limit=all&formats=html&fields=slug,html,status&filter=status:published",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi"
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "QhL0UvJsafCurjXU",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T02:28:06.161Z",
+      "updatedAt": "2026-10-31T02:28:06.161Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T02:33:50.730Z",
+  "versionId": "ebd03985-c629-461d-9ff5-e39ff7ae812e"
+}
