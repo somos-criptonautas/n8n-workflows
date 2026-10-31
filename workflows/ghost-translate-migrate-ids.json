@@ -1,0 +1,331 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Spanish Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spanish Posts": {
+      "main": [
+        [
+          {
+            "node": "Spanish Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spanish Pages": {
+      "main": [
+        [
+          {
+            "node": "English Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "English Posts": {
+      "main": [
+        [
+          {
+            "node": "English Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "English Pages": {
+      "main": [
+        [
+          {
+            "node": "Read Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Rows": {
+      "main": [
+        [
+          {
+            "node": "Plan Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Rows": {
+      "main": [
+        [
+          {
+            "node": "Update Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T04:24:18.701Z",
+  "id": "mKo8vZUySqNFY7Cd",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "ghost-translate-migrate-ids",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "5fea8ae3-1ea3-4310-b936-5476a082da4e",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "ba9f549d-8e6c-4624-9c61-81dce7692d01",
+      "name": "Spanish Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=100&filter=status:[published,draft,scheduled]&fields=id,slug,title",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "e96478ec-5cc6-49a5-b7ff-29f836356cef",
+      "name": "Spanish Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://criptonautas.co/ghost/api/admin/pages/?limit=100&filter=status:[published,draft,scheduled]&fields=id,slug,title",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      }
+    },
+    {
+      "id": "38385622-7a32-439d-a63a-a9de7c116d74",
+      "name": "English Posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/posts/?limit=100&filter=status:[published,draft,scheduled]&fields=id,slug,title",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "405e8005-626a-4aec-bb2b-4847e2e29831",
+      "name": "English Pages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://en.criptonautas.co/ghost/api/admin/pages/?limit=100&filter=status:[published,draft,scheduled]&fields=id,slug,title",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {}
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "dB4sfMhTDWOirbsM",
+          "name": "ghost-en-admin-api"
+        }
+      }
+    },
+    {
+      "id": "b735fb89-8442-4242-ac6d-c73d0366daca",
+      "name": "Read Rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "3c6429a2-ff4a-4aea-8ab6-c0b92f53c277",
+      "name": "Plan Rows",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const crypto = require('crypto');\n\nconst sha = (s) => crypto.createHash('sha256').update(String(s)).digest('hex');\nconst VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);\nconst RAW = new Set(['script', 'style']);\nconst MEDIA = /<(img|iframe|video|audio|hr|svg|embed|object|canvas)\\b/i;\n\n// Ghost HTML is well formed, so a depth counter is enough and no parser library is needed.\nfunction splitBlocks(html) {\n  const blocks = [];\n  const lower = html.toLowerCase();\n  const re = /<!--[\\s\\S]*?-->|<(\\/?)([a-zA-Z][\\w-]*)(?:\"[^\"]*\"|'[^']*'|[^>\"'])*>/g;\n  let depth = 0, from = 0, open = 0, m;\n  const flush = (upto) => {\n    const t = html.slice(from, upto).trim();\n    if (t) blocks.push(t);\n    from = upto;\n  };\n  while ((m = re.exec(html))) {\n    const tok = m[0], close = m[1], tag = m[2] ? m[2].toLowerCase() : '';\n    let end = re.lastIndex;\n    if (close) {\n      if (depth === 0) { flush(m.index); from = end; continue; }\n      if (--depth === 0) { blocks.push(html.slice(open, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) flush(m.index);\n    if (RAW.has(tag)) {\n      const at = lower.indexOf('</' + tag, end);\n      const gt = at < 0 ? -1 : html.indexOf('>', at);\n      end = gt < 0 ? html.length : gt + 1;\n      re.lastIndex = end;\n    }\n    // Browsers ignore the slash on a div, so <div id=\"x\" /></div> is one element and the closer belongs to it.\n    if (tag && tok.endsWith('/>') && lower.startsWith('</' + tag + '>', end)) {\n      end += tag.length + 3;\n      re.lastIndex = end;\n    }\n    if (!tag || VOID.has(tag) || RAW.has(tag) || tok.endsWith('/>')) {\n      if (depth === 0) { blocks.push(html.slice(m.index, end)); from = end; }\n      continue;\n    }\n    if (depth === 0) open = m.index;\n    depth++;\n  }\n  flush(html.length);\n  return blocks;\n}\n\nconst isComment = (b) => b.startsWith('<!--');\nconst textOf = (b) => b\n  .replace(/<!--[\\s\\S]*?-->/g, '')\n  .replace(/<(script|style)\\b[\\s\\S]*?<\\/\\1>/gi, '')\n  .replace(/<[^>]+>/g, ' ')\n  .replace(/&nbsp;|&#160;/g, ' ')\n  .replace(/\\s+/g, ' ')\n  .trim();\n// Code blocks and comments are never sent to DeepL.\nconst needsTranslation = (b) => !isComment(b) && !/^<pre\\b/i.test(b) && textOf(b) !== '';\n// An empty element with an id or class is a mount point for a script or style, not a spacer.\nconst isMount = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && /^<[\\w-]+[^>]*\\s(?:id|class)=\"[^\"]/i.test(b);\n// Blocks Ghost drops on import anyway (empty spacer paragraphs).\nconst isJunk = (b) => !isComment(b) && textOf(b) === '' && !MEDIA.test(b) && !/<(script|style)\\b/i.test(b) && !isMount(b);\nconst units = (html) => splitBlocks(html || '').filter((b) => !isJunk(b));\n\n// Ghost's html import drops scripts and rewrites iframes unless they sit inside an html card.\nconst isRawBlock = (b) => /^<(script|style|iframe)\\b/i.test(b) || isMount(b);\nfunction protectRaw(blocks) {\n  const out = [];\n  let inCard = false, wrapping = false;\n  for (const b of blocks) {\n    if (/^<!--kg-card-begin:/.test(b)) inCard = true;\n    if (/^<!--kg-card-end:/.test(b)) inCard = false;\n    const raw = !inCard && isRawBlock(b);\n    if (raw && !wrapping) out.push('<!--kg-card-begin: html-->');\n    if (!raw && wrapping) out.push('<!--kg-card-end: html-->');\n    wrapping = raw;\n    out.push(b);\n  }\n  if (wrapping) out.push('<!--kg-card-end: html-->');\n  return out;\n}\n\n\n// DeepL may split one inline span or link into several, so these tags compare by presence, not count.\nconst INLINE = new Set(['a', 'b', 'strong', 'i', 'em', 'u', 's', 'span', 'mark', 'sub', 'sup', 'small']);\n// Two translations of one block must carry the same tags and the same links, in any order.\nfunction shape(b) {\n  const tags = (b.match(/<([a-zA-Z][\\w-]*)/g) || []).map((t) => t.slice(1).toLowerCase()).sort()\n    .filter((t, i, all) => !INLINE.has(t) || all.indexOf(t) === i);\n  const urls = [...new Set([...b.matchAll(/\\s(?:href|src)=\"([^\"]*)\"/g)].map((m) => m[1]))].sort();\n  return JSON.stringify({ tags, urls });\n}\n// allowLost names inline tags a translation may drop; anything else must still match.\nfunction sameShape(a, b, allowLost = []) {\n  const from = JSON.parse(shape(a)), to = JSON.parse(shape(b));\n  from.tags = from.tags.filter((t) => !allowLost.includes(t) || to.tags.includes(t));\n  return JSON.stringify(from) === JSON.stringify(to);\n}\n\nconst ES = 'https://criptonautas.co';\nconst EN = 'https://en.criptonautas.co';\n\n// slugs maps a Spanish slug to its English slug; a plain list means both are the same.\nfunction rewriteLinks(html, slugs, es = ES, en = EN) {\n  const known = new Map(Array.isArray(slugs) ? slugs.map((s) => [s, s]) : Object.entries(slugs));\n  const esc = es.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n  const re = new RegExp('href=\"' + esc + '/([^/\"?#]*)/?([?#][^\"]*)?\"', 'g');\n  return html.replace(re, (m, slug, tail) => (slug === '' || known.has(slug)\n    ? 'href=\"' + en + '/' + (slug ? known.get(slug) + '/' : '') + (tail || '') + '\"'\n    : m));\n}\n\nconst I18N = /<!--i18n-->[\\s\\S]*?<!--\\/i18n-->/;\nfunction hreflangBlock(slug, enSlug = slug, es = ES, en = EN) {\n  return '<!--i18n--><link rel=\"alternate\" hreflang=\"es\" href=\"' + es + '/' + slug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"en\" href=\"' + en + '/' + enSlug + '/\">'\n    + '<link rel=\"alternate\" hreflang=\"x-default\" href=\"' + es + '/' + slug + '/\"><!--/i18n-->';\n}\n// Markers keep any code injection the editors added by hand.\nfunction mergeHead(head, block) {\n  const h = head || '';\n  return I18N.test(h) ? h.replace(I18N, () => block) : (h ? h + '\\n' : '') + block;\n}\n\n// Ghost still suffixes a slug it finds taken, so this only keeps the first try readable.\nfunction slugify(title, taken = [], max = 60) {\n  const base = String(title || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()\n    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');\n  const cut = base.length <= max ? base : base.slice(0, max).replace(/-[^-]*$/, '');\n  const slug = cut || 'post';\n  const used = new Set(taken);\n  if (!used.has(slug)) return slug;\n  let n = 2;\n  while (used.has(slug + '-' + n)) n++;\n  return slug + '-' + n;\n}\n\n// Joins each state row to both sites by what survives renames: stored ids, then slug, then the Spanish title hash.\nfunction migrationPlan({ rows, es, en }) {\n  const out = [], problems = [], seen = new Set();\n  for (const row of rows) {\n    if (String(row.slug || '').startsWith('dry:')) continue;\n    const state = row.state ? JSON.parse(row.state) : {};\n    const titleHash = state.fields && state.fields.title && state.fields.title.h;\n    const src = es.find((p) => p.id === row.source_id) || es.find((p) => p.slug === row.slug)\n      || es.find((p) => sha(norm(p.title)) === titleHash);\n    if (!src) { problems.push(row.slug + ': no Spanish post'); continue; }\n    if (seen.has(src.id)) { problems.push(row.slug + ': Spanish post already claimed'); continue; }\n    seen.add(src.id);\n    const twin = en.find((p) => p.id === row.en_id) || en.find((p) => p.slug === row.en_slug)\n      || en.find((p) => p.slug === row.slug) || en.find((p) => p.id === src.id);\n    if (!twin) { problems.push(row.slug + ': no English post'); continue; }\n    out.push({ row_id: row.id, slug: src.slug, source_id: src.id, en_id: twin.id, en_slug: twin.slug });\n  }\n  return { out, problems };\n}\n\n// DeepL accepts at most 50 texts and 128 KiB per request.\nfunction chunk(jobs, maxTexts = 40, maxChars = 50000) {\n  const out = [];\n  let cur = [], size = 0;\n  for (const j of jobs) {\n    if (cur.length && (cur.length >= maxTexts || size + j.text.length > maxChars)) { out.push(cur); cur = []; size = 0; }\n    cur.push(j);\n    size += j.text.length;\n  }\n  if (cur.length) out.push(cur);\n  return out;\n}\n\n\n// File names the cover service produces through Ghost's upload: cover.webp, cover-1.webp, ...\nconst GENERATED = /\\/cover(-\\d+)?\\.(webp|png)$/i;\nconst isGeneratedCover = (url) => Boolean(url) && GENERATED.test(url);\n\n// A drawn cover has the Spanish title baked in, so English gets its own; any other image is shared by URL.\nfunction coverPlan({ esImage, enImage, cover }) {\n  const es = esImage || null, en = enImage || null;\n  if (!es) return { mode: 'none', url: null, changed: en !== null };\n  if (!isGeneratedCover(es)) return { mode: 'copy', url: es, changed: en !== es };\n  if (cover && cover.es === es && cover.url) return { mode: 'reuse', url: cover.url, changed: en !== cover.url };\n  return { mode: 'generate', url: null, changed: true };\n}\n\n// Same fields as the Spanish `ghost` collection. Typesense computes the embedding itself.\nfunction searchDoc(en, src, base = EN) {\n  const plain = textOf(en.html || '');\n  return {\n    id: en.id,\n    slug: en.slug,\n    title: en.title,\n    excerpt: en.custom_excerpt || en.excerpt || plain.slice(0, 200),\n    url: base + '/' + en.slug + '/',\n    feature_image: en.feature_image || '',\n    html: en.html || '',\n    plaintext: plain,\n    authors: (src.authors || []).map((a) => a.name),\n    tags: (en.tags || []).filter((t) => t.visibility === 'public').map((t) => t.name),\n    published_at: Date.parse(en.published_at),\n    updated_at: Date.parse(en.updated_at),\n    visibility: 'public',\n  };\n}\n\n\nconst norm = (v) => (v == null ? '' : String(v));\n\n// Decides, per field and per block, what to reuse, what to keep from a hand edit, and what to translate.\nfunction prepare({ fields, html, state, en }) {\n  const old = state || { fields: {}, body: [], enh: null, aligned: false };\n  const enUnits = en ? units(en.html) : null;\n  // Block-level protection only works while English still lines up block for block with our last write.\n  const guard = Boolean(old.aligned && enUnits && old.enh && enUnits.length === old.enh.length);\n  const jobs = { fields: {}, blocks: {} };\n  let changed = false, kept = 0;\n\n  const outFields = {};\n  for (const [k, raw] of Object.entries(fields)) {\n    const text = norm(raw), h = sha(text), prev = old.fields[k];\n    if (!prev || prev.h !== h) changed = true;\n    // DeepL gets fields as plain text; the hash stays on the raw value so Spanish edits are still seen.\n    const plain = text.includes('<') ? textOf(text) : text;\n    if (!plain) { outFields[k] = { h, t: '' }; continue; }\n    if (prev && prev.h === h) {\n      const live = en ? norm(en.fields && en.fields[k]) : null;\n      const edited = live !== null && live !== prev.t;\n      if (edited) kept++;\n      outFields[k] = { h, t: edited ? live : prev.t, kept: edited };\n    } else {\n      jobs.fields[h] = plain;\n      outFields[k] = { h, t: null };\n    }\n  }\n\n  const queues = {};\n  old.body.forEach((u, j) => { (queues[u.h] = queues[u.h] || []).push(j); });\n  const body = protectRaw(units(html)).map((src) => {\n    const h = sha(src);\n    if (!needsTranslation(src)) return { h, src, t: src, pass: true };\n    const j = (queues[h] || []).shift();\n    if (j === undefined) { jobs.blocks[h] = src; return { h, src, t: null }; }\n    const edited = guard && sha(enUnits[j]) !== old.enh[j];\n    if (edited) kept++;\n    return { h, src, t: edited ? enUnits[j] : old.body[j].t, kept: edited };\n  });\n  if (body.length !== old.body.length || body.some((u, i) => u.h !== old.body[i].h)) changed = true;\n\n  const list = (o) => Object.entries(o).map(([id, text]) => ({ id, text }));\n  const pending = Object.keys(jobs.fields).length + Object.keys(jobs.blocks).length;\n  return {\n    fields: outFields, body, kept,\n    jobs: { fields: list(jobs.fields), blocks: list(jobs.blocks) },\n    noop: Boolean(en) && !changed && pending === 0,\n  };\n}\n\n// Author and publisher are names: DeepL merges their spans and rewrites them, so the source's stay verbatim.\nconst METADATA = /<div class=\"kg-bookmark-metadata\">[\\s\\S]*?<\\/div>/g;\nfunction restoreMetadata(src, t) {\n  const original = src.match(METADATA) || [];\n  if (original.length !== (t.match(METADATA) || []).length) return t;\n  let i = 0;\n  return t.replace(METADATA, () => original[i++]);\n}\n\n// Fills the gaps, rejects anything that changed tags or links, and builds the English html.\nfunction finish({ prepared, translations, slugs, allowLost = [] }) {\n  const problems = [];\n  const pick = (u, bucket, label) => {\n    if (u.t !== null) return u.t;\n    const t = translations[bucket][u.h];\n    if (typeof t !== 'string') { problems.push('missing translation: ' + label); return ''; }\n    return t;\n  };\n  const fields = {}, stateFields = {};\n  for (const [k, u] of Object.entries(prepared.fields)) {\n    const t = pick(u, 'fields', k);\n    fields[k] = t;\n    stateFields[k] = { h: u.h, t };\n  }\n  const body = prepared.body.map((u, i) => {\n    const t = restoreMetadata(u.src, pick(u, 'blocks', 'block ' + i));\n    if (u.t === null && !sameShape(u.src, t, allowLost)) problems.push('shape mismatch in block ' + i);\n    return { h: u.h, t };\n  });\n  const html = body.map((b) => rewriteLinks(b.t, slugs)).join('\\n');\n  return { ok: problems.length === 0, problems, fields, html, state: { fields: stateFields, body, out: sha(html), enh: null, aligned: false } };\n}\n\n// Records what English looks like after Ghost re-rendered our write, so later hand edits can be told apart.\nfunction snapshot(state, enHtml) {\n  const en = units(enHtml);\n  return { ...state, enh: en.map(sha), aligned: en.length === state.body.length };\n}\n\n\nconst lists = (name) => {\n  const out = [];\n  for (const { json } of $(name).all()) {\n    // A second page would make real posts look missing.\n    if (json.meta && json.meta.pagination && json.meta.pagination.next) throw new Error(name + ' is paginated: raise the limit');\n    out.push(...(json.posts || json.pages || []));\n  }\n  return out;\n};\nconst plan = migrationPlan({ rows: $('Read Rows').all().map((i) => i.json), es: [...lists('Spanish Posts'), ...lists('Spanish Pages')], en: [...lists('English Posts'), ...lists('English Pages')] });\nif (plan.problems.length) throw new Error('Migration stopped, nothing written: ' + plan.problems.join('; '));\nreturn plan.out.map((json) => ({ json }));\n"
+      }
+    },
+    {
+      "id": "848d14ac-09f8-4ff6-b884-a349f8e4530e",
+      "name": "Update Row",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "lzuhgFaxodl1m3Mx"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.row_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "value": {
+            "slug": "={{ $json.slug }}",
+            "source_id": "={{ $json.source_id }}",
+            "en_id": "={{ $json.en_id }}",
+            "en_slug": "={{ $json.en_slug }}"
+          },
+          "schema": [
+            {
+              "id": "slug",
+              "displayName": "slug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "source_id",
+              "displayName": "source_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "en_id",
+              "displayName": "en_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "en_slug",
+              "displayName": "en_slug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "errorWorkflow": "6YeRd2MBpoIleUlj"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "mKo8vZUySqNFY7Cd",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T04:24:18.701Z",
+      "updatedAt": "2026-10-31T04:24:18.701Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T04:29:41.798Z",
+  "versionId": "f71da7bf-76e2-48f9-9f14-92bd34c0346e"
+}
