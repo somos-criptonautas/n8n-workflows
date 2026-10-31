@@ -1,7 +1,452 @@
 {
-  "active": false,
-  "activeVersion": null,
-  "activeVersionId": null,
+  "active": true,
+  "activeVersion": {
+    "versionId": "f427ef19-d10c-45a7-baf5-d0eab773ef6c",
+    "workflowId": "DtatgfUkQ8hYLwqr",
+    "nodes": [
+      {
+        "id": "990df1bf-a8c9-4210-a194-352ba0a1f6ed",
+        "name": "Start",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "316bca41-e1ac-44f4-87d4-4afae96a21d9",
+        "name": "Settings",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "mode": "manual",
+          "includeOtherFields": false,
+          "assignments": {
+            "assignments": [
+              {
+                "id": "dry_run",
+                "name": "dry_run",
+                "value": "={{ $('Daily Schedule').isExecuted ? false : true }}",
+                "type": "boolean"
+              },
+              {
+                "id": "only_slug",
+                "name": "only_slug",
+                "value": "",
+                "type": "string"
+              },
+              {
+                "id": "limit",
+                "name": "limit",
+                "value": "={{ $('Daily Schedule').isExecuted ? 0 : 3 }}",
+                "type": "number"
+              },
+              {
+                "id": "reindex",
+                "name": "reindex",
+                "value": false,
+                "type": "boolean"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "8970f20d-07c9-4ae0-8936-d1aff9570b1d",
+        "name": "Usage Before",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api-free.deepl.com/v2/usage",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "deepLApi"
+        },
+        "credentials": {
+          "deepLApi": {
+            "id": "dvYu8wxVM8WbVYZe",
+            "name": "DeepL account"
+          }
+        }
+      },
+      {
+        "id": "e4c54906-a13d-43a2-a0f0-7ac9a8b9ded0",
+        "name": "List Posts",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://criptonautas.co/ghost/api/admin/posts/?limit=all&fields=id,slug,title,status&filter=status:published",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi"
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "id": "e6c438ba-a83b-48cd-8e60-b9e411a2d5cb",
+        "name": "List Pages",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://criptonautas.co/ghost/api/admin/pages/?limit=all&fields=id,slug,title,status&filter=status:published",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi"
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        }
+      },
+      {
+        "id": "551b5e9f-4b40-4cd1-bad6-e1b154f42b93",
+        "name": "Plan Run",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const s = $('Settings').first().json;\nconst pick = (node, key, type) => $(node).first().json[key].map((p) => ({ type, id: p.id, slug: p.slug }));\nlet rows = [...pick('List Posts', 'posts', 'posts'), ...pick('List Pages', 'pages', 'pages')];\nif (s.only_slug) rows = rows.filter((r) => r.slug === s.only_slug);\nif (s.limit > 0) rows = rows.slice(0, s.limit);\nreturn rows.map((json) => ({ json }));"
+        },
+        "notes": "Why Code: merges two API lists and applies two optional filters."
+      },
+      {
+        "id": "5a59c1fb-5124-4e6d-85f9-4f81ae8ac73d",
+        "name": "Translate One",
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1344,
+          0
+        ],
+        "parameters": {
+          "source": "database",
+          "workflowId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "SrFAelNFFszu09q5"
+          },
+          "mode": "each",
+          "options": {
+            "waitForSubWorkflow": true
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "matchingColumns": [],
+            "value": {
+              "type": "={{ $json.type }}",
+              "id": "={{ $json.id }}",
+              "dry_run": "={{ $('Settings').first().json.dry_run }}",
+              "reindex": "={{ $('Settings').first().json.reindex }}"
+            },
+            "schema": [
+              {
+                "id": "type",
+                "displayName": "type",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              },
+              {
+                "id": "id",
+                "displayName": "id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string"
+              },
+              {
+                "id": "dry_run",
+                "displayName": "dry_run",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "boolean"
+              },
+              {
+                "id": "reindex",
+                "displayName": "reindex",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "boolean"
+              }
+            ]
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "727e10a3-a1c2-4b55-a2df-ca21b71b495c",
+        "name": "Usage After",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1568,
+          0
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "https://api-free.deepl.com/v2/usage",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "deepLApi"
+        },
+        "executeOnce": true,
+        "credentials": {
+          "deepLApi": {
+            "id": "dvYu8wxVM8WbVYZe",
+            "name": "DeepL account"
+          }
+        }
+      },
+      {
+        "id": "c856a70a-088e-4126-bf9a-db1e512f157f",
+        "name": "Summary",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          0
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const planned = $('Plan Run').all().map((i) => i.json);\n// One entry per planned post: Report can run once per branch, and a crashed node passes its input through.\nconst byPost = new Map();\nfor (const i of $('Translate One').all()) {\n  const n = i.pairedItem?.item ?? 0;\n  if (!byPost.has(n)) byPost.set(n, { ...i.json, slug: i.json.slug || planned[n].slug });\n}\nconst done = [...byPost.values()];\nconst isFailed = (j) => Boolean(j.error) || (!('jobs' in j) && !j.skipped);\nconst failed = done.filter(isFailed);\nconst sum = (k) => done.reduce((a, j) => a + (j[k] || 0), 0);\nconst before = $('Usage Before').first().json.character_count;\nconst after = $('Usage After').first().json.character_count;\nreturn [{ json: { done: done.filter((j) => !isFailed(j) && !j.skipped).length, skipped: done.filter((j) => j.skipped).map((j) => j.slug), failed: failed.length, failed_slugs: failed.map((j) => j.slug), jobs: sum('jobs'), chars_sent: sum('chars_sent'), kept: sum('kept'), deepl_billed: after - before, usage_after: after, usage_limit: $('Usage After').first().json.character_limit, items: done } }];"
+        },
+        "notes": "Why Code: totals over all items plus a usage difference."
+      },
+      {
+        "id": "e0fa0ff9-f8df-4684-8674-5beb52c2c0fa",
+        "name": "Daily Schedule",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          200
+        ],
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "30 5 * * *"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "907e6fff-406c-4be0-8764-0d63ef3488de",
+        "name": "Any Failed",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2016,
+          0
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ $json.failed > 0 }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "a2fefb4e-6c64-402a-9b61-950476837d96",
+        "name": "Batch Failed",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          2240,
+          0
+        ],
+        "parameters": {
+          "errorType": "errorMessage",
+          "errorMessage": "=ghost-translate-batch failed on: {{ $json.failed_slugs.join(', ') }}"
+        }
+      }
+    ],
+    "connections": {
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Settings",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Settings": {
+        "main": [
+          [
+            {
+              "node": "Usage Before",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Usage Before": {
+        "main": [
+          [
+            {
+              "node": "List Posts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Posts": {
+        "main": [
+          [
+            {
+              "node": "List Pages",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Pages": {
+        "main": [
+          [
+            {
+              "node": "Plan Run",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Plan Run": {
+        "main": [
+          [
+            {
+              "node": "Translate One",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Translate One": {
+        "main": [
+          [
+            {
+              "node": "Usage After",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Usage After": {
+        "main": [
+          [
+            {
+              "node": "Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Daily Schedule": {
+        "main": [
+          [
+            {
+              "node": "Settings",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Summary": {
+        "main": [
+          [
+            {
+              "node": "Any Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Any Failed": {
+        "main": [
+          [
+            {
+              "node": "Batch Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "D C (via MCP)",
+    "name": "Daily schedule and failure alert",
+    "description": "Added nodes: Daily Schedule, Any Failed, Batch Failed\nUpdated nodes: Settings\nConnections: 3 added, 0 removed",
+    "autosaved": false,
+    "createdAt": "2026-10-31T05:31:42.614Z",
+    "updatedAt": "2026-10-31T05:31:42.614Z"
+  },
+  "activeVersionId": "f427ef19-d10c-45a7-baf5-d0eab773ef6c",
   "connections": {
     "Start": {
       "main": [
@@ -90,6 +535,39 @@
           }
         ]
       ]
+    },
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary": {
+      "main": [
+        [
+          {
+            "node": "Any Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Any Failed": {
+      "main": [
+        [
+          {
+            "node": "Batch Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-10-31T00:40:04.727Z",
@@ -130,7 +608,7 @@
             {
               "id": "dry_run",
               "name": "dry_run",
-              "value": true,
+              "value": "={{ $('Daily Schedule').isExecuted ? false : true }}",
               "type": "boolean"
             },
             {
@@ -142,7 +620,7 @@
             {
               "id": "limit",
               "name": "limit",
-              "value": 3,
+              "value": "={{ $('Daily Schedule').isExecuted ? 0 : 3 }}",
               "type": "number"
             },
             {
@@ -346,6 +824,71 @@
         "jsCode": "const planned = $('Plan Run').all().map((i) => i.json);\n// One entry per planned post: Report can run once per branch, and a crashed node passes its input through.\nconst byPost = new Map();\nfor (const i of $('Translate One').all()) {\n  const n = i.pairedItem?.item ?? 0;\n  if (!byPost.has(n)) byPost.set(n, { ...i.json, slug: i.json.slug || planned[n].slug });\n}\nconst done = [...byPost.values()];\nconst isFailed = (j) => Boolean(j.error) || (!('jobs' in j) && !j.skipped);\nconst failed = done.filter(isFailed);\nconst sum = (k) => done.reduce((a, j) => a + (j[k] || 0), 0);\nconst before = $('Usage Before').first().json.character_count;\nconst after = $('Usage After').first().json.character_count;\nreturn [{ json: { done: done.filter((j) => !isFailed(j) && !j.skipped).length, skipped: done.filter((j) => j.skipped).map((j) => j.slug), failed: failed.length, failed_slugs: failed.map((j) => j.slug), jobs: sum('jobs'), chars_sent: sum('chars_sent'), kept: sum('kept'), deepl_billed: after - before, usage_after: after, usage_limit: $('Usage After').first().json.character_limit, items: done } }];"
       },
       "notes": "Why Code: totals over all items plus a usage difference."
+    },
+    {
+      "id": "e0fa0ff9-f8df-4684-8674-5beb52c2c0fa",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "30 5 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "907e6fff-406c-4be0-8764-0d63ef3488de",
+      "name": "Any Failed",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ $json.failed > 0 }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a2fefb4e-6c64-402a-9b61-950476837d96",
+      "name": "Batch Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        0
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=ghost-translate-batch failed on: {{ $json.failed_slugs.join(', ') }}"
+      }
     }
   ],
   "pinData": null,
@@ -363,9 +906,18 @@
       "updatedAt": "2026-10-31T00:40:04.727Z"
     }
   ],
-  "staticData": null,
+  "staticData": {
+    "node:Daily Schedule": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
   "tags": [],
-  "triggerCount": 0,
-  "updatedAt": "2026-10-31T03:03:18.007Z",
-  "versionId": "2ac4b616-3c87-461c-b7a0-527c67d78872"
+  "triggerCount": 1,
+  "updatedAt": "2026-10-31T05:44:21.423Z",
+  "versionId": "ecd3289a-af87-4eeb-8e2d-cd900d18b025"
 }
