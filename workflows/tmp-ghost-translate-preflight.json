@@ -1,0 +1,89 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Typesense Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-10-31T01:10:03.908Z",
+  "id": "e70EdfK2q2VUsDxw",
+  "isArchived": true,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "tmp-ghost-translate-preflight",
+  "nodeGroups": [],
+  "nodes": [
+    {
+      "id": "e1d801a7-8cab-4aeb-a5d0-e95f41b902a6",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "3b35c7e3-1bf9-40ce-a521-fbc39f7c0476",
+      "name": "Typesense Check",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://typesense.criptonautas.co/collections/ghost_en/documents/does-not-exist",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "WPc3DZDfaLOOzy8a",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": null,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "e70EdfK2q2VUsDxw",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-10-31T01:10:03.908Z",
+      "updatedAt": "2026-10-31T01:10:03.908Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-10-31T01:10:27.231Z",
+  "versionId": "eeab93e1-8e20-41fc-963e-ba1550459d39"
+}
