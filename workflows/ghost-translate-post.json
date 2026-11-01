@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "701c826e-49f2-4536-82f8-e055108c1ca4",
+    "versionId": "9c518576-292f-43b5-a74b-5c6e6b889da0",
     "workflowId": "SrFAelNFFszu09q5",
     "nodes": [
       {
@@ -48,7 +48,7 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors",
+          "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors,tiers",
           "authentication": "predefinedCredentialType",
           "nodeCredentialType": "ghostAdminApi"
         },
@@ -212,7 +212,7 @@
         ],
         "parameters": {
           "method": "GET",
-          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Context').first().json.type }}/{{ $('Get State').first().json.en_id || '000000000000000000000000' }}/?formats=html&include=tags",
+          "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Context').first().json.type }}/{{ $('Get State').first().json.en_id || '000000000000000000000000' }}/?formats=html&include=tags,tiers",
           "authentication": "predefinedCredentialType",
           "nodeCredentialType": "ghostAdminApi",
           "options": {
@@ -522,7 +522,7 @@
             "combinator": "and",
             "conditions": [
               {
-                "leftValue": "={{ $('Finish Translation').first().json.write }}",
+                "leftValue": "={{ $('Finish Translation').first().json.write || $('Check Access').first().json.changed }}",
                 "operator": {
                   "type": "boolean",
                   "operation": "true",
@@ -1148,6 +1148,54 @@
           "options": {}
         },
         "alwaysOutputData": true
+      },
+      {
+        "id": "27dc038f-434a-435c-bdac-137c41946233",
+        "name": "Check Access",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2300,
+          500
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nconst enRes = $('Get English').first().json;\nconst en = enRes && enRes[ctx.type] && enRes[ctx.type][0] ? enRes[ctx.type][0] : null;\n// Gating a post changes no text, and the English twin must not stay open.\nreturn [{ json: { changed: accessChanged(src, en) } }];\n"
+        },
+        "notes": "Why Code: pasted access.js."
+      },
+      {
+        "id": "88cf7b10-2cd8-4324-bbf5-fd4925536842",
+        "name": "Apply Access",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2600,
+          700
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nconst json = $input.first().json;\nObject.assign(json.body[ctx.type][0], accessFields(src));\nreturn [{ json }];\n"
+        },
+        "notes": "Why Code: pasted access.js."
+      },
+      {
+        "id": "32a3e68e-be13-4d65-9273-96df903f3e65",
+        "name": "Gate Search Doc",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2900,
+          900
+        ],
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nreturn [{ json: { doc: gateSearchDoc($input.first().json.doc, src) } }];\n"
+        },
+        "notes": "Why Code: pasted access.js."
       }
     ],
     "connections": {
@@ -1286,7 +1334,7 @@
           ],
           [
             {
-              "node": "Needs Write",
+              "node": "Check Access",
               "type": "main",
               "index": 0
             }
@@ -1380,17 +1428,6 @@
           ]
         ]
       },
-      "Build Ghost Payload": {
-        "main": [
-          [
-            {
-              "node": "Write English",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "Write English": {
         "main": [
           [
@@ -1439,17 +1476,6 @@
           [
             {
               "node": "Report",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Build Search Doc": {
-        "main": [
-          [
-            {
-              "node": "Upsert English Search",
               "type": "main",
               "index": 0
             }
@@ -1564,17 +1590,72 @@
             }
           ]
         ]
+      },
+      "Check Access": {
+        "main": [
+          [
+            {
+              "node": "Needs Write",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Ghost Payload": {
+        "main": [
+          [
+            {
+              "node": "Apply Access",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Apply Access": {
+        "main": [
+          [
+            {
+              "node": "Write English",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Search Doc": {
+        "main": [
+          [
+            {
+              "node": "Gate Search Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gate Search Doc": {
+        "main": [
+          [
+            {
+              "node": "Upsert English Search",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Draft: same core in source head and search doc",
-    "description": "Updated nodes: Build Search Doc, Build Source Head",
+    "name": "Copy source visibility to English",
+    "description": "English twins and search docs follow the visibility of the source. Three small nodes; the large Code nodes are untouched.",
     "autosaved": false,
-    "createdAt": "2026-10-31T05:38:05.775Z",
-    "updatedAt": "2026-10-31T05:38:05.775Z"
+    "createdAt": "2026-11-01T04:55:15.554Z",
+    "updatedAt": "2026-11-01T04:55:15.554Z"
   },
-  "activeVersionId": "701c826e-49f2-4536-82f8-e055108c1ca4",
+  "activeVersionId": "9c518576-292f-43b5-a74b-5c6e6b889da0",
   "connections": {
     "Inputs": {
       "main": [
@@ -1711,7 +1792,7 @@
         ],
         [
           {
-            "node": "Needs Write",
+            "node": "Check Access",
             "type": "main",
             "index": 0
           }
@@ -1805,17 +1886,6 @@
         ]
       ]
     },
-    "Build Ghost Payload": {
-      "main": [
-        [
-          {
-            "node": "Write English",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Write English": {
       "main": [
         [
@@ -1864,17 +1934,6 @@
         [
           {
             "node": "Report",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Build Search Doc": {
-      "main": [
-        [
-          {
-            "node": "Upsert English Search",
             "type": "main",
             "index": 0
           }
@@ -1989,6 +2048,61 @@
           }
         ]
       ]
+    },
+    "Check Access": {
+      "main": [
+        [
+          {
+            "node": "Needs Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Ghost Payload": {
+      "main": [
+        [
+          {
+            "node": "Apply Access",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Access": {
+      "main": [
+        [
+          {
+            "node": "Write English",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Search Doc": {
+      "main": [
+        [
+          {
+            "node": "Gate Search Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate Search Doc": {
+      "main": [
+        [
+          {
+            "node": "Upsert English Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-10-31T00:38:03.497Z",
@@ -2045,7 +2159,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors",
+        "url": "=https://criptonautas.co/ghost/api/admin/{{ $json.type }}/{{ $json.id }}/?formats=html&include=tags,authors,tiers",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "ghostAdminApi"
       },
@@ -2209,7 +2323,7 @@
       ],
       "parameters": {
         "method": "GET",
-        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Context').first().json.type }}/{{ $('Get State').first().json.en_id || '000000000000000000000000' }}/?formats=html&include=tags",
+        "url": "=https://en.criptonautas.co/ghost/api/admin/{{ $('Context').first().json.type }}/{{ $('Get State').first().json.en_id || '000000000000000000000000' }}/?formats=html&include=tags,tiers",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "ghostAdminApi",
         "options": {
@@ -2519,7 +2633,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ $('Finish Translation').first().json.write }}",
+              "leftValue": "={{ $('Finish Translation').first().json.write || $('Check Access').first().json.changed }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -3145,6 +3259,54 @@
         "options": {}
       },
       "alwaysOutputData": true
+    },
+    {
+      "id": "27dc038f-434a-435c-bdac-137c41946233",
+      "name": "Check Access",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nconst enRes = $('Get English').first().json;\nconst en = enRes && enRes[ctx.type] && enRes[ctx.type][0] ? enRes[ctx.type][0] : null;\n// Gating a post changes no text, and the English twin must not stay open.\nreturn [{ json: { changed: accessChanged(src, en) } }];\n"
+      },
+      "notes": "Why Code: pasted access.js."
+    },
+    {
+      "id": "88cf7b10-2cd8-4324-bbf5-fd4925536842",
+      "name": "Apply Access",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        700
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nconst json = $input.first().json;\nObject.assign(json.body[ctx.type][0], accessFields(src));\nreturn [{ json }];\n"
+      },
+      "notes": "Why Code: pasted access.js."
+    },
+    {
+      "id": "32a3e68e-be13-4d65-9273-96df903f3e65",
+      "name": "Gate Search Doc",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2900,
+        900
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Ghost lists every tier on public posts too, so tiers only count when the post is gated by tier.\nconst tierSlugs = (p) => (p.tiers || []).map((t) => t.slug).sort();\n\nfunction accessFields(src) {\n  if (!src.visibility) throw new Error('Source has no visibility: ' + src.slug);\n  return src.visibility === 'tiers'\n    ? { visibility: 'tiers', tiers: tierSlugs(src).map((slug) => ({ slug })) }\n    : { visibility: src.visibility };\n}\n\nfunction accessChanged(src, en) {\n  if (!en) return false;\n  if (en.visibility !== src.visibility) return true;\n  return src.visibility === 'tiers' && JSON.stringify(tierSlugs(en)) !== JSON.stringify(tierSlugs(src));\n}\n\n// The search key is public and a filter is only a request, so gated text never enters the index.\nfunction gateSearchDoc(doc, src) {\n  const visibility = src.visibility || 'paid';\n  return visibility === 'public' ? { ...doc, visibility } : { ...doc, visibility, excerpt: '', html: '', plaintext: '' };\n}\n\nconst ctx = $('Context').first().json;\nconst src = $('Fetch Source').first().json[ctx.type][0];\nreturn [{ json: { doc: gateSearchDoc($input.first().json.doc, src) } }];\n"
+      },
+      "notes": "Why Code: pasted access.js."
     }
   ],
   "pinData": null,
@@ -3165,6 +3327,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-10-31T05:38:05.772Z",
-  "versionId": "701c826e-49f2-4536-82f8-e055108c1ca4"
+  "updatedAt": "2026-11-01T04:55:15.550Z",
+  "versionId": "9c518576-292f-43b5-a74b-5c6e6b889da0"
 }
