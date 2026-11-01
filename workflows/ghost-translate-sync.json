@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6",
+    "versionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90",
     "workflowId": "HEdpSdE8bIh3c1RZ",
     "nodes": [
       {
@@ -39,43 +39,43 @@
                 "id": "event",
                 "name": "event",
                 "type": "string",
-                "value": "={{ $json.query.event }}"
+                "value": "={{ String($json.query?.event || '') }}"
               },
               {
                 "id": "type",
                 "name": "type",
                 "type": "string",
-                "value": "={{ $json.query.event.startsWith('page') ? 'pages' : 'posts' }}"
+                "value": "={{ String($json.query?.event || '').startsWith('page') ? 'pages' : 'posts' }}"
               },
               {
                 "id": "id",
                 "name": "id",
                 "type": "string",
-                "value": "={{ ($json.body.post || $json.body.page).current?.id || ($json.body.post || $json.body.page).previous?.id }}"
+                "value": "={{ String(($json.body?.post || $json.body?.page)?.current?.id || ($json.body?.post || $json.body?.page)?.previous?.id || '') }}"
               },
               {
                 "id": "slug",
                 "name": "slug",
                 "type": "string",
-                "value": "={{ ($json.body.post || $json.body.page).current?.slug || ($json.body.post || $json.body.page).previous?.slug }}"
+                "value": "={{ String(($json.body?.post || $json.body?.page)?.current?.slug || ($json.body?.post || $json.body?.page)?.previous?.slug || '') }}"
               },
               {
                 "id": "old_slug",
                 "name": "old_slug",
                 "type": "string",
-                "value": "={{ ($json.body.post || $json.body.page).previous?.slug || '' }}"
+                "value": "={{ ($json.body?.post || $json.body?.page)?.previous?.slug || '' }}"
               },
               {
                 "id": "has_current",
                 "name": "has_current",
                 "type": "boolean",
-                "value": "={{ Boolean(($json.body.post || $json.body.page).current?.id) }}"
+                "value": "={{ Boolean(($json.body?.post || $json.body?.page)?.current?.id) }}"
               },
               {
                 "id": "updated_at",
                 "name": "updated_at",
                 "type": "string",
-                "value": "={{ ($json.body.post || $json.body.page).current?.updated_at || '' }}"
+                "value": "={{ ($json.body?.post || $json.body?.page)?.current?.updated_at || '' }}"
               }
             ]
           }
@@ -752,6 +752,171 @@
           "limit": 1
         },
         "alwaysOutputData": true
+      },
+      {
+        "id": "0b76db8b-7641-46c1-9e8b-86e80d2eb63c",
+        "name": "Valid Event",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          336,
+          380
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict"
+            },
+            "combinator": "and",
+            "conditions": [
+              {
+                "leftValue": "={{ /^(post|page)\\.[a-z.]+$/.test($json.event) && /^[a-f0-9]{24}$/.test($json.id) }}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "rightValue": ""
+              }
+            ]
+          }
+        },
+        "notes": "The webhook has no signature, and id ends up in Ghost API paths."
+      },
+      {
+        "id": "785f8d98-4993-486c-8be7-e1ef8d185955",
+        "name": "Invalid Event",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          448,
+          200
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "d4370060-aa89-4463-8418-af398d1d6107",
+        "name": "Verify Source",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          784,
+          780
+        ],
+        "parameters": {
+          "method": "GET",
+          "url": "=https://criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $('Normalize Event').first().json.id }}/?fields=id,status",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "ghostAdminApi",
+          "options": {
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            }
+          }
+        },
+        "credentials": {
+          "ghostAdminApi": {
+            "id": "1A8x4AjzoI4VhxKp",
+            "name": "nautas-ghost-api"
+          }
+        },
+        "notes": "Anyone holding the webhook URL could fake an event, so Ghost decides what really happened.",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "id": "a0a21c79-e00a-4e1e-bd18-fc9487e7cc25",
+        "name": "Source Confirms",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          896,
+          1200
+        ],
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "renameOutput": true,
+                "outputKey": "confirmed",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $('Normalize Event').first().json.event.endsWith('.deleted') ? $json.errors?.[0]?.type === 'NotFoundError' : Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $json[$('Normalize Event').first().json.type][0].status !== 'published' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              },
+              {
+                "renameOutput": true,
+                "outputKey": "not-confirmed",
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict"
+                  },
+                  "combinator": "and",
+                  "conditions": [
+                    {
+                      "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                      "operator": {
+                        "type": "boolean",
+                        "operation": "true",
+                        "singleValue": true
+                      },
+                      "rightValue": ""
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra",
+            "renameFallbackOutput": "failed"
+          }
+        }
+      },
+      {
+        "id": "06d2a2fe-922d-4cdb-a8e6-2af285d1ca33",
+        "name": "Event Not Confirmed",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          1250
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "a8bf07d3-d2de-4f77-874c-93b0942b9b3c",
+        "name": "Source Check Failed",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          1400
+        ],
+        "parameters": {
+          "errorType": "errorMessage",
+          "errorMessage": "=Source check failed for {{ $('Normalize Event').first().json.id }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+        }
       }
     ],
     "connections": {
@@ -760,17 +925,6 @@
           [
             {
               "node": "Normalize Event",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Normalize Event": {
-        "main": [
-          [
-            {
-              "node": "Debounce",
               "type": "main",
               "index": 0
             }
@@ -804,14 +958,14 @@
           ],
           [
             {
-              "node": "Find State",
+              "node": "Verify Source",
               "type": "main",
               "index": 0
             }
           ],
           [
             {
-              "node": "Find State",
+              "node": "Verify Source",
               "type": "main",
               "index": 0
             }
@@ -947,34 +1101,88 @@
             }
           ]
         ]
+      },
+      "Normalize Event": {
+        "main": [
+          [
+            {
+              "node": "Valid Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Valid Event": {
+        "main": [
+          [
+            {
+              "node": "Debounce",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Invalid Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verify Source": {
+        "main": [
+          [
+            {
+              "node": "Source Confirms",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Source Confirms": {
+        "main": [
+          [
+            {
+              "node": "Find State",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Event Not Confirmed",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Source Check Failed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Draft: find English through source id",
-    "description": "Added nodes: Find State\nRemoved nodes: Slug Changed, Find English By Old Slug, Old Slug Lookup, Rename English, Delete Old State Row\nUpdated nodes: Find English, Delete State Row, Delete Orphan State Row, Is Latest Save\nConnections: 4 added, 11 removed",
+    "name": "Verify events against Ghost before acting",
+    "description": "The webhook carries no signature. Malformed requests stop at Valid Event, and unpublish or delete only act when the source Ghost confirms the post state.",
     "autosaved": false,
-    "createdAt": "2026-10-31T04:23:17.645Z",
-    "updatedAt": "2026-10-31T04:23:17.645Z"
+    "createdAt": "2026-11-01T04:51:37.175Z",
+    "updatedAt": "2026-11-01T04:51:37.175Z"
   },
-  "activeVersionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6",
+  "activeVersionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90",
   "connections": {
     "Ghost Webhook": {
       "main": [
         [
           {
             "node": "Normalize Event",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalize Event": {
-      "main": [
-        [
-          {
-            "node": "Debounce",
             "type": "main",
             "index": 0
           }
@@ -1008,14 +1216,14 @@
         ],
         [
           {
-            "node": "Find State",
+            "node": "Verify Source",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Find State",
+            "node": "Verify Source",
             "type": "main",
             "index": 0
           }
@@ -1151,6 +1359,71 @@
           }
         ]
       ]
+    },
+    "Normalize Event": {
+      "main": [
+        [
+          {
+            "node": "Valid Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Valid Event": {
+      "main": [
+        [
+          {
+            "node": "Debounce",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify Source": {
+      "main": [
+        [
+          {
+            "node": "Source Confirms",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source Confirms": {
+      "main": [
+        [
+          {
+            "node": "Find State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Event Not Confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Source Check Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "createdAt": "2026-10-31T03:25:12.887Z",
@@ -1198,43 +1471,43 @@
               "id": "event",
               "name": "event",
               "type": "string",
-              "value": "={{ $json.query.event }}"
+              "value": "={{ String($json.query?.event || '') }}"
             },
             {
               "id": "type",
               "name": "type",
               "type": "string",
-              "value": "={{ $json.query.event.startsWith('page') ? 'pages' : 'posts' }}"
+              "value": "={{ String($json.query?.event || '').startsWith('page') ? 'pages' : 'posts' }}"
             },
             {
               "id": "id",
               "name": "id",
               "type": "string",
-              "value": "={{ ($json.body.post || $json.body.page).current?.id || ($json.body.post || $json.body.page).previous?.id }}"
+              "value": "={{ String(($json.body?.post || $json.body?.page)?.current?.id || ($json.body?.post || $json.body?.page)?.previous?.id || '') }}"
             },
             {
               "id": "slug",
               "name": "slug",
               "type": "string",
-              "value": "={{ ($json.body.post || $json.body.page).current?.slug || ($json.body.post || $json.body.page).previous?.slug }}"
+              "value": "={{ String(($json.body?.post || $json.body?.page)?.current?.slug || ($json.body?.post || $json.body?.page)?.previous?.slug || '') }}"
             },
             {
               "id": "old_slug",
               "name": "old_slug",
               "type": "string",
-              "value": "={{ ($json.body.post || $json.body.page).previous?.slug || '' }}"
+              "value": "={{ ($json.body?.post || $json.body?.page)?.previous?.slug || '' }}"
             },
             {
               "id": "has_current",
               "name": "has_current",
               "type": "boolean",
-              "value": "={{ Boolean(($json.body.post || $json.body.page).current?.id) }}"
+              "value": "={{ Boolean(($json.body?.post || $json.body?.page)?.current?.id) }}"
             },
             {
               "id": "updated_at",
               "name": "updated_at",
               "type": "string",
-              "value": "={{ ($json.body.post || $json.body.page).current?.updated_at || '' }}"
+              "value": "={{ ($json.body?.post || $json.body?.page)?.current?.updated_at || '' }}"
             }
           ]
         }
@@ -1911,6 +2184,171 @@
         "limit": 1
       },
       "alwaysOutputData": true
+    },
+    {
+      "id": "0b76db8b-7641-46c1-9e8b-86e80d2eb63c",
+      "name": "Valid Event",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        380
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "leftValue": "={{ /^(post|page)\\.[a-z.]+$/.test($json.event) && /^[a-f0-9]{24}$/.test($json.id) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "notes": "The webhook has no signature, and id ends up in Ghost API paths."
+    },
+    {
+      "id": "785f8d98-4993-486c-8be7-e1ef8d185955",
+      "name": "Invalid Event",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        448,
+        200
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "d4370060-aa89-4463-8418-af398d1d6107",
+      "name": "Verify Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        780
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://criptonautas.co/ghost/api/admin/{{ $('Normalize Event').first().json.type }}/{{ $('Normalize Event').first().json.id }}/?fields=id,status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "ghostAdminApi",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "ghostAdminApi": {
+          "id": "1A8x4AjzoI4VhxKp",
+          "name": "nautas-ghost-api"
+        }
+      },
+      "notes": "Anyone holding the webhook URL could fake an event, so Ghost decides what really happened.",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "a0a21c79-e00a-4e1e-bd18-fc9487e7cc25",
+      "name": "Source Confirms",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        1200
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "renameOutput": true,
+              "outputKey": "confirmed",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Event').first().json.event.endsWith('.deleted') ? $json.errors?.[0]?.type === 'NotFoundError' : Boolean($json[$('Normalize Event').first().json.type]?.[0]) && $json[$('Normalize Event').first().json.type][0].status !== 'published' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "not-confirmed",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Boolean($json[$('Normalize Event').first().json.type]?.[0]) || $json.errors?.[0]?.type === 'NotFoundError' }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "failed"
+        }
+      }
+    },
+    {
+      "id": "06d2a2fe-922d-4cdb-a8e6-2af285d1ca33",
+      "name": "Event Not Confirmed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1250
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "a8bf07d3-d2de-4f77-874c-93b0942b9b3c",
+      "name": "Source Check Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1400
+      ],
+      "parameters": {
+        "errorType": "errorMessage",
+        "errorMessage": "=Source check failed for {{ $('Normalize Event').first().json.id }}: {{ $json.errors?.[0]?.type ?? $json.error?.message ?? $json.error ?? 'unexpected response' }}"
+      }
     }
   ],
   "pinData": null,
@@ -1931,6 +2369,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-10-31T04:23:17.643Z",
-  "versionId": "2546abe4-f6ac-4138-bf58-37b9f7f807c6"
+  "updatedAt": "2026-11-01T04:51:37.172Z",
+  "versionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90"
 }
