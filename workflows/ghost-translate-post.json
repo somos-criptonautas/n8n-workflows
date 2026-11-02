@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "9c518576-292f-43b5-a74b-5c6e6b889da0",
+    "versionId": "addba9c7-3d85-4e94-abe4-15760846fab8",
     "workflowId": "SrFAelNFFszu09q5",
     "nodes": [
       {
@@ -81,7 +81,7 @@
             "combinator": "and",
             "conditions": [
               {
-                "leftValue": "={{ $json[$('Inputs').first().json.type][0].status !== 'published' || ['terminos','privacidad'].includes($json[$('Inputs').first().json.type][0].slug) || /^FUSIONADO/i.test($json[$('Inputs').first().json.type][0].title) }}",
+                "leftValue": "={{ $json[$('Inputs').first().json.type][0].status !== 'published' || ['terminos','privacidad','home'].includes($json[$('Inputs').first().json.type][0].slug) || /^FUSIONADO/i.test($json[$('Inputs').first().json.type][0].title) }}",
                 "operator": {
                   "type": "boolean",
                   "operation": "true",
@@ -1649,13 +1649,13 @@
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Copy source visibility to English",
-    "description": "English twins and search docs follow the visibility of the source. Three small nodes; the large Code nodes are untouched.",
+    "name": "Skip home: English landing is hand-edited",
+    "description": "Updated nodes: Out Of Scope",
     "autosaved": false,
-    "createdAt": "2026-11-01T04:55:15.554Z",
-    "updatedAt": "2026-11-01T04:55:15.554Z"
+    "createdAt": "2026-11-02T03:38:23.549Z",
+    "updatedAt": "2026-11-02T03:38:23.549Z"
   },
-  "activeVersionId": "9c518576-292f-43b5-a74b-5c6e6b889da0",
+  "activeVersionId": "addba9c7-3d85-4e94-abe4-15760846fab8",
   "connections": {
     "Inputs": {
       "main": [
@@ -2192,7 +2192,7 @@
           "combinator": "and",
           "conditions": [
             {
-              "leftValue": "={{ $json[$('Inputs').first().json.type][0].status !== 'published' || ['terminos','privacidad'].includes($json[$('Inputs').first().json.type][0].slug) || /^FUSIONADO/i.test($json[$('Inputs').first().json.type][0].title) }}",
+              "leftValue": "={{ $json[$('Inputs').first().json.type][0].status !== 'published' || ['terminos','privacidad','home'].includes($json[$('Inputs').first().json.type][0].slug) || /^FUSIONADO/i.test($json[$('Inputs').first().json.type][0].title) }}",
               "operator": {
                 "type": "boolean",
                 "operation": "true",
@@ -3327,6 +3327,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 0,
-  "updatedAt": "2026-11-01T04:55:15.550Z",
-  "versionId": "9c518576-292f-43b5-a74b-5c6e6b889da0"
+  "updatedAt": "2026-11-02T03:38:23.545Z",
+  "versionId": "addba9c7-3d85-4e94-abe4-15760846fab8"
 }
