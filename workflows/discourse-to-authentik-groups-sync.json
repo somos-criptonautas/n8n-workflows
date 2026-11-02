@@ -1,0 +1,476 @@
+{
+  "active": false,
+  "activeVersion": null,
+  "activeVersionId": null,
+  "connections": {
+    "Nightly reconcile": {
+      "main": [
+        [
+          {
+            "node": "Discourse tier list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discourse tier list": {
+      "main": [
+        [
+          {
+            "node": "Fetch Discourse members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Discourse members": {
+      "main": [
+        [
+          {
+            "node": "Tag members with tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag members with tier": {
+      "main": [
+        [
+          {
+            "node": "Fetch authentik groups",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch authentik groups": {
+      "main": [
+        [
+          {
+            "node": "Fetch authentik users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch authentik users": {
+      "main": [
+        [
+          {
+            "node": "Plan membership changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan membership changes": {
+      "main": [
+        [
+          {
+            "node": "Add or remove",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add or remove": {
+      "main": [
+        [
+          {
+            "node": "Add user to group",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove user from group",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "createdAt": "2026-11-02T06:11:56.471Z",
+  "id": "QWD0iDNb052cq2Ng",
+  "isArchived": false,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "name": "discourse-to-authentik-groups-sync",
+  "nodeGroups": [
+    {
+      "id": "8cd9a95a-4027-4c64-a83c-213d738621d0",
+      "name": "Collect current state",
+      "nodeIds": [
+        "eebb6c66-9cff-493e-96df-f8a3984f8427",
+        "a1115eb6-f0ed-4ddb-bf6c-a9f64aa7b526",
+        "37979eb1-9f14-4b26-b742-4793cb09c55f",
+        "844f2de9-8147-46e9-ac84-27e165a19cc6"
+      ],
+      "description": "Discourse members per tier, plus authentik groups and the username to pk map"
+    },
+    {
+      "id": "385689d1-9c95-4944-ad45-ebb4a482b1bf",
+      "name": "Apply changes",
+      "nodeIds": [
+        "7f2fd27f-53fb-413b-a2e7-6aa1fa87441a",
+        "dc6f7e39-989d-4937-b39a-515145294ec5",
+        "9e65b30a-1d0f-49f7-941b-2cd656fb8cf5"
+      ],
+      "description": "One add_user or remove_user call per planned membership change"
+    }
+  ],
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "17 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "8fd1b7cf-a6c8-4169-aae2-2c953a6e5c87",
+      "name": "Nightly reconcile",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flip ADD_ONLY to false once the seed run looks right: then removals apply too.\n// agoristas and team stay hand-managed in authentik for now; add them back here AND to\n// the Discourse API key's name param when you want them synced.\nconst ADD_ONLY = true;\nconst tiers = ['nuevos', 'anons', 'nautas', 'traders'];\nreturn tiers.map(t => ({ json: { discourseGroup: t, authentikGroup: 'discourse-' + t, addOnly: ADD_ONLY } }));"
+      },
+      "id": "1da12e16-e778-402a-8e5c-5fe5ac84ca05",
+      "name": "Discourse tier list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://comunidad.criptonautas.co/groups/{{ $json.discourseGroup }}/members.json",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "discourseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "1000"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "eebb6c66-9cff-493e-96df-f8a3984f8427",
+      "name": "Fetch Discourse members",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        496,
+        128
+      ],
+      "credentials": {
+        "discourseApi": {
+          "id": "cbowr6XQ4h8BpO8f",
+          "name": "Discourse account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "tier",
+              "name": "tier",
+              "value": "={{ $('Discourse tier list').item.json.authentikGroup }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a1115eb6-f0ed-4ddb-bf6c-a9f64aa7b526",
+      "name": "Tag members with tier",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://auth.criptonautas.co/api/v3/core/groups/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "100"
+            },
+            {
+              "name": "include_users",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "37979eb1-9f14-4b26-b742-4793cb09c55f",
+      "name": "Fetch authentik groups",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        944,
+        128
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xwLgNCuqccd2SaNl",
+          "name": "authentik-discourse-sync"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://auth.criptonautas.co/api/v3/core/users/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "page_size",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {
+          "pagination": {
+            "pagination": {
+              "parameters": {
+                "parameters": [
+                  {
+                    "name": "page",
+                    "value": "={{ $pageCount + 1 }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ $response.body.pagination.next === 0 }}",
+              "limitPagesFetched": true,
+              "maxRequests": 200,
+              "requestInterval": 200
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "844f2de9-8147-46e9-ac84-27e165a19cc6",
+      "name": "Fetch authentik users",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1168,
+        128
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xwLgNCuqccd2SaNl",
+          "name": "authentik-discourse-sync"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Discourse tier list').all();\nconst addOnly = cfg[0].json.addOnly;\n\nconst groupsBody = $('Fetch authentik groups').first().json;\nif (groupsBody.pagination.count > groupsBody.results.length) {\n  throw new Error('authentik returned ' + groupsBody.results.length + ' of ' + groupsBody.pagination.count + ' groups; raise page_size on Fetch authentik groups');\n}\nconst groupByName = {};\nfor (const g of groupsBody.results) { groupByName[g.name] = g; }\n\n// username -> pk, across every page of users\nconst pkByUsername = {};\nfor (const page of $('Fetch authentik users').all()) {\n  for (const u of page.json.results) { pkByUsername[u.username] = u.pk; }\n}\n\nconst missing = [];\nfor (const c of cfg) {\n  if (!groupByName[c.json.authentikGroup]) { missing.push(c.json.authentikGroup); }\n}\nif (missing.length) {\n  throw new Error('Missing authentik groups: ' + missing.join(', ') + ' - create them before syncing');\n}\n\nconst ops = [];\nconst noAccount = [];\nfor (const item of $('Tag members with tier').all()) {\n  const tier = item.json.tier;\n  const members = item.json.members || [];\n  const total = item.json.meta ? item.json.meta.total : members.length;\n  // shortcut: single 1000-member page, fail loud instead of silently truncating; add pagination if a tier outgrows it\n  if (total > members.length) {\n    throw new Error(tier + ': Discourse reports ' + total + ' members but returned ' + members.length + '; add pagination to Fetch Discourse members');\n  }\n  const group = groupByName[tier];\n  const want = new Set(members.map(m => m.username));\n  const have = new Set((group.users_obj || []).map(u => u.username));\n\n  for (const username of want) {\n    if (have.has(username)) { continue; }\n    const pk = pkByUsername[username];\n    if (!pk) { noAccount.push(tier + '/' + username); continue; }\n    ops.push({ json: { op: 'add', group: tier, groupUuid: group.pk, username: username, pk: pk } });\n  }\n\n  if (!addOnly) {\n    for (const username of have) {\n      if (want.has(username)) { continue; }\n      ops.push({ json: { op: 'remove', group: tier, groupUuid: group.pk, username: username, pk: pkByUsername[username] } });\n    }\n  }\n}\n\nif (noAccount.length) {\n  console.log('No authentik account, skipped: ' + noAccount.join(', '));\n}\nreturn ops;"
+      },
+      "id": "e6dd11ca-caa3-404d-96a0-8654585b9e2f",
+      "name": "Plan membership changes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.op }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "add"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.op }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "remove"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7f2fd27f-53fb-413b-a2e7-6aa1fa87441a",
+      "name": "Add or remove",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        1248,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://auth.criptonautas.co/api/v3/core/groups/{{ $json.groupUuid }}/add_user/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"pk\": {{ $json.pk }}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "dc6f7e39-989d-4937-b39a-515145294ec5",
+      "name": "Add user to group",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1472,
+        128
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xwLgNCuqccd2SaNl",
+          "name": "authentik-discourse-sync"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://auth.criptonautas.co/api/v3/core/groups/{{ $json.groupUuid }}/remove_user/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"pk\": {{ $json.pk }}}",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 10,
+              "batchInterval": 500
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "9e65b30a-1d0f-49f7-941b-2cd656fb8cf5",
+      "name": "Remove user from group",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1472,
+        320
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xwLgNCuqccd2SaNl",
+          "name": "authentik-discourse-sync"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "QWD0iDNb052cq2Ng",
+      "projectId": "HXLppsMA2lbH4F4C",
+      "createdAt": "2026-11-02T06:11:56.471Z",
+      "updatedAt": "2026-11-02T06:11:56.471Z"
+    }
+  ],
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-11-02T07:01:59.540Z",
+  "versionId": "9eae971b-6715-4591-82c9-2debf63a4003"
+}
