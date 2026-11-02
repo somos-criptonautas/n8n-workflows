@@ -1,7 +1,7 @@
 {
   "active": true,
   "activeVersion": {
-    "versionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90",
+    "versionId": "23d03f46-a621-4287-bb78-e5995ab6145a",
     "workflowId": "HEdpSdE8bIh3c1RZ",
     "nodes": [
       {
@@ -142,7 +142,7 @@
                   "combinator": "and",
                   "conditions": [
                     {
-                      "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad'].includes($json.slug) }}",
+                      "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad','home'].includes($json.slug) }}",
                       "operator": {
                         "type": "boolean",
                         "operation": "true",
@@ -164,7 +164,7 @@
                   "combinator": "and",
                   "conditions": [
                     {
-                      "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad'].includes($json.slug) }}",
+                      "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad','home'].includes($json.slug) }}",
                       "operator": {
                         "type": "boolean",
                         "operation": "true",
@@ -1170,13 +1170,13 @@
     },
     "nodeGroups": [],
     "authors": "D C (via MCP)",
-    "name": "Verify events against Ghost before acting",
-    "description": "The webhook carries no signature. Malformed requests stop at Valid Event, and unpublish or delete only act when the source Ghost confirms the post state.",
+    "name": "Skip home: English landing is hand-edited",
+    "description": "Updated nodes: Route Event",
     "autosaved": false,
-    "createdAt": "2026-11-01T04:51:37.175Z",
-    "updatedAt": "2026-11-01T04:51:37.175Z"
+    "createdAt": "2026-11-02T03:38:25.555Z",
+    "updatedAt": "2026-11-02T03:38:25.555Z"
   },
-  "activeVersionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90",
+  "activeVersionId": "23d03f46-a621-4287-bb78-e5995ab6145a",
   "connections": {
     "Ghost Webhook": {
       "main": [
@@ -1574,7 +1574,7 @@
                 "combinator": "and",
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad'].includes($json.slug) }}",
+                    "leftValue": "={{ $json.event.endsWith('.unpublished') && $json.has_current && !['terminos','privacidad','home'].includes($json.slug) }}",
                     "operator": {
                       "type": "boolean",
                       "operation": "true",
@@ -1596,7 +1596,7 @@
                 "combinator": "and",
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad'].includes($json.slug) }}",
+                    "leftValue": "={{ $json.event.endsWith('.deleted') && !['terminos','privacidad','home'].includes($json.slug) }}",
                     "operator": {
                       "type": "boolean",
                       "operation": "true",
@@ -2369,6 +2369,6 @@
   "staticData": null,
   "tags": [],
   "triggerCount": 1,
-  "updatedAt": "2026-11-01T04:51:37.172Z",
-  "versionId": "4bfdcd81-dacf-49d2-9bc5-d1abf4570f90"
+  "updatedAt": "2026-11-02T03:38:25.549Z",
+  "versionId": "23d03f46-a621-4287-bb78-e5995ab6145a"
 }
